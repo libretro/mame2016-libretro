@@ -205,6 +205,30 @@ end
 		}
 	end
 
+   -- RETRO HACK
+	if _OPTIONS["osd"]=="retro" then
+
+		includedirs {
+			MAME_DIR .. "src/emu",
+			MAME_DIR .. "src/osd",
+			MAME_DIR .. "src/lib",
+			MAME_DIR .. "src/lib/util",
+			MAME_DIR .. "src/osd/retro",
+			MAME_DIR .. "src/osd/modules/render",
+			MAME_DIR .. "3rdparty",
+			MAME_DIR .. "3rdparty/winpcap/Include",
+			MAME_DIR .. "3rdparty/bgfx/include",
+			MAME_DIR .. "3rdparty/bx/include",
+			MAME_DIR .. "src/osd/retro/libretro-common/include",
+		}
+
+		files {
+			MAME_DIR .. "src/osd/retro/retromain.c",
+			MAME_DIR .. "src/osd/retro/libretro.c",
+		}
+	end
+-- RETRO HACK
+
 	if _OPTIONS["targetos"]=="macosx" and (not override_resources) then
 		linkoptions {
 			"-sectcreate __TEXT __info_plist " .. GEN_DIR .. "/resource/" .. _subtarget .. "-Info.plist"

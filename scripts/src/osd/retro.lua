@@ -1,6 +1,13 @@
 function maintargetosdoptions(_target)
 end
 
+function includeosd()
+	includedirs {
+		MAME_DIR .. "src/osd",
+		MAME_DIR .. "src/osd/retro",
+	}
+end
+
 newoption {
 	trigger = "NO_USE_MIDI",
 	description = "Disable MIDI I/O",
@@ -9,6 +16,15 @@ newoption {
 		{ "1",  "Disable MIDI" },
 	},
 }
+
+configuration { "mingw*" }
+		linkoptions {	
+			"-shared ",
+			"-Wl,--version-script=../../../../src/osd/retro/link.T",
+			"-Wl,--no-undefined", 
+		}
+
+configuration { }
 
 project ("osd_" .. _OPTIONS["osd"])
 	uuid (os.uuid("osd_" .. _OPTIONS["osd"]))
@@ -20,6 +36,14 @@ project ("osd_" .. _OPTIONS["osd"])
 
 	options {
 		"ForceCPP",
+	}
+
+   buildoptions {
+ 		"-fPIC"
+	}
+
+   linkoptions{
+		"-shared -Wl,--version-script=" .. MAME_DIR .. "src/osd/retro/link.T -Wl,--no-undefined"
 	}
 
 	dofile("retro_cfg.lua")
@@ -91,6 +115,19 @@ project ("ocore_" .. _OPTIONS["osd"])
 	}
 
 	dofile("retro_cfg.lua")
+
+   buildoptions {
+ 		"-fPIC"
+	}
+
+   
+	linkoptions{
+		"-shared -Wl,--version-script=src/osd/retro/link.T -Wl,--no-undefined"
+	}
+		
+	links {
+
+	}
 
 	includedirs {
 		MAME_DIR .. "src/emu",

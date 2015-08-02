@@ -528,6 +528,18 @@ configuration { "gmake" }
 
 dofile ("toolchain.lua")
 
+-- RETRO HACK
+if _OPTIONS["osd"]=="retro" then
+	buildoptions {
+		"-fPIC",
+	}
+	
+	defines {
+		"__LIBRETRO__",
+	}
+end
+-- RETRO HACK
+
 
 if _OPTIONS["targetos"]=="windows" then
 	configuration { "x64" }
@@ -1095,6 +1107,22 @@ configuration { "nacl*" }
 	archivesplit_size "20"
 
 configuration { "linux-*" }
+--RETRO HACK
+if _OPTIONS["osd"]=="retro" then
+		links {
+			"pthread",		
+			"dl",
+			"m",
+			"asound",			
+		}
+
+		linkoptions {	
+			"-shared ",
+			"-Wl,--version-script="  .. MAME_DIR .. "src/osd/retro/link.T",
+			"-Wl,--no-undefined", 
+		}
+else
+-- ORIGIN
 		links {
 			"dl",
 		}
@@ -1104,6 +1132,9 @@ configuration { "linux-*" }
 				"NO_AFFINITY_NP",
 			}
 		end
+      -- ORIGIN
+end
+-- RETRO HACK
 
 
 configuration { "osx*" }
