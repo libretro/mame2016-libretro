@@ -928,26 +928,22 @@ static int getGameInfo(char* gameName, int* rotation, int* driverIndex,bool *Arc
 
    if (num != -1)
    {
-#if 0
-      if (driver_list::driver(num).flags & GAME_TYPE_ARCADE)
-#endif
+      if (driver_list::driver(num).flags & MACHINE_TYPE_ARCADE)
       {
          *Arcade=TRUE;
          if (log_cb)
             log_cb(RETRO_LOG_DEBUG, "System type: ARCADE\n");
       }
-#if 0
-      else if(driver_list::driver(num).flags& GAME_TYPE_CONSOLE)
+      else if(driver_list::driver(num).flags& MACHINE_TYPE_CONSOLE)
       {
          if (log_cb)
             log_cb(RETRO_LOG_DEBUG, "System type: CONSOLE\n");
       }
-      else if(driver_list::driver(num).flags& GAME_TYPE_COMPUTER)
+      else if(driver_list::driver(num).flags& MACHINE_TYPE_COMPUTER)
       {
          if (log_cb)
             log_cb(RETRO_LOG_DEBUG, "System type: COMPUTER\n");
       }
-#endif
       gameFound = 1;
 
       if (log_cb)
