@@ -622,7 +622,7 @@ static MACHINE_CONFIG_START( 1942p, _1942_state )
 	/* basic machine hardware */
 	MCFG_CPU_ADD("maincpu", Z80, MAIN_CPU_CLOCK)    /* 4 MHz ??? */
 	MCFG_CPU_PROGRAM_MAP(c1942p_map)
-	MCFG_TIMER_DRIVER_ADD_SCANLINE("scantimer", _1942_state, c1942_scanline, "screen", 0, 1)
+	MCFG_CPU_VBLANK_INT_DRIVER("screen", _1942_state,  irq0_line_hold) // note, powerups won't move down the screen with the original '1942' logic.
 
 	MCFG_CPU_ADD("audiocpu", Z80, SOUND_CPU_CLOCK)  /* 3 MHz ??? */
 	MCFG_CPU_PROGRAM_MAP(c1942p_sound_map)
@@ -945,10 +945,10 @@ DRIVER_INIT_MEMBER(_1942_state,1942)
 }
 
 
-GAME( 1984, 1942,     0,    1942, 1942, _1942_state, 1942, ROT270, "Capcom", "1942 (Revision B)", GAME_SUPPORTS_SAVE )
-GAME( 1984, 1942a,    1942, 1942, 1942, _1942_state, 1942, ROT270, "Capcom", "1942 (Revision A)", GAME_SUPPORTS_SAVE )
-GAME( 1984, 1942abl,  1942, 1942, 1942, _1942_state, 1942, ROT270, "bootleg", "1942 (Revision A, bootleg)", GAME_SUPPORTS_SAVE ) // data is the same as 1942a set, different rom format
-GAME( 198?, 1942h,    1942, 1942, 1942, _1942_state, 1942, ROT270, "hack (Two Bit Score?)", "42", GAME_SUPPORTS_SAVE )
-GAME( 1984, 1942b,    1942, 1942, 1942, _1942_state, 1942, ROT270, "Capcom", "1942 (First Version)", GAME_SUPPORTS_SAVE )
-GAME( 1985, 1942w,    1942, 1942, 1942, _1942_state, 1942, ROT270, "Capcom (Williams Electronics license)", "1942 (Williams Electronics license)", GAME_SUPPORTS_SAVE ) /* Based on 1942 (Revision B) */
-GAME( 1984, 1942p,    1942, 1942p,1942p,_1942_state, 1942, ROT270, "bootleg", "1942 (Tecfri PCB, bootleg?)", GAME_NOT_WORKING | GAME_SUPPORTS_SAVE )
+GAME( 1984, 1942,     0,    1942, 1942, _1942_state, 1942, ROT270, "Capcom", "1942 (Revision B)", MACHINE_SUPPORTS_SAVE )
+GAME( 1984, 1942a,    1942, 1942, 1942, _1942_state, 1942, ROT270, "Capcom", "1942 (Revision A)", MACHINE_SUPPORTS_SAVE )
+GAME( 1984, 1942abl,  1942, 1942, 1942, _1942_state, 1942, ROT270, "bootleg", "1942 (Revision A, bootleg)", MACHINE_SUPPORTS_SAVE ) // data is the same as 1942a set, different rom format
+GAME( 198?, 1942h,    1942, 1942, 1942, _1942_state, 1942, ROT270, "hack (Two Bit Score?)", "42", MACHINE_SUPPORTS_SAVE )
+GAME( 1984, 1942b,    1942, 1942, 1942, _1942_state, 1942, ROT270, "Capcom", "1942 (First Version)", MACHINE_SUPPORTS_SAVE )
+GAME( 1985, 1942w,    1942, 1942, 1942, _1942_state, 1942, ROT270, "Capcom (Williams Electronics license)", "1942 (Williams Electronics license)", MACHINE_SUPPORTS_SAVE ) /* Based on 1942 (Revision B) */
+GAME( 1984, 1942p,    1942, 1942p,1942p,_1942_state, 1942, ROT270, "bootleg", "1942 (Tecfri PCB, bootleg?)", MACHINE_SUPPORTS_SAVE )

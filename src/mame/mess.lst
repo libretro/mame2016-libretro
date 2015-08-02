@@ -99,6 +99,7 @@ multmega  // 1994 Sega Multi-Mega (Europe)
 32xe
 32xj
 32x_scd   // 1994 Sega Sega CD (USA w/32X addon)
+segapm	  // 1996 Sega Picture Magic (32x type hardware)
 
 saturnjp  // 1994 Sega Saturn (Japan)
 saturn  // 1995 Sega Saturn (USA)
@@ -327,7 +328,6 @@ mu100r  // 1997 MU-100 Rackable version
 fb01    // 1986 FB-01
 
 // Roland
-tb303
 mt32
 cm32l
 d110
@@ -1043,16 +1043,6 @@ avigo_es     // 1997 Avigo (Spanish)
 avigo_it     // 1997 Avigo (Italian)
 
 // Texas Instruments Calculators
-tisr16    // 1974 SR-16
-tisr16ii
-ti1270
-ti1000
-ti30      // 1976 TI-30
-tiprog
-tibusan1
-wizatron
-lilprof
-lilprof78
 ti73      // 1990 TI-73
 ti74      // 1985 TI-74
 ti95      // 1986 TI-95
@@ -1591,7 +1581,7 @@ fsa1gt
 fsa1st
 
 // Microsoft
-xbox	
+xbox
 
 // NASCOM Microcomputers
 nascom1   // 1978 Nascom 1
@@ -2164,9 +2154,14 @@ bmboxing    // Bambino
 bfriskyt    // Bandai
 packmon     // Bandai
 msthawk     // Bandai/Mattel
+bzaxxon     // Bandai
 zackman     // Bandai
+bpengo      // Bandai
+bbtime      // Bandai
 bdoramon    // Bandai
+bultrman    // Bandai
 machiman    // Bandai
+pairmtch    // Bandai
 alnattck    // Coleco
 cdkong      // Coleco
 cgalaxn     // Coleco
@@ -2189,6 +2184,7 @@ vinvader    // VTech
 
 // hh_melps4
 cfrogger    // Coleco
+gjungler    // Gakken
 
 // hh_pic16
 maniac      // Ideal
@@ -2235,7 +2231,7 @@ tbreakup    // Tomy
 elecbowl    // Marx
 mbdtower    // Milton Bradley
 
-// TI snspell
+// hh_tms1k tispeak.c
 snspell
 snspella
 snspellb
@@ -2247,6 +2243,18 @@ snmath
 snmathp
 snread
 lantutor
+
+// hh_tms1k ticalc1x.c
+tisr16
+tisr16ii
+ti1270
+ti1000
+ti30
+tiprog
+tibusan1
+wizatron
+lilprof
+lilprof78
 
 // hh_ucom4
 ufombs      // Bambino
@@ -2266,6 +2274,9 @@ tmtennis    // Tomy
 tmscramb    // Tomy
 tcaveman    // Tomy
 alnchase    // Tomy
+
+// hh_ucom4 derivatives
+tb303       // Roland
 
 // other
 tama        // Bandai

@@ -102,12 +102,6 @@
     ???        ?              2001    Pop'n Music Mickey Tunes
 
     TODO:
-        - The display list pointer setting in the graphics chip is not understood. Currently
-          it has to be changed manually. (BIOS = 0x200000, PPP bootup = 0x1D0800, ingame = 0x0000, 0x8000 & 0x10000)
-
-        - Keyboardmania 3rd mix is missing some graphics in the ingame. Most notably the backgrounds.
-          The display list objects seem to be there, but the address is wrong (0x14c400, instead of the correct address)
-
         - The external Yamaha MIDI sound board is not emulated (no keyboard sounds).
 
 
@@ -141,6 +135,7 @@
 #include "machine/midikbd.h"
 #include "sound/ymz280b.h"
 #include "sound/cdda.h"
+#include "sound/rf5c400.h"
 #include "firebeat.lh"
 
 
@@ -232,7 +227,7 @@ READ32_MEMBER(firebeat_gcu_device::read)
 
 	switch (reg)
 	{
-		case 0x78:		// GCU Status
+		case 0x78:      // GCU Status
 			/* ppd checks bits 0x0041 of the upper halfword on interrupt */
 			return 0xffff0005;
 
@@ -260,96 +255,96 @@ WRITE32_MEMBER(firebeat_gcu_device::write)
 #endif
 			break;
 
-		case 0x14:		// ?
+		case 0x14:      // ?
 			break;
 
-		case 0x18:		// ?
+		case 0x18:      // ?
 			break;
 
-		case 0x20:		// Framebuffer 0 Origin(?)
+		case 0x20:      // Framebuffer 0 Origin(?)
 			break;
 
-		case 0x24:		// Framebuffer 1 Origin(?)
+		case 0x24:      // Framebuffer 1 Origin(?)
 			break;
 
-		case 0x28:		// Framebuffer 2 Origin(?)
+		case 0x28:      // Framebuffer 2 Origin(?)
 			break;
 
-		case 0x2c:		// Framebuffer 3 Origin(?)
+		case 0x2c:      // Framebuffer 3 Origin(?)
 			break;
 
-		case 0x30:		// Framebuffer 0 Dimensions
+		case 0x30:      // Framebuffer 0 Dimensions
 			if (ACCESSING_BITS_16_31)
 				m_frame[0].height = (data >> 16) & 0xffff;
 			if (ACCESSING_BITS_0_15)
 				m_frame[0].width = data & 0xffff;
 			break;
 
-		case 0x34:		// Framebuffer 1 Dimensions
+		case 0x34:      // Framebuffer 1 Dimensions
 			if (ACCESSING_BITS_16_31)
 				m_frame[1].height = (data >> 16) & 0xffff;
 			if (ACCESSING_BITS_0_15)
 				m_frame[1].width = data & 0xffff;
 			break;
 
-		case 0x38:		// Framebuffer 2 Dimensions
+		case 0x38:      // Framebuffer 2 Dimensions
 			if (ACCESSING_BITS_16_31)
 				m_frame[2].height = (data >> 16) & 0xffff;
 			if (ACCESSING_BITS_0_15)
 				m_frame[2].width = data & 0xffff;
 			break;
 
-		case 0x3c:		// Framebuffer 3 Dimensions
+		case 0x3c:      // Framebuffer 3 Dimensions
 			if (ACCESSING_BITS_16_31)
 				m_frame[3].height = (data >> 16) & 0xffff;
 			if (ACCESSING_BITS_0_15)
 				m_frame[3].width = data & 0xffff;
 			break;
 
-		case 0x40:		// Framebuffer 0 Base
+		case 0x40:      // Framebuffer 0 Base
 			m_frame[0].base = data;
 #if PRINT_GCU
 			printf("%s FB0 Base: %08X\n", basetag(), data);
 #endif
 			break;
 
-		case 0x44:		// Framebuffer 1 Base
+		case 0x44:      // Framebuffer 1 Base
 			m_frame[1].base = data;
 #if PRINT_GCU
 			printf("%s FB1 Base: %08X\n", basetag(), data);
 #endif
 			break;
 
-		case 0x48:		// Framebuffer 2 Base
+		case 0x48:      // Framebuffer 2 Base
 			m_frame[2].base = data;
 #if PRINT_GCU
 			printf("%s FB2 Base: %08X\n", basetag(), data);
 #endif
 			break;
 
-		case 0x4c:		// Framebuffer 3 Base
+		case 0x4c:      // Framebuffer 3 Base
 			m_frame[3].base = data;
 #if PRINT_GCU
 			printf("%s FB3 Base: %08X\n", basetag(), data);
 #endif
 			break;
 
-		case 0x5c:		// VRAM Read Address
+		case 0x5c:      // VRAM Read Address
 			m_vram_read_addr = (data & 0xffffff) / 2;
 			break;
 
-		case 0x60:		// VRAM Port 0 Write Address
+		case 0x60:      // VRAM Port 0 Write Address
 			m_vram_fifo0_addr = (data & 0xffffff) / 2;
 			break;
 
-		case 0x68:		// VRAM Port 0/1 Mode
+		case 0x68:      // VRAM Port 0/1 Mode
 			if (ACCESSING_BITS_16_31)
 				m_vram_fifo0_mode = data >> 16;
 			if (ACCESSING_BITS_0_15)
 				m_vram_fifo1_mode = data & 0xffff;
 			break;
 
-		case 0x70:		// VRAM Port 0 Write FIFO
+		case 0x70:      // VRAM Port 0 Write FIFO
 			if (m_vram_fifo0_mode & 0x100)
 			{
 				// write to command fifo
@@ -364,7 +359,7 @@ WRITE32_MEMBER(firebeat_gcu_device::write)
 					m_command_fifo0_ptr = 0;
 				}
 			}
-			else	
+			else
 			{
 				// write to VRAM fifo
 				m_vram[m_vram_fifo0_addr] = data;
@@ -372,12 +367,12 @@ WRITE32_MEMBER(firebeat_gcu_device::write)
 			}
 			break;
 
-		case 0x64:		// VRAM Port 1 Write Address
+		case 0x64:      // VRAM Port 1 Write Address
 			m_vram_fifo1_addr = (data & 0xffffff) / 2;
 			printf("GCU FIFO1 addr = %08X\n", data);
 			break;
 
-		case 0x74:		// VRAM Port 1 Write FIFO
+		case 0x74:      // VRAM Port 1 Write FIFO
 			printf("GCU FIFO1 write = %08X\n", data);
 
 			if (m_vram_fifo1_mode & 0x100)
@@ -393,7 +388,7 @@ WRITE32_MEMBER(firebeat_gcu_device::write)
 					m_command_fifo1_ptr = 0;
 				}
 			}
-			else	
+			else
 			{
 				// write to VRAM fifo
 				m_vram[m_vram_fifo1_addr] = data;
@@ -414,7 +409,7 @@ int firebeat_gcu_device::draw(screen_device &screen, bitmap_ind16 &bitmap, const
 	int x = 0;
 	int y = 0;
 	int width = m_frame[0].width;
-	int height = m_frame[0].height;	
+	int height = m_frame[0].height;
 
 	if (width != 0 && height != 0)
 	{
@@ -435,15 +430,15 @@ int firebeat_gcu_device::draw(screen_device &screen, bitmap_ind16 &bitmap, const
 		int li = ((j+y) * fb_pitch) + x;
 		UINT32 fbaddr0 = m_frame[0].base + li;
 		UINT32 fbaddr1 = m_frame[1].base + li;
-//		UINT32 fbaddr2 = m_frame[2].base + li;
-//		UINT32 fbaddr3 = m_frame[3].base + li;
+//      UINT32 fbaddr2 = m_frame[2].base + li;
+//      UINT32 fbaddr3 = m_frame[3].base + li;
 
 		for (int i=0; i < width; i++)
 		{
 			UINT16 pix0 = vram16[fbaddr0 ^ NATIVE_ENDIAN_VALUE_LE_BE(1,0)];
 			UINT16 pix1 = vram16[fbaddr1 ^ NATIVE_ENDIAN_VALUE_LE_BE(1,0)];
-//			UINT16 pix2 = vram16[fbaddr2 ^ NATIVE_ENDIAN_VALUE_LE_BE(1,0)];
-//			UINT16 pix3 = vram16[fbaddr3 ^ NATIVE_ENDIAN_VALUE_LE_BE(1,0)];
+//          UINT16 pix2 = vram16[fbaddr2 ^ NATIVE_ENDIAN_VALUE_LE_BE(1,0)];
+//          UINT16 pix3 = vram16[fbaddr3 ^ NATIVE_ENDIAN_VALUE_LE_BE(1,0)];
 
 			if (pix0 & 0x8000)
 			{
@@ -456,8 +451,8 @@ int firebeat_gcu_device::draw(screen_device &screen, bitmap_ind16 &bitmap, const
 
 			fbaddr0++;
 			fbaddr1++;
-//			fbaddr2++;
-//			fbaddr3++;
+//          fbaddr2++;
+//          fbaddr3++;
 		}
 	}
 
@@ -498,7 +493,7 @@ void firebeat_gcu_device::draw_object(UINT32 *cmd)
 	UINT32 address = cmd[0] & 0xffffff;
 	int alpha_level = (cmd[2] >> 27) & 0x1f;
 	bool relative_coords = (cmd[0] & 0x10000000) ? true : false;
-	
+
 	if (relative_coords)
 	{
 		x += m_fb_origin_x;
@@ -527,7 +522,7 @@ void firebeat_gcu_device::draw_object(UINT32 *cmd)
 		int index;
 		int xinc;
 		UINT32 fbaddr = ((j+y) * fb_pitch) + x;
-		
+
 		if (yflip)
 		{
 			index = address + ((height - 1 - (v >> 6)) * 1024);
@@ -597,7 +592,7 @@ void firebeat_gcu_device::draw_object(UINT32 *cmd)
 
 void firebeat_gcu_device::fill_rect(UINT32 *cmd)
 {
-	// 0x00: xxx----- -------- -------- --------	   command (4)
+	// 0x00: xxx----- -------- -------- --------       command (4)
 	// 0x00: ---x---- -------- -------- --------   0: absolute coordinates
 	//                                             1: relative coordinates from framebuffer origin
 	// 0x00: ----xx-- -------- -------- --------   ?
@@ -747,30 +742,30 @@ void firebeat_gcu_device::execute_display_list(UINT32 addr)
 
 		switch (command)
 		{
-			case 0:		// NOP?
+			case 0:     // NOP?
 				break;
 
-			case 1:		// Execute display list
+			case 1:     // Execute display list
 				execute_display_list(cmd[0] & 0xffffff);
 				break;
 
-			case 2:		// End of display list
+			case 2:     // End of display list
 				end = true;
 				break;
 
-			case 3:		// Framebuffer config
+			case 3:     // Framebuffer config
 				fb_config(cmd);
 				break;
 
-			case 4:		// Fill rectangle
+			case 4:     // Fill rectangle
 				fill_rect(cmd);
 				break;
 
-			case 5:		// Draw object
+			case 5:     // Draw object
 				draw_object(cmd);
 				break;
 
-			case 7:		// Draw 8x8 character (2 bits per pixel)
+			case 7:     // Draw 8x8 character (2 bits per pixel)
 				draw_character(cmd);
 				break;
 
@@ -792,29 +787,29 @@ void firebeat_gcu_device::execute_command(UINT32* cmd)
 
 	switch (command)
 	{
-		case 0:		// NOP?
+		case 0:     // NOP?
 			break;
 
-		case 1:		// Execute display list
+		case 1:     // Execute display list
 			execute_display_list(cmd[0] & 0xffffff);
 			break;
 
-		case 2:		// End of display list
+		case 2:     // End of display list
 			break;
 
-		case 3:		// Framebuffer config				
+		case 3:     // Framebuffer config
 			fb_config(cmd);
 			break;
 
-		case 4:		// Fill rectangle
+		case 4:     // Fill rectangle
 			fill_rect(cmd);
 			break;
 
-		case 5:		// Draw object
+		case 5:     // Draw object
 			draw_object(cmd);
 			break;
 
-		case 7:		// Draw 8x8 character (2 bits per pixel)
+		case 7:     // Draw 8x8 character (2 bits per pixel)
 			draw_character(cmd);
 			break;
 
@@ -856,7 +851,7 @@ void firebeat_gcu_device::device_stop()
 	printf("dumping %s\n", filename);
 	FILE *file = fopen(filename, "wb");
 	int i;
-	
+
 	for (i=0; i < 0x2000000/4; i++)
 	{
 		fputc((m_vram[i] >> 24) & 0xff, file);
@@ -864,7 +859,7 @@ void firebeat_gcu_device::device_stop()
 		fputc((m_vram[i] >> 8) & 0xff, file);
 		fputc((m_vram[i] >> 0) & 0xff, file);
 	}
-	
+
 	fclose(file);
 #endif
 }
@@ -872,6 +867,7 @@ void firebeat_gcu_device::device_stop()
 
 
 
+#define PRINT_SPU_MEM 0
 
 class firebeat_state : public driver_device
 {
@@ -879,6 +875,7 @@ public:
 	firebeat_state(const machine_config &mconfig, device_type type, const char *tag)
 		: driver_device(mconfig, type, tag),
 		m_maincpu(*this, "maincpu"),
+		m_audiocpu(*this, "audiocpu"),
 		m_work_ram(*this, "work_ram"),
 		m_flash_main(*this, "flash_main"),
 		m_flash_snd1(*this, "flash_snd1"),
@@ -889,10 +886,12 @@ public:
 		m_kbd1(*this, "kbd1"),
 		m_ata(*this, "ata"),
 		m_gcu0(*this, "gcu0"),
-		m_gcu1(*this, "gcu1")
+		m_gcu1(*this, "gcu1"),
+		m_spuata(*this, "spu_ata")
 	{ }
 
 	required_device<ppc4xx_device> m_maincpu;
+	optional_device<m68000_device> m_audiocpu;
 	required_shared_ptr<UINT32> m_work_ram;
 	required_device<fujitsu_29f016a_device> m_flash_main;
 	required_device<fujitsu_29f016a_device> m_flash_snd1;
@@ -904,6 +903,7 @@ public:
 	required_device<ata_interface_device> m_ata;
 	required_device<firebeat_gcu_device> m_gcu0;
 	required_device<firebeat_gcu_device> m_gcu1;
+	optional_device<ata_interface_device> m_spuata;
 
 	UINT8 m_extend_board_irq_enable;
 	UINT8 m_extend_board_irq_active;
@@ -918,6 +918,7 @@ public:
 	int m_ibutton_state;
 	int m_ibutton_read_subkey_ptr;
 	UINT8 m_ibutton_subkey_data[0x40];
+
 	DECLARE_READ8_MEMBER(soundram_r);
 	DECLARE_DRIVER_INIT(ppd);
 	DECLARE_DRIVER_INIT(kbm);
@@ -957,7 +958,13 @@ public:
 	DECLARE_READ32_MEMBER(ppc_spu_share_r);
 	DECLARE_WRITE32_MEMBER(ppc_spu_share_w);
 	DECLARE_READ16_MEMBER(spu_unk_r);
+	DECLARE_WRITE16_MEMBER(spu_irq_ack_w);
+	DECLARE_WRITE16_MEMBER(spu_220000_w);
+	DECLARE_READ16_MEMBER(m68k_spu_share_r);
+	DECLARE_WRITE16_MEMBER(m68k_spu_share_w);
+	DECLARE_WRITE_LINE_MEMBER(spu_ata_interrupt);
 //  TIMER_CALLBACK_MEMBER(keyboard_timer_callback);
+	TIMER_DEVICE_CALLBACK_MEMBER(spu_timer_callback);
 	void set_ibutton(UINT8 *data);
 	int ibutton_w(UINT8 data);
 	DECLARE_WRITE8_MEMBER(security_w);
@@ -1567,6 +1574,10 @@ READ32_MEMBER(firebeat_state::ppc_spu_share_r)
 {
 	UINT32 r = 0;
 
+#if PRINT_SPU_MEM
+	printf("ppc_spu_share_r: %08X, %08X at %08X\n", offset, mem_mask, space.device().safe_pc());
+#endif
+
 	if (ACCESSING_BITS_24_31)
 	{
 		r |= m_spu_shared_ram[(offset * 4) + 0] << 24;
@@ -1582,6 +1593,11 @@ READ32_MEMBER(firebeat_state::ppc_spu_share_r)
 	if (ACCESSING_BITS_0_7)
 	{
 		r |= m_spu_shared_ram[(offset * 4) + 3] <<  0;
+
+		if (offset == 0xff)     // address 0x3ff clears PPC interrupt
+		{
+			m_maincpu->set_input_line(INPUT_LINE_IRQ3, CLEAR_LINE);
+		}
 	}
 
 	return r;
@@ -1589,6 +1605,10 @@ READ32_MEMBER(firebeat_state::ppc_spu_share_r)
 
 WRITE32_MEMBER(firebeat_state::ppc_spu_share_w)
 {
+#if PRINT_SPU_MEM
+	printf("ppc_spu_share_w: %08X, %08X, %08X at %08X\n", data, offset, mem_mask, space.device().safe_pc());
+#endif
+
 	if (ACCESSING_BITS_24_31)
 	{
 		m_spu_shared_ram[(offset * 4) + 0] = (data >> 24) & 0xff;
@@ -1600,6 +1620,11 @@ WRITE32_MEMBER(firebeat_state::ppc_spu_share_w)
 	if (ACCESSING_BITS_8_15)
 	{
 		m_spu_shared_ram[(offset * 4) + 2] = (data >>  8) & 0xff;
+
+		if (offset == 0xff)     // address 0x3fe triggers M68K interrupt
+		{
+			m_audiocpu->set_input_line(INPUT_LINE_IRQ4, ASSERT_LINE);
+		}
 	}
 	if (ACCESSING_BITS_0_7)
 	{
@@ -1607,21 +1632,89 @@ WRITE32_MEMBER(firebeat_state::ppc_spu_share_w)
 	}
 }
 
-#ifdef UNUSED_FUNCTION
+/*  SPU board M68K IRQs
+
+    IRQ1: ?
+
+    IRQ2: Timer?
+
+    IRQ4: Dual-port RAM mailbox (when PPC writes to 0x3FE)
+          Handles commands from PPC (bytes 0x00 and 0x01)
+
+    IRQ6: ATA
+*/
+
 READ16_MEMBER(firebeat_state::m68k_spu_share_r)
 {
-	return m_spu_shared_ram[offset] << 8;
+#if PRINT_SPU_MEM
+	printf("m68k_spu_share_r: %08X, %08X\n", offset, mem_mask);
+#endif
+	UINT16 r = 0;
+
+	if (ACCESSING_BITS_0_7)
+	{
+		r |= m_spu_shared_ram[offset];
+
+		if (offset == 0x3fe)            // address 0x3fe clears M68K interrupt
+		{
+			m_audiocpu->set_input_line(INPUT_LINE_IRQ4, CLEAR_LINE);
+		}
+	}
+	return r;
 }
 
 WRITE16_MEMBER(firebeat_state::m68k_spu_share_w)
 {
-	m_spu_shared_ram[offset] = (data >> 8) & 0xff;
-}
+#if PRINT_SPU_MEM
+	printf("m68k_spu_share_w: %04X, %08X, %08X\n", data, offset, mem_mask);
 #endif
+	if (ACCESSING_BITS_0_7)
+	{
+		m_spu_shared_ram[offset] = data & 0xff;
+
+		if (offset == 0x3ff)            // address 0x3ff triggers PPC interrupt
+		{
+			m_maincpu->set_input_line(INPUT_LINE_IRQ3, ASSERT_LINE);
+		}
+	}
+}
 
 READ16_MEMBER(firebeat_state::spu_unk_r)
 {
-	return 0xffff;
+	// dipswitches?
+
+	UINT16 r = 0;
+	r |= 0x80;      // if set, uses ATA PIO mode, otherwise DMA
+
+	return r;
+}
+
+WRITE16_MEMBER(firebeat_state::spu_irq_ack_w)
+{
+	if (ACCESSING_BITS_0_7)
+	{
+		if (data & 0x01)
+			m_audiocpu->set_input_line(INPUT_LINE_IRQ1, CLEAR_LINE);
+		if (data & 0x02)
+			m_audiocpu->set_input_line(INPUT_LINE_IRQ2, CLEAR_LINE);
+		if (data & 0x08)
+			m_audiocpu->set_input_line(INPUT_LINE_IRQ6, CLEAR_LINE);
+	}
+}
+
+WRITE16_MEMBER(firebeat_state::spu_220000_w)
+{
+	// IRQ2 handler 5 sets all bits
+}
+
+WRITE_LINE_MEMBER(firebeat_state::spu_ata_interrupt)
+{
+	m_audiocpu->set_input_line(INPUT_LINE_IRQ6, state);
+}
+
+TIMER_DEVICE_CALLBACK_MEMBER(firebeat_state::spu_timer_callback)
+{
+	m_audiocpu->set_input_line(INPUT_LINE_IRQ2, ASSERT_LINE);
 }
 
 /*****************************************************************************/
@@ -1661,7 +1754,13 @@ ADDRESS_MAP_END
 static ADDRESS_MAP_START( spu_map, AS_PROGRAM, 16, firebeat_state )
 	AM_RANGE(0x000000, 0x07ffff) AM_ROM
 	AM_RANGE(0x100000, 0x13ffff) AM_RAM
-	AM_RANGE(0x340000, 0x34000f) AM_READ(spu_unk_r)
+	AM_RANGE(0x200000, 0x200001) AM_READ(spu_unk_r)
+	AM_RANGE(0x220000, 0x220001) AM_WRITE(spu_220000_w)
+	AM_RANGE(0x230000, 0x230001) AM_WRITE(spu_irq_ack_w)
+	AM_RANGE(0x280000, 0x2807ff) AM_READWRITE(m68k_spu_share_r, m68k_spu_share_w)
+	AM_RANGE(0x300000, 0x30000f) AM_DEVREADWRITE("spu_ata", ata_interface_device, read_cs0, write_cs0)
+	AM_RANGE(0x340000, 0x34000f) AM_DEVREADWRITE("spu_ata", ata_interface_device, read_cs1, write_cs1)
+	AM_RANGE(0x400000, 0x400fff) AM_DEVREADWRITE("rf5c400", rf5c400_device, rf5c400_r, rf5c400_w)
 ADDRESS_MAP_END
 
 /*****************************************************************************/
@@ -1821,6 +1920,7 @@ INTERRUPT_GEN_MEMBER(firebeat_state::firebeat_interrupt)
 	// IRQ 0: VBlank
 	// IRQ 1: Extend board IRQ
 	// IRQ 2: Main board UART
+	// IRQ 3: SPU mailbox interrupt
 	// IRQ 4: ATA
 
 	device.execute().set_input_line(INPUT_LINE_IRQ0, ASSERT_LINE);
@@ -1977,6 +2077,15 @@ static MACHINE_CONFIG_DERIVED( firebeat_spu, firebeat )
 	/* basic machine hardware */
 	MCFG_CPU_ADD("audiocpu", M68000, 16000000)
 	MCFG_CPU_PROGRAM_MAP(spu_map)
+
+	MCFG_TIMER_DRIVER_ADD_PERIODIC("sputimer", firebeat_state, spu_timer_callback, attotime::from_hz(1000));
+
+	MCFG_RF5C400_ADD("rf5c400", XTAL_16_9344MHz)
+	MCFG_SOUND_ROUTE(0, "lspeaker", 1.0)
+	MCFG_SOUND_ROUTE(1, "rspeaker", 1.0)
+
+	MCFG_ATA_INTERFACE_ADD("spu_ata", ata_devices, "cdrom", NULL, true)
+	MCFG_ATA_INTERFACE_IRQ_HANDLER(WRITELINE(firebeat_state, spu_ata_interrupt))
 MACHINE_CONFIG_END
 
 /*****************************************************************************/
@@ -2259,11 +2368,13 @@ ROM_START( popn4 )
 	ROM_REGION(0x80000, "audiocpu", 0)          // SPU 68K program
 	ROM_LOAD16_WORD_SWAP("a02jaa04.3q", 0x00000, 0x80000, CRC(8c6000dd) SHA1(94ab2a66879839411eac6c673b25143d15836683))
 
+	ROM_REGION16_LE(0x1000000, "rf5c400", ROMREGION_ERASE00)
+
 	DISK_REGION( "ata:0:cdrom" ) // program CD-ROM
 	DISK_IMAGE_READONLY( "gq986jaa01", 0, SHA1(e5368ac029b0bdf29943ae66677b5521ae1176e1) )
 
-	DISK_REGION( "ata:1:cdrom" ) // data DVD-ROM
-	DISK_IMAGE( "gq986jaa02", 1, SHA1(53367d3d5f91422fe386c42716492a0ae4332390) )
+	DISK_REGION( "spu_ata:0:cdrom" ) // data DVD-ROM
+	DISK_IMAGE( "gq986jaa02", 0, SHA1(53367d3d5f91422fe386c42716492a0ae4332390) )
 ROM_END
 
 ROM_START( popn5 )
@@ -2276,11 +2387,13 @@ ROM_START( popn5 )
 	ROM_REGION(0x80000, "audiocpu", 0)          // SPU 68K program
 	ROM_LOAD16_WORD_SWAP( "a02jaa04.3q",  0x000000, 0x080000, CRC(8c6000dd) SHA1(94ab2a66879839411eac6c673b25143d15836683) )
 
+	ROM_REGION16_LE(0x1000000, "rf5c400", ROMREGION_ERASE00)
+
 	DISK_REGION( "ata:0:cdrom" ) // program CD-ROM
 	DISK_IMAGE_READONLY( "a04jaa01", 0, SHA1(87136ddad1d786b4d5f04381fcbf679ab666e6c9) )
 
-	DISK_REGION( "ata:1:cdrom" ) // data DVD-ROM
-	DISK_IMAGE_READONLY( "a04jaa02", 1, SHA1(49a017dde76f84829f6e99a678524c40665c3bfd) )
+	DISK_REGION( "spu_ata:0:cdrom" ) // data DVD-ROM
+	DISK_IMAGE_READONLY( "a04jaa02", 0, SHA1(49a017dde76f84829f6e99a678524c40665c3bfd) )
 ROM_END
 
 ROM_START( popn6 )
@@ -2293,11 +2406,13 @@ ROM_START( popn6 )
 	ROM_REGION(0x80000, "audiocpu", 0)          // SPU 68K program
 	ROM_LOAD16_WORD_SWAP("a02jaa04.3q", 0x00000, 0x80000, CRC(8c6000dd) SHA1(94ab2a66879839411eac6c673b25143d15836683))
 
+	ROM_REGION16_LE(0x1000000, "rf5c400", ROMREGION_ERASE00)
+
 	DISK_REGION( "ata:0:cdrom" ) // program CD-ROM
 	DISK_IMAGE_READONLY( "gqa16jaa01", 0, SHA1(7a7e475d06c74a273f821fdfde0743b33d566e4c) )
 
-	DISK_REGION( "ata:1:cdrom" ) // data DVD-ROM
-	DISK_IMAGE( "gqa16jaa02", 1, SHA1(e39067300e9440ff19cb98c1abc234fa3d5b26d1) )
+	DISK_REGION( "spu_ata:0:cdrom" ) // data DVD-ROM
+	DISK_IMAGE( "gqa16jaa02", 0, SHA1(e39067300e9440ff19cb98c1abc234fa3d5b26d1) )
 ROM_END
 
 ROM_START( popn7 )
@@ -2310,11 +2425,13 @@ ROM_START( popn7 )
 	ROM_REGION(0x80000, "audiocpu", 0)          // SPU 68K program
 	ROM_LOAD16_WORD_SWAP("a02jaa04.3q", 0x00000, 0x80000, CRC(8c6000dd) SHA1(94ab2a66879839411eac6c673b25143d15836683))
 
+	ROM_REGION16_LE(0x1000000, "rf5c400", ROMREGION_ERASE00)
+
 	DISK_REGION( "ata:0:cdrom" ) // program CD-ROM
 	DISK_IMAGE_READONLY( "b00jab01", 0, SHA1(259c733ca4d30281205b46b7bf8d60c9d01aa818) )
 
-	DISK_REGION( "ata:1:cdrom" ) // data DVD-ROM
-	DISK_IMAGE_READONLY( "b00jaa02", 1, SHA1(c8ce2f8ee6aeeedef9c110a59e68fcec7b669ad6) )
+	DISK_REGION( "spu_ata:0:cdrom" ) // data DVD-ROM
+	DISK_IMAGE_READONLY( "b00jaa02", 0, SHA1(c8ce2f8ee6aeeedef9c110a59e68fcec7b669ad6) )
 ROM_END
 
 ROM_START( popn8 )
@@ -2327,11 +2444,13 @@ ROM_START( popn8 )
 	ROM_REGION(0x80000, "audiocpu", 0)          // SPU 68K program
 	ROM_LOAD16_WORD_SWAP("a02jaa04.3q", 0x00000, 0x80000, CRC(8c6000dd) SHA1(94ab2a66879839411eac6c673b25143d15836683))
 
+	ROM_REGION16_LE(0x1000000, "rf5c400", ROMREGION_ERASE00)
+
 	DISK_REGION( "ata:0:cdrom" ) // program CD-ROM
 	DISK_IMAGE_READONLY( "gqb30jaa01", 0, SHA1(0ff3e40e3717ce23337b3a2438bdaca01cba9e30) )
 
-	DISK_REGION( "ata:1:cdrom" ) // data DVD-ROM
-	DISK_IMAGE_READONLY( "gqb30jaa02", 1, SHA1(f067d502c23efe0267aada5706f5bc7a54605942) )
+	DISK_REGION( "spu_ata:0:cdrom" ) // data DVD-ROM
+	DISK_IMAGE_READONLY( "gqb30jaa02", 0, SHA1(f067d502c23efe0267aada5706f5bc7a54605942) )
 ROM_END
 
 ROM_START( popnanm2 )
@@ -2344,11 +2463,13 @@ ROM_START( popnanm2 )
 	ROM_REGION(0x80000, "audiocpu", 0)          // SPU 68K program
 	ROM_LOAD16_WORD_SWAP("a02jaa04.3q", 0x00000, 0x80000, CRC(8c6000dd) SHA1(94ab2a66879839411eac6c673b25143d15836683))
 
+	ROM_REGION16_LE(0x1000000, "rf5c400", ROMREGION_ERASE00)
+
 	DISK_REGION( "ata:0:cdrom" ) // program CD-ROM
 	DISK_IMAGE_READONLY( "gea02jaa01", 0, SHA1(e81203b6812336c4d00476377193340031ef11b1) )
 
-	DISK_REGION( "ata:1:cdrom" ) // data DVD-ROM
-	DISK_IMAGE_READONLY( "gea02jaa02", 1, SHA1(7212e399779f37a5dcb8317a8f635a3b3f620aa9) )
+	DISK_REGION( "spu_ata:0:cdrom" ) // data DVD-ROM
+	DISK_IMAGE_READONLY( "gea02jaa02", 0, SHA1(7212e399779f37a5dcb8317a8f635a3b3f620aa9) )
 ROM_END
 
 ROM_START( ppd )
@@ -2382,7 +2503,7 @@ ROM_END
 // Beatmania III has a different BIOS and SPU program, and they aren't dumped yet
 ROM_START( bm37th )
 	ROM_REGION32_BE(0x80000, "user1", 0)
-	ROM_LOAD16_WORD_SWAP("a02jaa03.21e", 0x00000, 0x80000, BAD_DUMP CRC(43ecc093) SHA1(637df5b546cf7409dd4752dc471674fe2a046599))
+	ROM_LOAD16_WORD_SWAP("974a03.21e", 0x00000, 0x80000, BAD_DUMP CRC(ef9a932d) SHA1(6299d3b9823605e519dbf1f105b59a09197df72f))     // boots with KBM BIOS
 
 	ROM_REGION(0xc0, "user2", ROMREGION_ERASE00)    // Security dongle
 	ROM_LOAD( "gcb07-jc", 0x000000, 0x0000c0, CRC(16115b6a) SHA1(dcb2a3346973941a946b2cdfd31a5a761f666ca3) )
@@ -2390,16 +2511,18 @@ ROM_START( bm37th )
 	ROM_REGION(0x80000, "audiocpu", 0)          // SPU 68K program
 	ROM_LOAD16_WORD_SWAP("a02jaa04.3q", 0x00000, 0x80000, BAD_DUMP CRC(8c6000dd) SHA1(94ab2a66879839411eac6c673b25143d15836683))
 
+	ROM_REGION16_LE(0x1000000, "rf5c400", ROMREGION_ERASE00)
+
 	DISK_REGION( "ata:0:cdrom" ) // program CD-ROM
 	DISK_IMAGE_READONLY( "gcb07jca01", 0, SHA1(f906379bdebee314e2ca97c7756259c8c25897fd) )
 
-	DISK_REGION( "ata:1:hdd:image" ) // data HDD
-	DISK_IMAGE_READONLY( "gcb07jca02", 1, SHA1(6b8e17635825a6a43dc8d2721fe2eb0e0f39e940) )
+	DISK_REGION( "spu_ata:0:hdd:image" ) // HDD
+	DISK_IMAGE_READONLY( "gcb07jca02", 0, SHA1(6b8e17635825a6a43dc8d2721fe2eb0e0f39e940) )
 ROM_END
 
 ROM_START( bm3final )
 	ROM_REGION32_BE(0x80000, "user1", 0)
-	ROM_LOAD16_WORD_SWAP("a02jaa03.21e", 0x00000, 0x80000, BAD_DUMP CRC(43ecc093) SHA1(637df5b546cf7409dd4752dc471674fe2a046599))
+	ROM_LOAD16_WORD_SWAP("974a03.21e", 0x00000, 0x80000, BAD_DUMP CRC(ef9a932d) SHA1(6299d3b9823605e519dbf1f105b59a09197df72f))     // boots with KBM BIOS
 
 	ROM_REGION(0xc0, "user2", ROMREGION_ERASE00)    // Security dongle
 	ROM_LOAD( "gcc01-jc", 0x000000, 0x0000c0, CRC(9c49fed8) SHA1(212b87c1d25763117611ffb2a36ed568d429d2f4) )
@@ -2407,27 +2530,29 @@ ROM_START( bm3final )
 	ROM_REGION(0x80000, "audiocpu", 0)          // SPU 68K program
 	ROM_LOAD16_WORD_SWAP("a02jaa04.3q", 0x00000, 0x80000, BAD_DUMP CRC(8c6000dd) SHA1(94ab2a66879839411eac6c673b25143d15836683))
 
+	ROM_REGION16_LE(0x1000000, "rf5c400", ROMREGION_ERASE00)
+
 	DISK_REGION( "ata:0:cdrom" ) // program CD-ROM
 	DISK_IMAGE_READONLY( "gcc01jca01", 0, SHA1(3e7af83670d791591ad838823422959987f7aab9) )
 
-	DISK_REGION( "ata:1:hdd:image" ) // data HDD
-	DISK_IMAGE_READONLY( "gcc01jca02", 1, SHA1(823e29bab11cb67069d822f5ffb2b90b9d3368d2) )
+	DISK_REGION( "spu_ata:0:hdd:image" ) // HDD
+	DISK_IMAGE_READONLY( "gcc01jca02", 0, SHA1(823e29bab11cb67069d822f5ffb2b90b9d3368d2) )
 ROM_END
 
 /*****************************************************************************/
 
-GAME( 2000, ppp,      0,       firebeat,      ppp,  firebeat_state,   ppp,    ROT0,   "Konami",  "ParaParaParadise", GAME_NOT_WORKING)
-GAME( 2000, ppd,      0,       firebeat,      ppp,  firebeat_state,   ppd,    ROT0,   "Konami",  "ParaParaDancing", GAME_NOT_WORKING)
-GAME( 2000, ppp11,    0,       firebeat,      ppp,  firebeat_state,   ppp,    ROT0,   "Konami",  "ParaParaParadise v1.1", GAME_NOT_WORKING)
-GAME( 2000, ppp1mp,   ppp,     firebeat,      ppp,  firebeat_state,   ppp,    ROT0,   "Konami",  "ParaParaParadise 1st Mix Plus", GAME_NOT_WORKING)
-GAMEL(2000, kbm,      0,       firebeat2,     kbm,  firebeat_state,   kbm,    ROT270, "Konami",  "Keyboardmania", GAME_NOT_WORKING, layout_firebeat)
-GAMEL(2000, kbm2nd,   0,       firebeat2,     kbm,  firebeat_state,   kbm,    ROT270, "Konami",  "Keyboardmania 2nd Mix", GAME_NOT_WORKING, layout_firebeat)
-GAMEL(2001, kbm3rd,   0,       firebeat2,     kbm,  firebeat_state,   kbm,    ROT270, "Konami",  "Keyboardmania 3rd Mix", GAME_NOT_WORKING, layout_firebeat)
-GAME( 2000, popn4,    0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Pop'n Music 4", GAME_NOT_WORKING)
-GAME( 2000, popn5,    0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Pop'n Music 5", GAME_NOT_WORKING)
-GAME( 2001, popn6,    0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Pop'n Music 6", GAME_NOT_WORKING)
-GAME( 2001, popn7,    0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Pop'n Music 7", GAME_NOT_WORKING)
-GAME( 2001, popnanm2, 0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Pop'n Music Animelo 2", GAME_NOT_WORKING)
-GAME( 2002, popn8,    0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Pop'n Music 8", GAME_NOT_WORKING)
-GAME( 2002, bm37th,   0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Beatmania III Append 7th Mix", GAME_NOT_WORKING)
-GAME( 2003, bm3final, 0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Beatmania III The Final", GAME_NOT_WORKING)
+GAME( 2000, ppp,      0,       firebeat,      ppp,  firebeat_state,   ppp,    ROT0,   "Konami",  "ParaParaParadise", MACHINE_NOT_WORKING)
+GAME( 2000, ppd,      0,       firebeat,      ppp,  firebeat_state,   ppd,    ROT0,   "Konami",  "ParaParaDancing", MACHINE_NOT_WORKING)
+GAME( 2000, ppp11,    0,       firebeat,      ppp,  firebeat_state,   ppp,    ROT0,   "Konami",  "ParaParaParadise v1.1", MACHINE_NOT_WORKING)
+GAME( 2000, ppp1mp,   ppp,     firebeat,      ppp,  firebeat_state,   ppp,    ROT0,   "Konami",  "ParaParaParadise 1st Mix Plus", MACHINE_NOT_WORKING)
+GAMEL(2000, kbm,      0,       firebeat2,     kbm,  firebeat_state,   kbm,    ROT270, "Konami",  "Keyboardmania", MACHINE_NOT_WORKING, layout_firebeat)
+GAMEL(2000, kbm2nd,   0,       firebeat2,     kbm,  firebeat_state,   kbm,    ROT270, "Konami",  "Keyboardmania 2nd Mix", MACHINE_NOT_WORKING, layout_firebeat)
+GAMEL(2001, kbm3rd,   0,       firebeat2,     kbm,  firebeat_state,   kbm,    ROT270, "Konami",  "Keyboardmania 3rd Mix", MACHINE_NOT_WORKING, layout_firebeat)
+GAME( 2000, popn4,    0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Pop'n Music 4", MACHINE_NOT_WORKING)
+GAME( 2000, popn5,    0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Pop'n Music 5", MACHINE_NOT_WORKING)
+GAME( 2001, popn6,    0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Pop'n Music 6", MACHINE_NOT_WORKING)
+GAME( 2001, popn7,    0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Pop'n Music 7", MACHINE_NOT_WORKING)
+GAME( 2001, popnanm2, 0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Pop'n Music Animelo 2", MACHINE_NOT_WORKING)
+GAME( 2002, popn8,    0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Pop'n Music 8", MACHINE_NOT_WORKING)
+GAME( 2002, bm37th,   0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Beatmania III Append 7th Mix", MACHINE_NOT_WORKING)
+GAME( 2003, bm3final, 0,       firebeat_spu,  popn, firebeat_state,   ppp,    ROT0,   "Konami",  "Beatmania III The Final", MACHINE_NOT_WORKING)
