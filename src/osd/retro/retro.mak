@@ -88,7 +88,7 @@ OSDCOREOBJS := \
 	$(OSDOBJ)/modules/sync/sync_retro.o \
 	$(OSDOBJ)/modules/midi/none.o \
 	$(OSDOBJ)/modules/osdmodule.o \
-
+	$(OSDOBJ)/modules/netdev/none.o
 
 INCPATH += -I$(SRC)/osd/retro/libretro-common/include
 
