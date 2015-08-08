@@ -154,6 +154,7 @@
 
 #ifndef NLBASE_H_
 #define NLBASE_H_
+// RETRO HACK
 #if defined(SDLMAME_SOLARIS) || defined(__ANDROID__)
 #undef _C
 #endif

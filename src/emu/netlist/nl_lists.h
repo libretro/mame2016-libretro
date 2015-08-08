@@ -9,9 +9,11 @@
 
 #ifndef NLLISTS_H_
 #define NLLISTS_H_
+// RETRO HACK
 #if defined(SDLMAME_SOLARIS) || defined(__ANDROID__)
 #undef _C
 #endif
+
 #include "nl_config.h"
 #include "plib/plists.h"
 
