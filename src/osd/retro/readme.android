@@ -1,0 +1,45 @@
+Minimal patch to build for android on linux host
+
+hack done:
+
+scripts/src/main.lua
+scripts/src/osd/retro.lua 
+
+-> force include for retroprefix.h
+
++forcedincludes {
++	MAME_DIR .. "src/osd/retro/retroprefix.h"
++}
+
+src/emu/netlist/nl_base.h
+src/emu/netlist/nl_factory.h
+src/emu/netlist/nl_lists.h
+
+-> undef _C
+
++#if defined(SDLMAME_SOLARIS) || defined(__ANDROID__)
++#undef _C
++#endif
+
+src/osd/retro/retroprefix.h
+
+-> add some define for ANDROID
+
++#if defined(__ANDROID__)
++#include <math.h>
++#include <stdarg.h>
++static inline double log2(double x) { return log(x) * M_LOG2E; }
++#undef _C
++#define SDLMAME_ARM 1
++#undef PAGE_MASK
++#undef si_status
++#endif
+
+To compile for android :
+
+Setup ANDROID_NDK_ARM and ANDROID_NDK_ROOT to fit your ndk root and toolchain.
+then build with makefile (not Makefile.libretro) with :
+
+make OSD="retro" verbose=1 RETRO=1 NOWERROR=1  ANDROID_NDK_ARM="/opt/ndk/toolchains/arm-linux-androideabi-4.8/prebuilt/linux-x86_64" NOASM="1" ANDROID_NDK_ROOT="/opt/ndk"  gcc="android-arm" OS="linux" TARGETOS="android-arm" CONFIG=libretro  USE_BGFX=0 NO_USE_MIDI="1" -j4
+
+
