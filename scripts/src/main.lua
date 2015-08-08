@@ -207,7 +207,9 @@ end
 
    -- RETRO HACK
 	if _OPTIONS["osd"]=="retro" then
-
+forcedincludes {
+	MAME_DIR .. "src/osd/retro/retroprefix.h"
+}
 		includedirs {
 			MAME_DIR .. "src/emu",
 			MAME_DIR .. "src/osd",

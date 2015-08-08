@@ -154,6 +154,9 @@
 
 #ifndef NLBASE_H_
 #define NLBASE_H_
+#if defined(SDLMAME_SOLARIS) || defined(__ANDROID__)
+#undef _C
+#endif
 
 #include "nl_lists.h"
 #include "nl_time.h"

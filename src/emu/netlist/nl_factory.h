@@ -8,7 +8,9 @@
 
 #ifndef NLFACTORY_H_
 #define NLFACTORY_H_
-
+#if defined(SDLMAME_SOLARIS) || defined(__ANDROID__)
+#undef _C
+#endif
 #include "nl_config.h"
 #include "plib/palloc.h"
 #include "plib/plists.h"

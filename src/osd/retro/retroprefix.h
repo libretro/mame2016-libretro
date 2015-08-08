@@ -6,6 +6,16 @@
 //
 //============================================================
 
+#if defined(__ANDROID__)
+#include <math.h>
+#include <stdarg.h>
+static inline double log2(double x) { return log(x) * M_LOG2E; }
+#undef _C
+#define SDLMAME_ARM 1
+#undef PAGE_MASK
+#undef si_status
+#endif
+
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501 // Windows XP
 #endif
