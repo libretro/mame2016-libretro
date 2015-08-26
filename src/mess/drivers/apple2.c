@@ -368,7 +368,7 @@ PALETTE_INIT_MEMBER(napple2_state, apple2)
 UINT32 napple2_state::screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect)
 {
 	// always update the flash timer here so it's smooth regardless of mode switches
-	m_video->m_flash = ((machine().time() * 4).seconds & 1) ? true : false;
+	m_video->m_flash = ((machine().time() * 4).seconds() & 1) ? true : false;
 
 	if (m_video->m_graphics)
 	{
@@ -377,7 +377,14 @@ UINT32 napple2_state::screen_update(screen_device &screen, bitmap_ind16 &bitmap,
 			if (m_video->m_mix)
 			{
 				m_video->hgr_update(screen, bitmap, cliprect, 0, 159);
-				m_video->text_update_orig(screen, bitmap, cliprect, 160, 191);
+				if (!strcmp(machine().system().name, "ivelultr"))
+				{
+					m_video->text_update_ultr(screen, bitmap, cliprect, 160, 191);
+				}
+				else
+				{
+					m_video->text_update_orig(screen, bitmap, cliprect, 160, 191);
+				}
 			}
 			else
 			{
@@ -389,7 +396,14 @@ UINT32 napple2_state::screen_update(screen_device &screen, bitmap_ind16 &bitmap,
 			if (m_video->m_mix)
 			{
 				m_video->lores_update(screen, bitmap, cliprect, 0, 159);
-				m_video->text_update_orig(screen, bitmap, cliprect, 160, 191);
+				if (!strcmp(machine().system().name, "ivelultr"))
+				{
+					m_video->text_update_ultr(screen, bitmap, cliprect, 160, 191);
+				}
+				else
+				{
+					m_video->text_update_orig(screen, bitmap, cliprect, 160, 191);
+				}
 			}
 			else
 			{
@@ -399,7 +413,14 @@ UINT32 napple2_state::screen_update(screen_device &screen, bitmap_ind16 &bitmap,
 	}
 	else
 	{
-		m_video->text_update_orig(screen, bitmap, cliprect, 0, 191);
+		if (!strcmp(machine().system().name, "ivelultr"))
+		{
+			m_video->text_update_ultr(screen, bitmap, cliprect, 0, 191);
+		}
+		else
+		{
+			m_video->text_update_orig(screen, bitmap, cliprect, 0, 191);
+		}
 	}
 
 	return 0;

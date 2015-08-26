@@ -464,7 +464,9 @@ public:
 		m_nile_regs(*this, "nile_regs"),
 		m_rombase(*this, "rombase"),
 		m_dcs(*this, "dcs"),
-		m_ioasic(*this, "ioasic") { }
+		m_ioasic(*this, "ioasic"),
+		m_io_analog(*this, "AN")
+	{ }
 
 	required_device<mips3_device> m_maincpu;
 	required_device<m48t37_device> m_timekeeper;
@@ -475,6 +477,7 @@ public:
 	required_shared_ptr<UINT32> m_rombase;
 	required_device<dcs_audio_device> m_dcs;
 	required_device<midway_ioasic_device> m_ioasic;
+	optional_ioport_array<8> m_io_analog;
 
 	UINT16 m_nile_irq_state;
 	UINT16 m_ide_irq_state;
@@ -1172,7 +1175,7 @@ WRITE32_MEMBER( vegas_state::nile_w )
 					logerror("Unexpected value: timer %d is prescaled\n", which);
 				if (scale != 0)
 					m_timer[which]->adjust(TIMER_PERIOD * scale, which);
-				if (LOG_TIMERS) logerror("Starting timer %d at a rate of %d Hz\n", which, (int)ATTOSECONDS_TO_HZ((TIMER_PERIOD * (m_nile_regs[offset + 1] + 1)).attoseconds));
+				if (LOG_TIMERS) logerror("Starting timer %d at a rate of %d Hz\n", which, (int)ATTOSECONDS_TO_HZ((TIMER_PERIOD * (m_nile_regs[offset + 1] + 1)).attoseconds()));
 			}
 
 			/* timer disabled? */
@@ -1442,11 +1445,9 @@ READ32_MEMBER( vegas_state::analog_port_r )
 
 WRITE32_MEMBER( vegas_state::analog_port_w )
 {
-	static const char *const portnames[] = { "AN0", "AN1", "AN2", "AN3", "AN4", "AN5", "AN6", "AN7" };
-
 	if (data < 8 || data > 15)
 		logerror("%08X:Unexpected analog port select = %08X\n", safe_pc(), data);
-	m_pending_analog_read = ioport(portnames[data & 7])->read_safe(0);
+	m_pending_analog_read = m_io_analog[data & 7] ? m_io_analog[data & 7]->read() : 0;
 }
 
 
@@ -1947,28 +1948,28 @@ static INPUT_PORTS_START( warfa )
 	PORT_DIPSETTING(      0x4000, "Medium Res 512x384" )
 	PORT_DIPSETTING(      0x0000, "VGA Res 640x480" )
 
-	PORT_START("AN0")
+	PORT_START("AN.0")
 	PORT_BIT( 0xff, 0x80, IPT_AD_STICK_X ) PORT_SENSITIVITY(100) PORT_KEYDELTA(10) PORT_PLAYER(1)
 
-	PORT_START("AN1")
+	PORT_START("AN.1")
 	PORT_BIT( 0xff, 0x80, IPT_AD_STICK_Y ) PORT_SENSITIVITY(100) PORT_KEYDELTA(10) PORT_PLAYER(1)
 
-	PORT_START("AN2")
+	PORT_START("AN.2")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN3")
+	PORT_START("AN.3")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN4")
+	PORT_START("AN.4")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN5")
+	PORT_START("AN.5")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN6")
+	PORT_START("AN.6")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN7")
+	PORT_START("AN.7")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 INPUT_PORTS_END
 
@@ -1991,28 +1992,28 @@ static INPUT_PORTS_START( roadburn )
 	PORT_DIPSETTING(      0x0200, "Medium Res 512x384" )
 	PORT_DIPSETTING(      0x0000, "VGA Res 640x480" )
 
-	PORT_START("AN0")   /* Steer */
+	PORT_START("AN.0")   /* Steer */
 	PORT_BIT( 0xff, 0x80, IPT_PADDLE ) PORT_MINMAX(0x10, 0xf0) PORT_SENSITIVITY(25) PORT_KEYDELTA(5)
 
-	PORT_START("AN1")   /* Accel */
+	PORT_START("AN.1")   /* Accel */
 	PORT_BIT( 0xff, 0x80, IPT_PEDAL ) PORT_MINMAX(0x00, 0xff) PORT_SENSITIVITY(25) PORT_KEYDELTA(20)
 
-	PORT_START("AN2")   /* Brake */
+	PORT_START("AN.2")   /* Brake */
 	PORT_BIT( 0xff, 0x80, IPT_PEDAL2 ) PORT_MINMAX(0x00, 0xff) PORT_SENSITIVITY(25) PORT_KEYDELTA(100)
 
-	PORT_START("AN3")
+	PORT_START("AN.3")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN4")
+	PORT_START("AN.4")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN5")
+	PORT_START("AN.5")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN6")
+	PORT_START("AN.6")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN7")
+	PORT_START("AN.7")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 INPUT_PORTS_END
 
@@ -2087,28 +2088,28 @@ static INPUT_PORTS_START( sf2049 )
 	PORT_DIPSETTING(      0x0200, "Medium Res 512x384" )
 	PORT_DIPSETTING(      0x0300, "VGA Res 640x480" )
 
-	PORT_START("AN0")   /* Steer */
+	PORT_START("AN.0")   /* Steer */
 	PORT_BIT( 0xff, 0x80, IPT_PADDLE ) PORT_MINMAX(0x10, 0xf0) PORT_SENSITIVITY(25) PORT_KEYDELTA(5)
 
-	PORT_START("AN1")   /* Accel */
+	PORT_START("AN.1")   /* Accel */
 	PORT_BIT( 0xff, 0x80, IPT_PEDAL ) PORT_MINMAX(0x00, 0xff) PORT_SENSITIVITY(25) PORT_KEYDELTA(20)
 
-	PORT_START("AN2")   /* Brake */
+	PORT_START("AN.2")   /* Brake */
 	PORT_BIT( 0xff, 0x80, IPT_PEDAL2 ) PORT_MINMAX(0x00, 0xff) PORT_SENSITIVITY(25) PORT_KEYDELTA(100)
 
-	PORT_START("AN3")
+	PORT_START("AN.3")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN4")
+	PORT_START("AN.4")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN5")
+	PORT_START("AN.5")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN6")
+	PORT_START("AN.6")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN7")
+	PORT_START("AN.7")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 INPUT_PORTS_END
 
@@ -2118,28 +2119,28 @@ static INPUT_PORTS_START( sf2049se )
 
 	PORT_MODIFY("DIPS")
 
-	PORT_START("AN0")   /* Steer */
+	PORT_START("AN.0")   /* Steer */
 	PORT_BIT( 0xff, 0x80, IPT_PADDLE ) PORT_MINMAX(0x10, 0xf0) PORT_SENSITIVITY(25) PORT_KEYDELTA(5)
 
-	PORT_START("AN1")   /* Accel */
+	PORT_START("AN.1")   /* Accel */
 	PORT_BIT( 0xff, 0x80, IPT_PEDAL ) PORT_MINMAX(0x00, 0xff) PORT_SENSITIVITY(25) PORT_KEYDELTA(20)
 
-	PORT_START("AN2")   /* Brake */
+	PORT_START("AN.2")   /* Brake */
 	PORT_BIT( 0xff, 0x80, IPT_PEDAL2 ) PORT_MINMAX(0x00, 0xff) PORT_SENSITIVITY(25) PORT_KEYDELTA(100)
 
-	PORT_START("AN3")
+	PORT_START("AN.3")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN4")
+	PORT_START("AN.4")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN5")
+	PORT_START("AN.5")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN6")
+	PORT_START("AN.6")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN7")
+	PORT_START("AN.7")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 INPUT_PORTS_END
 
@@ -2149,28 +2150,28 @@ static INPUT_PORTS_START( sf2049te )
 
 	PORT_MODIFY("DIPS")
 
-	PORT_START("AN0")   /* Steer */
+	PORT_START("AN.0")   /* Steer */
 	PORT_BIT( 0xff, 0x80, IPT_PADDLE ) PORT_MINMAX(0x10, 0xf0) PORT_SENSITIVITY(25) PORT_KEYDELTA(5)
 
-	PORT_START("AN1")   /* Accel */
+	PORT_START("AN.1")   /* Accel */
 	PORT_BIT( 0xff, 0x80, IPT_PEDAL ) PORT_MINMAX(0x00, 0xff) PORT_SENSITIVITY(25) PORT_KEYDELTA(20)
 
-	PORT_START("AN2")   /* Brake */
+	PORT_START("AN.2")   /* Brake */
 	PORT_BIT( 0xff, 0x80, IPT_PEDAL2 ) PORT_MINMAX(0x00, 0xff) PORT_SENSITIVITY(25) PORT_KEYDELTA(100)
 
-	PORT_START("AN3")
+	PORT_START("AN.3")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN4")
+	PORT_START("AN.4")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN5")
+	PORT_START("AN.5")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN6")
+	PORT_START("AN.6")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN7")
+	PORT_START("AN.7")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 INPUT_PORTS_END
 
@@ -2180,28 +2181,28 @@ static INPUT_PORTS_START( cartfury )
 
 	PORT_MODIFY("DIPS")
 
-	PORT_START("AN0")   /* Steer */
+	PORT_START("AN.0")   /* Steer */
 	PORT_BIT( 0xff, 0x80, IPT_PADDLE ) PORT_MINMAX(0x10, 0xf0) PORT_SENSITIVITY(25) PORT_KEYDELTA(5)
 
-	PORT_START("AN1")   /* Accel */
+	PORT_START("AN.1")   /* Accel */
 	PORT_BIT( 0xff, 0x80, IPT_PEDAL ) PORT_MINMAX(0x00, 0xff) PORT_SENSITIVITY(25) PORT_KEYDELTA(20)
 
-	PORT_START("AN2")   /* Brake */
+	PORT_START("AN.2")   /* Brake */
 	PORT_BIT( 0xff, 0x80, IPT_PEDAL2 ) PORT_MINMAX(0x00, 0xff) PORT_SENSITIVITY(25) PORT_KEYDELTA(100)
 
-	PORT_START("AN3")
+	PORT_START("AN.3")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN4")
+	PORT_START("AN.4")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN5")
+	PORT_START("AN.5")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN6")
+	PORT_START("AN.6")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 
-	PORT_START("AN7")
+	PORT_START("AN.7")
 	PORT_BIT( 0xff, 0x80, IPT_SPECIAL )
 INPUT_PORTS_END
 
@@ -2453,7 +2454,7 @@ MACHINE_CONFIG_END
  *
  *************************************/
 
- // there is a socket next to the main bios roms for updates, this is what the update region is.
+	// there is a socket next to the main bios roms for updates, this is what the update region is.
 
 
 ROM_START( gauntleg )
@@ -2474,16 +2475,16 @@ ROM_START( gauntleg12 )
 	ROM_REGION32_LE( 0x80000, "user1", 0 )
 	ROM_LOAD( "legend13.bin", 0x000000, 0x80000, CRC(34674c5f) SHA1(92ec1779f3ab32944cbd953b6e1889503a57794b) ) //  EPROM Boot code. Version: Sep 25 1998 18:34:43 / 1.3 Sep 25 1998 18:33:45
 	ROM_LOAD( "legend14.bin", 0x000000, 0x80000, CRC(66869402) SHA1(bf470e0b9198b80f8baf8b9432a7e1df8c7d18ca) ) //  EPROM Boot code. Version: Oct 30 1998 17:48:21 / 1.4 Oct 30 1998 17:44:29
-	
+
 	ROM_REGION32_LE( 0x100000, "update", ROMREGION_ERASEFF )
 	ROM_SYSTEM_BIOS( 0, "noupdate",       "No Update Rom" )
 
 	ROM_SYSTEM_BIOS( 1, "up16_1",       "Disk Update 1.2 to 1.6 Step 1 of 3" )
-	ROMX_LOAD("12to16.1.bin", 0x000000, 0x100000, CRC(253c6bf2) SHA1(5e129576afe2bc4c638242e010735655d269a747), ROM_BIOS(2))	
+	ROMX_LOAD("12to16.1.bin", 0x000000, 0x100000, CRC(253c6bf2) SHA1(5e129576afe2bc4c638242e010735655d269a747), ROM_BIOS(2))
 	ROM_SYSTEM_BIOS( 2, "up16_2",       "Disk Update 1.2 to 1.6 Step 2 of 3" )
-	ROMX_LOAD("12to16.2.bin", 0x000000, 0x100000, CRC(15b1fe78) SHA1(532c4937b55befcc3a8cb25b0282d63e206fba47), ROM_BIOS(3))	
+	ROMX_LOAD("12to16.2.bin", 0x000000, 0x100000, CRC(15b1fe78) SHA1(532c4937b55befcc3a8cb25b0282d63e206fba47), ROM_BIOS(3))
 	ROM_SYSTEM_BIOS( 3, "up16_3",       "Disk Update 1.2 to 1.6 Step 3 of 3" )
-	ROMX_LOAD("12to16.3.bin", 0x000000, 0x100000, CRC(1027e54f) SHA1(a841f5cc5b022ddfaf70c97a64d1582f0a2ca70e), ROM_BIOS(4))	
+	ROMX_LOAD("12to16.3.bin", 0x000000, 0x100000, CRC(1027e54f) SHA1(a841f5cc5b022ddfaf70c97a64d1582f0a2ca70e), ROM_BIOS(4))
 
 
 

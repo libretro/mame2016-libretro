@@ -261,6 +261,8 @@ public:
 	DECLARE_WRITE_LINE_MEMBER(sound_irq_callback);
 	DECLARE_WRITE_LINE_MEMBER(midi_uart_ch0_irq_callback);
 	DECLARE_WRITE_LINE_MEMBER(midi_uart_ch1_irq_callback);
+	DECLARE_WRITE_LINE_MEMBER(gcu0_interrupt);
+	DECLARE_WRITE_LINE_MEMBER(gcu1_interrupt);
 };
 
 
@@ -1062,8 +1064,8 @@ static ADDRESS_MAP_START( spu_map, AS_PROGRAM, 16, firebeat_state )
 	AM_RANGE(0x300000, 0x30000f) AM_DEVREADWRITE("spu_ata", ata_interface_device, read_cs0, write_cs0)
 	AM_RANGE(0x340000, 0x34000f) AM_DEVREADWRITE("spu_ata", ata_interface_device, read_cs1, write_cs1)
 	AM_RANGE(0x400000, 0x400fff) AM_DEVREADWRITE("rf5c400", rf5c400_device, rf5c400_r, rf5c400_w)
-	AM_RANGE(0x800000, 0x83ffff) AM_RAM			// SDRAM
-	AM_RANGE(0xfc0000, 0xffffff) AM_RAM			// SDRAM
+	AM_RANGE(0x800000, 0x83ffff) AM_RAM         // SDRAM
+	AM_RANGE(0xfc0000, 0xffffff) AM_RAM         // SDRAM
 ADDRESS_MAP_END
 
 /*****************************************************************************/
@@ -1229,6 +1231,16 @@ INTERRUPT_GEN_MEMBER(firebeat_state::firebeat_interrupt)
 	device.execute().set_input_line(INPUT_LINE_IRQ0, ASSERT_LINE);
 }
 
+WRITE_LINE_MEMBER(firebeat_state::gcu0_interrupt)
+{
+	m_maincpu->set_input_line(INPUT_LINE_IRQ0, state);
+}
+
+WRITE_LINE_MEMBER(firebeat_state::gcu1_interrupt)
+{
+	m_maincpu->set_input_line(INPUT_LINE_IRQ0, state);
+}
+
 MACHINE_RESET_MEMBER(firebeat_state,firebeat)
 {
 	m_layer = 0;
@@ -1271,10 +1283,10 @@ static MACHINE_CONFIG_START( firebeat, firebeat_state )
 	MCFG_PALETTE_ADD_RRRRRGGGGGBBBBB("palette")
 
 	MCFG_DEVICE_ADD("gcu0", K057714, 0)
-	MCFG_K057714_CPU_TAG("maincpu")
+	MCFG_K057714_IRQ_CALLBACK(WRITELINE(firebeat_state, gcu0_interrupt))
 
 	MCFG_DEVICE_ADD("gcu1", K057714, 0)
-	MCFG_K057714_CPU_TAG("maincpu")
+	MCFG_K057714_IRQ_CALLBACK(WRITELINE(firebeat_state, gcu1_interrupt))
 
 	MCFG_SCREEN_ADD("screen", RASTER)
 	MCFG_SCREEN_REFRESH_RATE(60)
@@ -1331,10 +1343,10 @@ static MACHINE_CONFIG_START( firebeat2, firebeat_state )
 	MCFG_PALETTE_ADD_RRRRRGGGGGBBBBB("palette")
 
 	MCFG_DEVICE_ADD("gcu0", K057714, 0)
-	MCFG_K057714_CPU_TAG("maincpu")
+	MCFG_K057714_IRQ_CALLBACK(WRITELINE(firebeat_state, gcu0_interrupt))
 
 	MCFG_DEVICE_ADD("gcu1", K057714, 0)
-	MCFG_K057714_CPU_TAG("maincpu")
+	MCFG_K057714_IRQ_CALLBACK(WRITELINE(firebeat_state, gcu1_interrupt))
 
 	MCFG_SCREEN_ADD("lscreen", RASTER)
 	MCFG_SCREEN_REFRESH_RATE(60)

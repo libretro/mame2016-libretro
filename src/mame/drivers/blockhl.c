@@ -7,13 +7,13 @@
     Original driver by Nicola Salmoria
 
     Notes:
-		- To advance to the next screen in service mode, press P1 and P2 start
-		  simultaneously
+        - To advance to the next screen in service mode, press P1 and P2 start
+          simultaneously
 
-	Todo:
-		- How is the sound irq cleared (currently using HOLD_LINE)?
-		- Do bit 2 and 7 of the bankswitch port have any meaning?
-		- Use raw screen parameters
+    Todo:
+        - How is the sound irq cleared (currently using HOLD_LINE)?
+        - Do bit 2 and 7 of the bankswitch port have any meaning?
+        - Verify raw screen parameters
 
 *******************************************************************************/
 
@@ -51,7 +51,6 @@ public:
 
 	DECLARE_WRITE8_MEMBER(sound_irq_w);
 
-	INTERRUPT_GEN_MEMBER(blockhl_interrupt);
 	DECLARE_WRITE8_MEMBER(banking_callback);
 
 protected:
@@ -175,12 +174,6 @@ WRITE8_MEMBER( blockhl_state::sound_irq_w )
 //  MACHINE EMULATION
 //**************************************************************************
 
-INTERRUPT_GEN_MEMBER( blockhl_state::blockhl_interrupt )
-{
-	if (m_k052109->is_irq_enabled())
-		device.execute().set_input_line(KONAMI_IRQ_LINE, HOLD_LINE);
-}
-
 void blockhl_state::machine_start()
 {
 	// the first 0x8000 are banked, the remaining 0x8000 are directly accessible
@@ -276,7 +269,6 @@ static MACHINE_CONFIG_START( blockhl, blockhl_state )
 	// basic machine hardware
 	MCFG_CPU_ADD("maincpu", KONAMI, XTAL_24MHz/8)     // Konami 052526
 	MCFG_CPU_PROGRAM_MAP(main_map)
-	MCFG_CPU_VBLANK_INT_DRIVER("screen", blockhl_state,  blockhl_interrupt)
 	MCFG_KONAMICPU_LINE_CB(WRITE8(blockhl_state, banking_callback))
 
 	MCFG_DEVICE_ADD("bank5800", ADDRESS_MAP_BANK, 0)
@@ -291,10 +283,9 @@ static MACHINE_CONFIG_START( blockhl, blockhl_state )
 
 	// video hardware
 	MCFG_SCREEN_ADD("screen", RASTER)
-	MCFG_SCREEN_REFRESH_RATE(60)
-	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(0))
-	MCFG_SCREEN_SIZE(64*8, 32*8)
-	MCFG_SCREEN_VISIBLE_AREA(14*8, (64-14)*8-1, 2*8, 30*8-1 )
+	MCFG_SCREEN_RAW_PARAMS(XTAL_24MHz/3, 528, 112, 400, 256, 16, 240)
+//  6MHz dotclock is more realistic, however needs drawing updates. replace when ready
+//  MCFG_SCREEN_RAW_PARAMS(XTAL_24MHz/4, 396, hbend, hbstart, 256, 16, 240)
 	MCFG_SCREEN_UPDATE_DRIVER(blockhl_state, screen_update_blockhl)
 	MCFG_SCREEN_PALETTE("palette")
 
@@ -304,10 +295,13 @@ static MACHINE_CONFIG_START( blockhl, blockhl_state )
 
 	MCFG_DEVICE_ADD("k052109", K052109, 0)
 	MCFG_GFX_PALETTE("palette")
+	MCFG_K052109_SCREEN_TAG("screen")
 	MCFG_K052109_CB(blockhl_state, tile_callback)
+	MCFG_K052109_IRQ_HANDLER(INPUTLINE("maincpu", KONAMI_IRQ_LINE))
 
 	MCFG_DEVICE_ADD("k051960", K051960, 0)
 	MCFG_GFX_PALETTE("palette")
+	MCFG_K051960_SCREEN_TAG("screen")
 	MCFG_K051960_CB(blockhl_state, sprite_callback)
 
 	// sound hardware
@@ -324,48 +318,48 @@ MACHINE_CONFIG_END
 //**************************************************************************
 
 ROM_START( blockhl )
-	ROM_REGION( 0x10000, "maincpu", 0 )	// code + banked roms
+	ROM_REGION( 0x10000, "maincpu", 0 ) // code + banked roms
 	ROM_LOAD( "973l02.e21", 0x00000, 0x10000, CRC(e14f849a) SHA1(d44cf178cc98998b72ed32c6e20b6ebdf1f97579) )
 
-	ROM_REGION( 0x08000, "audiocpu", 0 )	// 32k for the sound CPU
+	ROM_REGION( 0x08000, "audiocpu", 0 )    // 32k for the sound CPU
 	ROM_LOAD( "973d01.g6",  0x00000, 0x08000, CRC(eeee9d92) SHA1(6c6c324b1f6f4fba0aa12e0d1fc5dbab133ef669) )
 
-	ROM_REGION( 0x20000, "k052109", 0 )	// tiles
+	ROM_REGION( 0x20000, "k052109", 0 ) // tiles
 	ROM_LOAD32_BYTE( "973f07.k15", 0x00000, 0x08000, CRC(1a8cd9b4) SHA1(7cb7944d24ac51fa6b610542d9dec68697cacf0f) )
 	ROM_LOAD32_BYTE( "973f08.k18", 0x00001, 0x08000, CRC(952b51a6) SHA1(017575738d444b688b137cad5611638d53be84f2) )
 	ROM_LOAD32_BYTE( "973f09.k20", 0x00002, 0x08000, CRC(77841594) SHA1(e1bfdc5bb598d865868d578ef7faba8078becd7a) )
 	ROM_LOAD32_BYTE( "973f10.k23", 0x00003, 0x08000, CRC(09039fab) SHA1(a9dea17aacf4484d21ef3b16470263447b51b6b5) )
 
-	ROM_REGION( 0x20000, "k051960", 0 )	// sprites
+	ROM_REGION( 0x20000, "k051960", 0 ) // sprites
 	ROM_LOAD32_BYTE( "973f06.k12", 0x00000, 0x08000, CRC(51acfdb6) SHA1(94d243f341b490684f5297d95d4835bd522ece35) )
 	ROM_LOAD32_BYTE( "973f05.k9",  0x00001, 0x08000, CRC(4cfea298) SHA1(4772b5b99f5fd8174d8884bd84173512e1edabf4) )
 	ROM_LOAD32_BYTE( "973f04.k7",  0x00002, 0x08000, CRC(69ca41bd) SHA1(9b0b1c888efd2f2d5525f14778e18fb4a7353eb6) )
 	ROM_LOAD32_BYTE( "973f03.k4",  0x00003, 0x08000, CRC(21e98472) SHA1(8c697d369a1f57be0825c33b4e9107ce1b02a130) )
 
-	ROM_REGION( 0x0100, "priority", 0 )	// priority encoder (not used)
+	ROM_REGION( 0x0100, "priority", 0 ) // priority encoder (not used)
 	ROM_LOAD( "973a11.h10", 0x0000, 0x0100, CRC(46d28fe9) SHA1(9d0811a928c8907785ef483bfbee5445506b3ec8) )
 ROM_END
 
 ROM_START( quarth )
-	ROM_REGION( 0x10000, "maincpu", 0 )	// code + banked roms
+	ROM_REGION( 0x10000, "maincpu", 0 ) // code + banked roms
 	ROM_LOAD( "973j02.e21", 0x00000, 0x10000, CRC(27a90118) SHA1(51309385b93db29b9277d14252166c4ea1746303) )
 
-	ROM_REGION( 0x08000, "audiocpu", 0 )	// 32k for the sound CPU
+	ROM_REGION( 0x08000, "audiocpu", 0 )    // 32k for the sound CPU
 	ROM_LOAD( "973d01.g6",  0x00000, 0x08000, CRC(eeee9d92) SHA1(6c6c324b1f6f4fba0aa12e0d1fc5dbab133ef669) )
 
-	ROM_REGION( 0x20000, "k052109", 0 )	// tiles
+	ROM_REGION( 0x20000, "k052109", 0 ) // tiles
 	ROM_LOAD32_BYTE( "973e07.k15", 0x00000, 0x08000, CRC(0bd6b0f8) SHA1(6c59cf637354fe2df424eaa89feb9c1bc1f66a92) )
 	ROM_LOAD32_BYTE( "973e08.k18", 0x00001, 0x08000, CRC(104d0d5f) SHA1(595698911513113d01e5b565f5b073d1bd033d3f) )
 	ROM_LOAD32_BYTE( "973e09.k20", 0x00002, 0x08000, CRC(bd3a6f24) SHA1(eb45db3a6a52bb2b25df8c2dace877e59b4130a6) )
 	ROM_LOAD32_BYTE( "973e10.k23", 0x00003, 0x08000, CRC(cf5e4b86) SHA1(43348753894c1763b26dbfc70245dac92048db8f) )
 
-	ROM_REGION( 0x20000, "k051960", 0 )	// sprites
+	ROM_REGION( 0x20000, "k051960", 0 ) // sprites
 	ROM_LOAD32_BYTE( "973e06.k12", 0x00000, 0x08000, CRC(0d58af85) SHA1(2efd661d614fb305a14cfe1aa4fb17714f215d4f) )
 	ROM_LOAD32_BYTE( "973e05.k9",  0x00001, 0x08000, CRC(15d822cb) SHA1(70ecad5e0a461df0da6e6eb23f43a7b643297f0d) )
 	ROM_LOAD32_BYTE( "973e04.k7",  0x00002, 0x08000, CRC(d70f4a2c) SHA1(25f835a17bacf2b8debb2eb8a3cff90cab3f402a) )
 	ROM_LOAD32_BYTE( "973e03.k4",  0x00003, 0x08000, CRC(2c5a4b4b) SHA1(e2991dd78b9cd96cf93ebd6de0d4e060d346ab9c) )
 
-	ROM_REGION( 0x0100, "priority", 0 )	// priority encoder (not used)
+	ROM_REGION( 0x0100, "priority", 0 ) // priority encoder (not used)
 	ROM_LOAD( "973a11.h10", 0x0000, 0x0100, CRC(46d28fe9) SHA1(9d0811a928c8907785ef483bfbee5445506b3ec8) )
 ROM_END
 

@@ -14,13 +14,14 @@
 const device_type K057714 = &device_creator<k057714_device>;
 
 k057714_device::k057714_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
-	: device_t(mconfig, K057714, "K057714 GCU", tag, owner, clock, "k057714", __FILE__)
+	: device_t(mconfig, K057714, "K057714 GCU", tag, owner, clock, "k057714", __FILE__),
+	m_irq(*this)
 {
 }
 
 void k057714_device::device_start()
 {
-	m_cpu = machine().device(m_cputag);
+	m_irq.resolve_safe();
 
 	m_vram = auto_alloc_array(machine(), UINT32, 0x2000000/4);
 	memset(m_vram, 0, 0x2000000);
@@ -97,7 +98,12 @@ WRITE32_MEMBER(k057714_device::write)
 			/* IRQ clear/enable; ppd writes bit off then on in response to interrupt */
 			/* it enables bits 0x41, but 0x01 seems to be the one it cares about */
 			if (ACCESSING_BITS_16_31 && (data & 0x00010000) == 0)
-				m_cpu->execute().set_input_line(INPUT_LINE_IRQ0, CLEAR_LINE);
+			{
+				if (!m_irq.isnull())
+				{
+					m_irq(CLEAR_LINE);
+				}
+			}
 			if (ACCESSING_BITS_0_15)
 #if PRINT_GCU
 				printf("%s_w: %02X, %08X, %08X\n", basetag(), reg, data, mem_mask);
@@ -108,6 +114,14 @@ WRITE32_MEMBER(k057714_device::write)
 			break;
 
 		case 0x18:      // ?
+			break;
+
+		case 0x1c:      // set to 1 on "media bus" access
+			if ((data >> 16) == 1)
+			{
+				m_ext_fifo_count = 0;
+				m_ext_fifo_line = 0;
+			}
 			break;
 
 		case 0x20:      // Framebuffer 0 Origin(?)
@@ -178,6 +192,17 @@ WRITE32_MEMBER(k057714_device::write)
 #endif
 			break;
 
+		case 0x54:
+			if (ACCESSING_BITS_16_31)
+				m_ext_fifo_num_lines = data >> 16;
+			if (ACCESSING_BITS_0_15)
+				m_ext_fifo_width = data & 0xffff;
+			break;
+
+		case 0x58:
+			m_ext_fifo_addr = (data & 0xffffff);
+			break;
+
 		case 0x5c:      // VRAM Read Address
 			m_vram_read_addr = (data & 0xffffff) / 2;
 			break;
@@ -244,8 +269,38 @@ WRITE32_MEMBER(k057714_device::write)
 			break;
 
 		default:
-			//printf("%s_w: %02X, %08X, %08X\n", basetag(), reg, data, mem_mask);
+			//printf("%s_w: %02X, %08X, %08X at %08X\n", basetag(), reg, data, mem_mask, space.device().safe_pc());
 			break;
+	}
+}
+
+WRITE32_MEMBER(k057714_device::fifo_w)
+{
+	if (ACCESSING_BITS_16_31)
+	{
+		if (m_ext_fifo_count != 0)      // first access is a dummy write
+		{
+			int count = m_ext_fifo_count - 1;
+			UINT32 addr = (((m_ext_fifo_addr >> 10) + m_ext_fifo_line) * 1024) + count;
+
+			if ((count & 1) == 0)
+			{
+				m_vram[addr >> 1] &= 0x0000ffff;
+				m_vram[addr >> 1] |= (data & 0xffff0000);
+			}
+			else
+			{
+				m_vram[addr >> 1] &= 0xffff0000;
+				m_vram[addr >> 1] |= (data >> 16);
+			}
+		}
+		m_ext_fifo_count++;
+
+		if (m_ext_fifo_count > m_ext_fifo_width+1)
+		{
+			m_ext_fifo_line++;
+			m_ext_fifo_count = 0;
+		}
 	}
 }
 
@@ -265,7 +320,7 @@ int k057714_device::draw(screen_device &screen, bitmap_ind16 &bitmap, const rect
 		{
 			visarea.max_x = width-1;
 			visarea.max_y = height-1;
-			screen.configure(width, height, visarea, screen.frame_period().attoseconds);
+			screen.configure(width, height, visarea, screen.frame_period().attoseconds());
 		}
 	}
 

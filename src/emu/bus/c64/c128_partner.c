@@ -2,29 +2,29 @@
 // copyright-holders:Curt Coder
 /**********************************************************************
 
-	Timeworks PARTNER 128 cartridge emulation
+    Timeworks PARTNER 128 cartridge emulation
 
 **********************************************************************/
 
 /*
 
-	PCB Layout
-	----------
+    PCB Layout
+    ----------
 
-	|---------------|
-	|LS74  SW     * |
-	|LS09      LS273|
-	|LS139   RAM    |
-	|LS133          |
-	|     LS240     |
-	|LS33    ROM    |
-	|LS09           |
-	 |||||||||||||||
+    |---------------|
+    |LS74  SW     * |
+    |LS09      LS273|
+    |LS139   RAM    |
+    |LS133          |
+    |     LS240     |
+    |LS33    ROM    |
+    |LS09           |
+     |||||||||||||||
 
-	ROM     - Toshiba TMM24128AP 16Kx8 EPROM (blank label)
-	RAM     - Sony CXK5864PN-15L 8Kx8 SRAM
-	SW      - push button switch
-	*       - solder point for joystick port dongle
+    ROM     - Toshiba TMM24128AP 16Kx8 EPROM (blank label)
+    RAM     - Sony CXK5864PN-15L 8Kx8 SRAM
+    SW      - push button switch
+    *       - solder point for joystick port dongle
 
 */
 
@@ -45,12 +45,15 @@ const device_type C128_PARTNER = &device_creator<partner128_t>;
 
 WRITE_LINE_MEMBER( partner128_t::nmi_w )
 {
-	m_ls74_d1 = state;
+	if (state)
+	{
+		m_ls74_q1 = 1;
+	}
 }
 
 static INPUT_PORTS_START( c128_partner )
 	PORT_START("NMI")
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Menu") PORT_CODE(KEYCODE_F11) PORT_WRITE_LINE_DEVICE_MEMBER(DEVICE_SELF, partner128_t, nmi_w)
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Menu") PORT_CODE(KEYCODE_END) PORT_WRITE_LINE_DEVICE_MEMBER(DEVICE_SELF, partner128_t, nmi_w)
 INPUT_PORTS_END
 
 
@@ -80,7 +83,6 @@ partner128_t::partner128_t(const machine_config &mconfig, const char *tag, devic
 	m_ram(*this, "ram"),
 	m_ram_a12_a7(0),
 	m_ls74_cd(0),
-	m_ls74_d1(0),
 	m_ls74_q1(0),
 	m_ls74_q2(0),
 	m_joyb2(0)
@@ -97,10 +99,13 @@ void partner128_t::device_start()
 	// allocate memory
 	m_ram.allocate(0x2000);
 
+	// simulate the 16.7ms pulse from CIA1 PB2 that would arrive thru the joystick port dongle
+	t_joyb2 = timer_alloc();
+	t_joyb2->adjust(attotime::from_msec(16), 0, attotime::from_msec(16));
+
 	// state saving
 	save_item(NAME(m_ram_a12_a7));
 	save_item(NAME(m_ls74_cd));
-	save_item(NAME(m_ls74_d1));
 	save_item(NAME(m_ls74_q1));
 	save_item(NAME(m_ls74_q2));
 	save_item(NAME(m_joyb2));
@@ -124,6 +129,21 @@ void partner128_t::device_reset()
 
 
 //-------------------------------------------------
+//  device_timer -
+//-------------------------------------------------
+
+void partner128_t::device_timer(emu_timer &timer, device_timer_id id, int param, void *ptr)
+{
+	if (m_ls74_cd)
+	{
+		m_ls74_q2 = m_ls74_q1;
+
+		nmi_w(m_ls74_q2 ? ASSERT_LINE : CLEAR_LINE);
+	}
+}
+
+
+//-------------------------------------------------
 //  c64_cd_r - cartridge data read
 //-------------------------------------------------
 
@@ -140,7 +160,10 @@ UINT8 partner128_t::c64_cd_r(address_space &space, offs_t offset, UINT8 data, in
 		{
 			data = m_roml[offset & 0x3fff];
 
-			m_ls74_q1 = m_ls74_d1;
+			if (m_ls74_cd)
+			{
+				m_ls74_q1 = 0;
+			}
 		}
 		else
 		{
@@ -148,9 +171,10 @@ UINT8 partner128_t::c64_cd_r(address_space &space, offs_t offset, UINT8 data, in
 		}
 	}
 
-	if (m_ls74_q2 && ((offset & 0xff3a) == 0xff3a))
+	if (m_ls74_q2 && ((offset & 0xfffa) == 0xfffa))
 	{
-		data = 0x21;
+		// override the 8502 NMI/IRQ vectors with 0xdede
+		data = 0xde;
 	}
 
 	return data;
@@ -169,16 +193,16 @@ void partner128_t::c64_cd_w(address_space &space, offs_t offset, UINT8 data, int
 		{
 			/*
 
-				bit 	description
+			    bit     description
 
-				0		RAM A7
-				1		RAM A8
-				2		RAM A9
-				3		RAM A10
-				4		RAM A11
-				5		RAM A12
-				6		LS74 1Cd,2Cd
-				7		N/C
+			    0       RAM A7
+			    1       RAM A8
+			    2       RAM A9
+			    3       RAM A10
+			    4       RAM A11
+			    5       RAM A12
+			    6       LS74 1Cd,2Cd
+			    7       N/C
 
 			*/
 
@@ -208,29 +232,19 @@ void partner128_t::c64_cd_w(address_space &space, offs_t offset, UINT8 data, int
 
 
 //-------------------------------------------------
-//  c64_game_r - GAME read
-//-------------------------------------------------
-
-int partner128_t::c64_game_r(offs_t offset, int sphi2, int ba, int rw)
-{
-	return 1;
-}
-
-
-//-------------------------------------------------
 //  vcs_joy_w - joystick write
 //-------------------------------------------------
 
 void partner128_t::vcs_joy_w(UINT8 data)
 {
-	int joya2 = BIT(data, 2);
+	int joyb2 = BIT(data, 2);
 
-	if (!m_joyb2 && joya2)
+	if (!m_joyb2 && joyb2 && m_ls74_cd)
 	{
 		m_ls74_q2 = m_ls74_q1;
 
 		nmi_w(m_ls74_q2 ? ASSERT_LINE : CLEAR_LINE);
-
-		m_joyb2 = joya2;
 	}
+
+	m_joyb2 = joyb2;
 }

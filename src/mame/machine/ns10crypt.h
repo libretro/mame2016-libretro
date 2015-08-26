@@ -16,7 +16,7 @@ private:
 class ns10_decrypter_device : public device_t
 {
 public:
-	// this encodes the decryption logic, which varies per game 
+	// this encodes the decryption logic, which varies per game
 	// and is probably hard-coded into the CPLD
 	struct ns10_crypto_logic
 	{
@@ -66,6 +66,12 @@ public:
 	gamshara_decrypter_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
 };
 
+class gjspace_decrypter_device : public ns10_decrypter_device
+{
+public:
+	gjspace_decrypter_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+};
+
 class knpuzzle_decrypter_device : public ns10_decrypter_device
 {
 public:
@@ -93,6 +99,7 @@ public:
 
 extern const device_type CHOCOVDR_DECRYPTER;
 extern const device_type GAMSHARA_DECRYPTER;
+extern const device_type  GJSPACE_DECRYPTER;
 extern const device_type KNPUZZLE_DECRYPTER;
 extern const device_type KONOTAKO_DECRYPTER;
 extern const device_type NFLCLSFB_DECRYPTER;

@@ -610,8 +610,11 @@ void apple2e_state::machine_start()
 	if (m_a2eauxslot)
 	{
 		m_auxslotdevice = m_a2eauxslot->get_a2eauxslot_card();
-		m_aux_ptr = m_auxslotdevice->get_vram_ptr();
-		m_aux_bank_ptr = m_auxslotdevice->get_auxbank_ptr();
+		if (m_auxslotdevice)
+		{
+			m_aux_ptr = m_auxslotdevice->get_vram_ptr();
+			m_aux_bank_ptr = m_auxslotdevice->get_auxbank_ptr();
+		}
 	}
 	else    // IIc has 128K right on the motherboard
 	{
@@ -822,7 +825,7 @@ UINT32 apple2e_state::screen_update(screen_device &screen, bitmap_ind16 &bitmap,
 	}
 
 	// always update the flash timer here so it's smooth regardless of mode switches
-	m_video->m_flash = ((machine().time() * 4).seconds & 1) ? true : false;
+	m_video->m_flash = ((machine().time() * 4).seconds() & 1) ? true : false;
 
 	if (m_video->m_graphics)
 	{

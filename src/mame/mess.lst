@@ -99,7 +99,7 @@ multmega  // 1994 Sega Multi-Mega (Europe)
 32xe
 32xj
 32x_scd   // 1994 Sega Sega CD (USA w/32X addon)
-segapm	  // 1996 Sega Picture Magic (32x type hardware)
+segapm    // 1996 Sega Picture Magic (32x type hardware)
 
 saturnjp  // 1994 Sega Saturn (Japan)
 saturn  // 1995 Sega Saturn (USA)
@@ -610,6 +610,7 @@ cbm4032b
 pet8032
 cbm8032
 cbm8032_de
+cbm8032_fr
 cbm8032_se
 superpet
 mmf9000
@@ -750,6 +751,7 @@ ssam88s
 
 // Non-PC msdos
 pcd     // Siemens PC-D
+pcx     // Siemens PC-X
 slicer  // 1983 Slicer Computers
 olypeopl // Olympia People PC
 
@@ -2233,6 +2235,7 @@ mbdtower    // Milton Bradley
 
 // hh_tms1k tispeak.c
 snspell
+snspellp
 snspella
 snspellb
 snspelluk
@@ -2304,7 +2307,6 @@ craft // Craft, by [lft]
 
 a5105
 attache
-attachef
 bcs3
 bcs3a
 bcs3b
@@ -2726,4 +2728,4 @@ bitgrpha
 bitgrphb
 tvgame
 aussieby
-
+hp_ipc

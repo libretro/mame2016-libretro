@@ -146,6 +146,8 @@ void hh_tms1k_state::machine_start()
 	m_inp_mux = 0;
 	m_power_led = false;
 	m_power_on = false;
+	m_grid = 0;
+	m_plate = 0;
 
 	// register for savestates
 	save_item(NAME(m_display_maxy));
@@ -162,6 +164,8 @@ void hh_tms1k_state::machine_start()
 	save_item(NAME(m_r));
 	save_item(NAME(m_inp_mux));
 	save_item(NAME(m_power_on));
+	save_item(NAME(m_grid));
+	save_item(NAME(m_plate));
 }
 
 void hh_tms1k_state::machine_reset()
@@ -231,7 +235,7 @@ void hh_tms1k_state::display_update()
 		}
 
 	memcpy(m_display_cache, active_state, sizeof(m_display_cache));
-	
+
 	// output optional power led
 	if (m_power_led != m_power_on)
 	{
@@ -1526,7 +1530,7 @@ MACHINE_CONFIG_END
   TMS1100, the second more widespread release runs on a COP400. There are
   also differences with the overlay mask.
 
-  NOTE!: MAME external artwork is recommended
+  NOTE!: MAME external artwork is required
 
 ***************************************************************************/
 
@@ -1895,7 +1899,7 @@ MACHINE_CONFIG_END
     8 = lamp42     18 = lamp73     28 = lamp84     38 = lamp82
     9 = lamp43     19 = -          29 = lamp94     39 = lamp83
 
-  NOTE!: MAME external artwork is recommended
+  NOTE!: MAME external artwork is required
 
 ***************************************************************************/
 
