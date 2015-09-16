@@ -68,6 +68,8 @@ public:
 	DECLARE_DRIVER_INIT(fearless);
 	DECLARE_DRIVER_INIT(slqz3);
 	DECLARE_DRIVER_INIT(fruitpar);
+	DECLARE_DRIVER_INIT(amazonia);
+	DECLARE_DRIVER_INIT(amazoni2);
 	TILE_GET_INFO_MEMBER(get_tx_tilemap_tile_info);
 	TILE_GET_INFO_MEMBER(get_bg_tilemap_tile_info);
 	virtual void video_start();
@@ -313,6 +315,79 @@ void igs_m027_state::sdwx_gfx_decrypt()
 static INPUT_PORTS_START( sdwx )
 INPUT_PORTS_END
 
+static INPUT_PORTS_START( amazonia )
+	PORT_START("DSW1")
+// Credits proportion
+	PORT_DIPNAME( 0x03, 0x03, "Proporcao Credito" ) PORT_DIPLOCATION("SW1:1,2")
+	PORT_DIPSETTING(    0x00, "1" )
+	PORT_DIPSETTING(    0x02, "2" )
+	PORT_DIPSETTING(    0x01, "4" )
+	PORT_DIPSETTING(    0x03, "10" )
+// (Oponent's ?) credits proportion
+	PORT_DIPNAME( 0x0c, 0x0c, "Proporcao Credito Ele" ) PORT_DIPLOCATION("SW1:3,4")
+	PORT_DIPSETTING(    0x00, "1" )
+	PORT_DIPSETTING(    0x08, "2" )
+	PORT_DIPSETTING(    0x04, "4" )
+	PORT_DIPSETTING(    0x0c, "10" )
+// Game Percentage
+	PORT_DIPNAME( 0x70, 0x70, "Porcentagem Jogo" ) PORT_DIPLOCATION("SW1:5,6,7")
+	PORT_DIPSETTING(    0x00, "55%" )
+	PORT_DIPSETTING(    0x40, "60%" )
+	PORT_DIPSETTING(    0x20, "65%" )
+	PORT_DIPSETTING(    0x60, "70%" )
+	PORT_DIPSETTING(    0x10, "75%" )
+	PORT_DIPSETTING(    0x50, "80%" )
+	PORT_DIPSETTING(    0x30, "85%" )
+	PORT_DIPSETTING(    0x70, "90%" )
+// Payment System
+	PORT_DIPNAME( 0x80, 0x80, "Sistema de Pagamento" ) PORT_DIPLOCATION("SW1:8")
+	PORT_DIPSETTING(    0x00, "Normal" )
+	PORT_DIPSETTING(    0x80, "Auto" )
+
+
+	PORT_START("DSW2")
+// Demo Song
+	PORT_DIPNAME( 0x01, 0x01, "Demonstracao Musica" ) PORT_DIPLOCATION("SW2:1")
+	PORT_DIPSETTING(    0x00, DEF_STR( No ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( Yes ) )
+// End of Game
+	PORT_DIPNAME( 0x02, 0x02, "Fim do Sistema" ) PORT_DIPLOCATION("SW2:2")
+	PORT_DIPSETTING(    0x00, DEF_STR( No ) )
+	PORT_DIPSETTING(    0x02, "10000" )
+// Background color
+	PORT_DIPNAME( 0x04, 0x04, "Cor do Fundo" ) PORT_DIPLOCATION("SW2:3")
+	PORT_DIPSETTING(    0x00, "Preto" ) // Black
+	PORT_DIPSETTING(    0x04, "Cor" ) // Coloured
+// Double Percentage
+	PORT_DIPNAME( 0x18, 0x18, "Porcentagem Dobrar" ) PORT_DIPLOCATION("SW2:4,5")
+	PORT_DIPSETTING(    0x00, "70%" )
+	PORT_DIPSETTING(    0x08, "90%" )
+	PORT_DIPSETTING(    0x10, "80%" )
+	PORT_DIPSETTING(    0x18, "90%" )
+// Language
+	PORT_DIPNAME( 0x20, 0x20, "Idioma" ) PORT_DIPLOCATION("SW2:6")
+	PORT_DIPSETTING(    0x00, "Espanhol" ) // Spanish
+	PORT_DIPSETTING(    0x20, "Portugues" ) // Portuguese
+// Credit Mode
+	PORT_DIPNAME( 0x40, 0x40, "Credit Mode" ) PORT_DIPLOCATION("SW2:7")
+	PORT_DIPSETTING(    0x00, "COIN" )
+	PORT_DIPSETTING(    0x40, "KEYIN" )
+// Panel Mode
+	PORT_DIPNAME( 0x80, 0x80, "Panel Mode" ) PORT_DIPLOCATION("SW2:8")
+	PORT_DIPSETTING(    0x00, "36+10" )
+	PORT_DIPSETTING(    0x80, "28" )
+
+	PORT_START("DSW3")
+	PORT_DIPUNKNOWN_DIPLOC( 0x01, 0x01, "SW3:1" )
+	PORT_DIPUNKNOWN_DIPLOC( 0x02, 0x02, "SW3:2" )
+	PORT_DIPUNKNOWN_DIPLOC( 0x04, 0x04, "SW3:3" )
+	PORT_DIPUNKNOWN_DIPLOC( 0x08, 0x08, "SW3:4" )
+	PORT_DIPUNKNOWN_DIPLOC( 0x10, 0x10, "SW3:5" )
+	PORT_DIPUNKNOWN_DIPLOC( 0x20, 0x20, "SW3:6" )
+	PORT_DIPUNKNOWN_DIPLOC( 0x40, 0x40, "SW3:7" )
+	PORT_DIPUNKNOWN_DIPLOC( 0x80, 0x80, "SW3:8" )
+INPUT_PORTS_END
+
 
 /***************************************************************************
 
@@ -538,6 +613,37 @@ ROM_END
 
 
 
+/***************************************************************************
+
+Amazonia King
+IGS
+
+IGS PCB-0367-00-FG-1
+
+  - IGS 027A
+  - IGS 031
+  - IGS A2107
+  - IGS T2105
+  - K668 (qfp44) == OKI6225
+  - 82C55
+
+***************************************************************************/
+
+ROM_START( amazonia )
+	ROM_REGION( 0x04000, "maincpu", 0 )
+	/* Internal rom of IGS027A type G ARM based MCU */
+	ROM_LOAD( "amazonia_igs027a", 0x00000, 0x4000, NO_DUMP )
+
+	ROM_REGION( 0x80000, "user1", 0 ) // external ARM data / prg
+	ROM_LOAD( "amazonia_v-104br.u23", 0x00000, 0x80000, CRC(103d465e) SHA1(68d088f24171e27c0a9b0660f81d3334f730637a) )
+
+	ROM_REGION( 0x480000, "gfx1", 0 )
+	ROM_LOAD( "amazonia_cg.u11", 0x000000, 0x80000, CRC(2ac2cfd1) SHA1(f8750a4727ddabf1415dab6eaa4a72e60e86e7f1) )
+
+	ROM_REGION( 0x80000, "oki", 0 )
+	ROM_LOAD( "igs_s2102.u28", 0x00000, 0x80000, CRC(90dda82d) SHA1(67fbc1e8d76b85e124136e2f1df09c8b6c5a8f97) )
+ROM_END
+
 
 ROM_START( sdwx )
 	ROM_REGION( 0x04000, "maincpu", 0 )
@@ -553,11 +659,43 @@ ROM_START( sdwx )
 	ROM_REGION( 0x200000, "gfx2", 0 )
 	ROM_LOAD( "cg.u25", 0x000000, 0x200000, CRC(709b9a42) SHA1(18c4b8e159b29c168f5cafb437fe6eb123672471) )
 
-	ROM_REGION( 0x80000, "unknown", 0 )
+	ROM_REGION( 0x80000, "oki", 0 ) // m6295 samples
 	ROM_LOAD( "sp.u2", 0x00000, 0x80000, CRC(216b5418) SHA1(b7bc24ced0ccb5476c974420aa506c13b971fc9f) )
 ROM_END
 
+/*
+Amazonia King II by IGS 2004 ( International Game System )
+Patented by EAGO.
 
+U12 is a 27c240  labeled ( AKII TEXT ) ( text )
+U13 is a 27c160  labeled ( AKII CG ) ( Grafics)
+U23 is a 27c4096 labeled ( AKII_V-202br ) ( Program version Brazil )
+U28 is a 29F4000 labeled (AKII SP) ( Sound Program )
+U17 is a ATF16V8B-15P labeled ( FG-1 ) (read protected)
+U10 is a IGS 003c Dip 40 pin ( Maybe 8255 ? )
+U24 is a IGS031 QFP with 208 pin
+U32 is a IGS027a QFP with 120 pin ( Encrypted ARM, internal code, stamped P9 A/K II )
+Crystal Frequency = 22.000 Mhz
+Sound Processor ( U6295 )
+*/
+
+ROM_START( amazoni2 )
+	ROM_REGION( 0x04000, "maincpu", 0 )
+	/* Internal rom of IGS027A ARM based MCU */
+	ROM_LOAD( "sdwx_igs027a", 0x00000, 0x4000, NO_DUMP )
+
+	ROM_REGION( 0x80000, "user1", 0 ) // external ARM data / prg
+	ROM_LOAD( "U23_27c4096_AKII_V-202br.bin", 0x000000, 0x80000, CRC(7147b43c) SHA1(29a4a20867595650918c4ab892ddb71440bd3f4b) )
+
+	ROM_REGION( 0x80000, "gfx1", 0 )
+	ROM_LOAD( "akii_text.u24", 0x000000, 0x80000, CRC(60b415ac) SHA1(b4475b0ba1e70504cac9ac05078873df0b16495b) )
+
+	ROM_REGION( 0x200000, "gfx2", 0 )
+	ROM_LOAD( "U13_27c160_AKII_CG.bin", 0x000000, 0x200000, CRC(254bd84f) SHA1(091ecda792c4c4a7bb039b2c708788ef87fdaf86) ) // FIXED BITS (xxxxxxx0xxxxxxxx)
+
+	ROM_REGION( 0x80000, "oki", 0 )  // m6295 samples
+	ROM_LOAD( "akii_sp.u28", 0x00000, 0x80000, CRC(216b5418) SHA1(b7bc24ced0ccb5476c974420aa506c13b971fc9f) )
+ROM_END
 
 
 ROM_START( sddz )
@@ -1064,6 +1202,20 @@ DRIVER_INIT_MEMBER(igs_m027_state,fruitpar)
 	pgm_create_dummy_internal_arm_region();
 }
 
+DRIVER_INIT_MEMBER(igs_m027_state,amazonia)
+{
+	amazonia_decrypt(machine());
+	//sdwx_gfx_decrypt(machine());
+	pgm_create_dummy_internal_arm_region();
+}
+
+DRIVER_INIT_MEMBER(igs_m027_state,amazoni2)
+{
+	amazoni2_decrypt(machine());
+	//sdwx_gfx_decrypt(machine());
+	pgm_create_dummy_internal_arm_region();
+}
+
 /***************************************************************************
 
     Game Drivers
@@ -1071,8 +1223,10 @@ DRIVER_INIT_MEMBER(igs_m027_state,fruitpar)
 ***************************************************************************/
 
 GAME( 1999,  slqz3,     0, igs_majhong, sdwx, igs_m027_state, slqz3,       ROT0, "IGS", "Mahjong Shuang Long Qiang Zhu 3 (China, VS107C)", MACHINE_IS_SKELETON )
+GAME( 1999,  amazonia,  0, igs_majhong, amazonia, igs_m027_state, amazonia,    ROT0, "IGS", "Amazonia King (V104BR)", MACHINE_IS_SKELETON )
 GAME( 200?,  fruitpar,  0, igs_majhong, sdwx, igs_m027_state, fruitpar,    ROT0, "IGS", "Fruit Paradise (V214)", MACHINE_IS_SKELETON )
-GAME( 2002,  sdwx,      0, igs_majhong, sdwx, igs_m027_state, sdwx,        ROT0, "IGS", "Sheng Dan Wu Xian", MACHINE_IS_SKELETON ) // aka Christmas 5 Line?
+GAME( 2002,  sdwx,      0, igs_majhong, sdwx, igs_m027_state, sdwx,        ROT0, "IGS", "Sheng Dan Wu Xian", MACHINE_IS_SKELETON ) // aka Christmas 5 Line? (or Amazonia King II, shares roms at least?)
+GAME( 2002,  amazoni2,  0, igs_majhong, sdwx, igs_m027_state, amazoni2,    ROT0, "IGS", "Amazonia King II (V202BR)", MACHINE_IS_SKELETON )
 GAME( 200?,  sddz,      0, igs_majhong, sdwx, igs_m027_state, sddz,        ROT0, "IGS", "Super Dou Di Zhu",  MACHINE_IS_SKELETON )
 GAME( 2000,  zhongguo,  0, igs_majhong, sdwx, igs_m027_state, zhongguo,    ROT0, "IGS", "Zhong Guo Chu Da D",  MACHINE_IS_SKELETON )
 GAME( 200?,  lhzb3,     0, igs_majhong, sdwx, igs_m027_state, lhzb3,       ROT0, "IGS", "Long Hu Zheng Ba 3", MACHINE_IS_SKELETON )

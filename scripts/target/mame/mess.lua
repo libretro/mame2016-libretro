@@ -546,6 +546,8 @@ MACHINES["X76F100"] = true
 MACHINES["YM2148"] = true
 MACHINES["Z80CTC"] = true
 MACHINES["Z80DART"] = true
+MACHINES["Z80SIO"] = true
+MACHINES["Z80SCC"] = true
 MACHINES["Z80DMA"] = true
 MACHINES["Z80PIO"] = true
 MACHINES["Z80STI"] = true
@@ -736,6 +738,7 @@ function linkProjects_mame_mess(_target, _subtarget)
 		"heathkit",
 		"hec2hrp",
 		"hegener",
+		"heurikon",
 		"hitachi",
 		"homebrew",
 		"homelab",
@@ -882,21 +885,16 @@ function createMESSProjects(_target, _subtarget, _name)
 	includedirs {
 		MAME_DIR .. "src/osd",
 		MAME_DIR .. "src/emu",
+		MAME_DIR .. "src/devices",
 		MAME_DIR .. "src/mess",
 		MAME_DIR .. "src/mame",
 		MAME_DIR .. "src/lib",
 		MAME_DIR .. "src/lib/util",
-	MAME_DIR .. "src/emu/netlist",
+		MAME_DIR .. "src/lib/netlist",
 		MAME_DIR .. "3rdparty",
 		GEN_DIR  .. "mess/layout",
 		GEN_DIR  .. "mame/layout",
-		MAME_DIR .. "src/emu/cpu/m68000",
 	}
-	if _OPTIONS["with-bundled-zlib"] then
-		includedirs {
-			MAME_DIR .. "3rdparty/zlib",
-		}
-	end
 end
 
 function createProjects_mame_mess(_target, _subtarget)
@@ -1640,6 +1638,11 @@ files {
 	MAME_DIR .. "src/mess/drivers/interact.c",
 }
 
+createMESSProjects(_target, _subtarget, "heurikon")
+files {          
+	MAME_DIR .. "src/mess/drivers/hk68v10.c",  
+}
+
 createMESSProjects(_target, _subtarget, "intel")
 files {
 	MAME_DIR .. "src/mess/drivers/basic52.c",
@@ -2212,6 +2215,7 @@ createMESSProjects(_target, _subtarget, "siemens")
 files {
 	MAME_DIR .. "src/mess/drivers/pcd.c",
 	MAME_DIR .. "src/mess/machine/pcd_kbd.c",
+	MAME_DIR .. "src/mess/video/pcd.c",
 }
 
 createMESSProjects(_target, _subtarget, "slicer")
