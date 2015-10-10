@@ -83,8 +83,12 @@ end
 
 	-- BEGIN libretro overrides to MAME's GENie build
 	configuration { "libretro*" }
-		kind "SharedLib"
-		targetsuffix "_libretro"
+		kind "SharedLib"		
+		if _OPTIONS["targetos"]=="android-arm" then		
+			targetsuffix "_libretro_android"
+		else
+			targetsuffix "_libretro"
+		end
 		targetprefix ""
 
 		includedirs {
