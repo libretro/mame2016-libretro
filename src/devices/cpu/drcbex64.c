@@ -208,8 +208,8 @@ const UINT32 PTYPE_MF   = PTYPE_M | PTYPE_F;
 
 const int REG_PARAM1    = REG_RCX;
 const int REG_PARAM2    = REG_RDX;
-const int REG_PARAM3    = REG_R8;
-const int REG_PARAM4    = REG_R9;
+const int REG_PARAM3    = x64emit::REG_R8;
+const int REG_PARAM4    = x64emit::REG_R9;
 
 #else
 
@@ -254,9 +254,9 @@ drcbe_x64::opcode_generate_func drcbe_x64::s_opcode_table[OP_MAX];
 static const UINT8 int_register_map[REG_I_COUNT] =
 {
 #ifdef X64_WINDOWS_ABI
-	REG_RBX, REG_RSI, REG_RDI, REG_R12, REG_R13, REG_R14, REG_R15
+	REG_RBX, REG_RSI, REG_RDI, x64emit::REG_R12, x64emit::REG_R13,x64emit::REG_R14,x64emit::REG_R15
 #else
-	REG_RBX, REG_R12, REG_R13, REG_R14, REG_R15
+	REG_RBX, x64emit::REG_R12, x64emit::REG_R13, x64emit::REG_R14,x64emit::REG_R15
 #endif
 };
 
@@ -707,10 +707,10 @@ void drcbe_x64::reset()
 	emit_push_r64(dst, REG_RSI);                                                        // push  rsi
 	emit_push_r64(dst, REG_RDI);                                                        // push  rdi
 	emit_push_r64(dst, REG_RBP);                                                        // push  rbp
-	emit_push_r64(dst, REG_R12);                                                        // push  r12
-	emit_push_r64(dst, REG_R13);                                                        // push  r13
-	emit_push_r64(dst, REG_R14);                                                        // push  r14
-	emit_push_r64(dst, REG_R15);                                                        // push  r15
+	emit_push_r64(dst, x64emit::REG_R12);                                                        // push  r12
+	emit_push_r64(dst, x64emit::REG_R13);                                                        // push  r13
+	emit_push_r64(dst, x64emit::REG_R14);                                                        // push  r14
+	emit_push_r64(dst, x64emit::REG_R15);                                                        // push  r15
 	emit_mov_r64_r64(dst, REG_RBP, REG_PARAM1);                                         // mov   rbp,param1
 	emit_sub_r64_imm(dst, REG_RSP, 32);                                                 // sub   rsp,32
 	emit_mov_m64_r64(dst, MABS(&m_near.hashstacksave), REG_RSP);                        // mov   [hashstacksave],rsp
@@ -726,10 +726,10 @@ void drcbe_x64::reset()
 	emit_ldmxcsr_m32(dst, MABS(&m_near.ssemode));                                       // ldmxcsr [ssemode]
 	emit_mov_r64_m64(dst, REG_RSP, MABS(&m_near.hashstacksave));                        // mov   rsp,[hashstacksave]
 	emit_add_r64_imm(dst, REG_RSP, 32);                                                 // add   rsp,32
-	emit_pop_r64(dst, REG_R15);                                                         // pop   r15
-	emit_pop_r64(dst, REG_R14);                                                         // pop   r14
-	emit_pop_r64(dst, REG_R13);                                                         // pop   r13
-	emit_pop_r64(dst, REG_R12);                                                         // pop   r12
+	emit_pop_r64(dst, x64emit::REG_R15);                                                         // pop   r15
+	emit_pop_r64(dst, x64emit::REG_R14);                                                         // pop   r14
+	emit_pop_r64(dst, x64emit::REG_R13);                                                         // pop   r13
+	emit_pop_r64(dst, x64emit::REG_R12);                                                         // pop   r12
 	emit_pop_r64(dst, REG_RBP);                                                         // pop   rbp
 	emit_pop_r64(dst, REG_RDI);                                                         // pop   rdi
 	emit_pop_r64(dst, REG_RSI);                                                         // pop   rsi
@@ -1717,8 +1717,8 @@ void drcbe_x64::emit_add_r64_p64(x86code *&dst, UINT8 reg, const be_parameter &p
 				emit_add_r64_imm(dst, reg, param.immediate());                          // add   reg,param
 			else
 			{
-				emit_mov_r64_imm(dst, REG_R11, param.immediate());                      // mov   r11,param
-				emit_add_r64_r64(dst, reg, REG_R11);                                    // add   reg,r11
+				emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                      // mov   r11,param
+				emit_add_r64_r64(dst, reg, x64emit::REG_R11);                                    // add   reg,r11
 			}
 		}
 	}
@@ -1744,8 +1744,8 @@ void drcbe_x64::emit_add_m64_p64(x86code *&dst, x86_memref memref, const be_para
 				emit_add_m64_imm(dst, memref, param.immediate());                   // add   [mem],param
 			else
 			{
-				emit_mov_r64_imm(dst, REG_R11, param.immediate());                      // mov   r11,param
-				emit_add_m64_r64(dst, memref, REG_R11);                             // add   [mem],r11
+				emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                      // mov   r11,param
+				emit_add_m64_r64(dst, memref, x64emit::REG_R11);                             // add   [mem],r11
 			}
 		}
 	}
@@ -1771,8 +1771,8 @@ void drcbe_x64::emit_adc_r64_p64(x86code *&dst, UINT8 reg, const be_parameter &p
 			emit_adc_r64_imm(dst, reg, param.immediate());                              // adc   reg,param
 		else
 		{
-			emit_mov_r64_imm(dst, REG_R11, param.immediate());                          // mov   r11,param
-			emit_adc_r64_r64(dst, reg, REG_R11);                                        // adc   reg,r11
+			emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                          // mov   r11,param
+			emit_adc_r64_r64(dst, reg, x64emit::REG_R11);                                        // adc   reg,r11
 		}
 	}
 	else if (param.is_memory())
@@ -1815,8 +1815,8 @@ void drcbe_x64::emit_sub_r64_p64(x86code *&dst, UINT8 reg, const be_parameter &p
 				emit_sub_r64_imm(dst, reg, param.immediate());                          // sub   reg,param
 			else
 			{
-				emit_mov_r64_imm(dst, REG_R11, param.immediate());                      // mov   r11,param
-				emit_sub_r64_r64(dst, reg, REG_R11);                                    // sub   reg,r11
+				emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                      // mov   r11,param
+				emit_sub_r64_r64(dst, reg, x64emit::REG_R11);                                    // sub   reg,r11
 			}
 		}
 	}
@@ -1842,8 +1842,8 @@ void drcbe_x64::emit_sub_m64_p64(x86code *&dst, x86_memref memref, const be_para
 				emit_sub_m64_imm(dst, memref, param.immediate());                   // sub   [mem],param
 			else
 			{
-				emit_mov_r64_imm(dst, REG_R11, param.immediate());                      // mov   r11,param
-				emit_sub_m64_r64(dst, memref, REG_R11);                             // sub   [mem],r11
+				emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                      // mov   r11,param
+				emit_sub_m64_r64(dst, memref,x64emit::REG_R11);                             // sub   [mem],r11
 			}
 		}
 	}
@@ -1869,8 +1869,8 @@ void drcbe_x64::emit_sbb_r64_p64(x86code *&dst, UINT8 reg, const be_parameter &p
 			emit_sbb_r64_imm(dst, reg, param.immediate());                              // sbb   reg,param
 		else
 		{
-			emit_mov_r64_imm(dst, REG_R11, param.immediate());                          // mov   r11,param
-			emit_sbb_r64_r64(dst, reg, REG_R11);                                        // sbb   reg,r11
+			emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                          // mov   r11,param
+			emit_sbb_r64_r64(dst, reg, x64emit::REG_R11);                                        // sbb   reg,r11
 		}
 	}
 	else if (param.is_memory())
@@ -1911,8 +1911,8 @@ void drcbe_x64::emit_cmp_r64_p64(x86code *&dst, UINT8 reg, const be_parameter &p
 			emit_cmp_r64_imm(dst, reg, param.immediate());                              // cmp   reg,param
 		else
 		{
-			emit_mov_r64_imm(dst, REG_R11, param.immediate());                          // mov   r11,param
-			emit_cmp_r64_r64(dst, reg, REG_R11);                                        // cmp   reg,r11
+			emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                          // mov   r11,param
+			emit_cmp_r64_r64(dst, reg, x64emit::REG_R11);                                        // cmp   reg,r11
 		}
 	}
 	else if (param.is_memory())
@@ -1955,8 +1955,8 @@ void drcbe_x64::emit_and_r64_p64(x86code *&dst, UINT8 reg, const be_parameter &p
 				emit_and_r64_imm(dst, reg, param.immediate());                          // and   reg,param
 			else
 			{
-				emit_mov_r64_imm(dst, REG_R11, param.immediate());                      // mov   r11,param
-				emit_and_r64_r64(dst, reg, REG_R11);                                    // and   reg,r11
+				emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                      // mov   r11,param
+				emit_and_r64_r64(dst, reg, x64emit::REG_R11);                                    // and   reg,r11
 			}
 		}
 	}
@@ -1982,8 +1982,8 @@ void drcbe_x64::emit_and_m64_p64(x86code *&dst, x86_memref memref, const be_para
 				emit_and_m64_imm(dst, memref, param.immediate());                   // and   [mem],param
 			else
 			{
-				emit_mov_r64_imm(dst, REG_R11, param.immediate());                      // mov   r11,param
-				emit_and_m64_r64(dst, memref, REG_R11);                             // and   [mem],r11
+				emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                      // mov   r11,param
+				emit_and_m64_r64(dst, memref, x64emit::REG_R11);                             // and   [mem],r11
 			}
 		}
 	}
@@ -2009,8 +2009,8 @@ void drcbe_x64::emit_test_r64_p64(x86code *&dst, UINT8 reg, const be_parameter &
 			emit_test_r64_imm(dst, reg, param.immediate());                             // test  reg,param
 		else
 		{
-			emit_mov_r64_imm(dst, REG_R11, param.immediate());                          // mov   r11,param
-			emit_test_r64_r64(dst, reg, REG_R11);                                       // test  reg,r11
+			emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                          // mov   r11,param
+			emit_test_r64_r64(dst, reg, x64emit::REG_R11);                                       // test  reg,r11
 		}
 	}
 	else if (param.is_memory())
@@ -2054,8 +2054,8 @@ void drcbe_x64::emit_or_r64_p64(x86code *&dst, UINT8 reg, const be_parameter &pa
 				emit_or_r64_imm(dst, reg, param.immediate());                           // or    reg,param
 			else
 			{
-				emit_mov_r64_imm(dst, REG_R11, param.immediate());                      // mov   r11,param
-				emit_or_r64_r64(dst, reg, REG_R11);                                     // or    reg,r11
+				emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                      // mov   r11,param
+				emit_or_r64_r64(dst, reg, x64emit::REG_R11);                                     // or    reg,r11
 			}
 		}
 	}
@@ -2081,8 +2081,8 @@ void drcbe_x64::emit_or_m64_p64(x86code *&dst, x86_memref memref, const be_param
 				emit_or_m64_imm(dst, memref, param.immediate());                        // or    [mem],param
 			else
 			{
-				emit_mov_r64_imm(dst, REG_R11, param.immediate());                      // mov   r11,param
-				emit_or_m64_r64(dst, memref, REG_R11);                              // or    [mem],r11
+				emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                      // mov   r11,param
+				emit_or_m64_r64(dst, memref, x64emit::REG_R11);                              // or    [mem],r11
 			}
 		}
 	}
@@ -2112,8 +2112,8 @@ void drcbe_x64::emit_xor_r64_p64(x86code *&dst, UINT8 reg, const be_parameter &p
 				emit_xor_r64_imm(dst, reg, param.immediate());                          // xor   reg,param
 			else
 			{
-				emit_mov_r64_imm(dst, REG_R11, param.immediate());                      // mov   r11,param
-				emit_xor_r64_r64(dst, reg, REG_R11);                                    // xor   reg,r11
+				emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                      // mov   r11,param
+				emit_xor_r64_r64(dst, reg, x64emit::REG_R11);                                    // xor   reg,r11
 			}
 		}
 	}
@@ -2141,8 +2141,8 @@ void drcbe_x64::emit_xor_m64_p64(x86code *&dst, x86_memref memref, const be_para
 				emit_xor_m64_imm(dst, memref, param.immediate());                   // xor   [mem],param
 			else
 			{
-				emit_mov_r64_imm(dst, REG_R11, param.immediate());                      // mov   r11,param
-				emit_xor_m64_r64(dst, memref, REG_R11);                             // xor   [mem],r11
+				emit_mov_r64_imm(dst, x64emit::REG_R11, param.immediate());                      // mov   r11,param
+				emit_xor_m64_r64(dst, memref, x64emit::REG_R11);                             // xor   [mem],r11
 			}
 		}
 	}
