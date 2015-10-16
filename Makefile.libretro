@@ -110,7 +110,7 @@ ifeq ($(platform), android)
 #	FORCE_DRC_C_BACKEND = 1
 else ifeq ($(platform), osx)
 	PYTHON_EXECUTABLE = python
-else ifeq ($(platform), ios)
+else ifneq (,$(findstring ios,$(platform)))
 #	PTR64 = 0
 	PYTHON_EXECUTABLE = python
 	# FIXME: Pass these to GENie and test...
@@ -283,7 +283,7 @@ clean:
 #	PLATCFLAGS += -DSDLMAME_NO64BITIO -DOSX
 #	CCOMFLAGS += $(PLATCFLAGS)
 ### iOS
-#else ifeq ($(platform), ios)
+#else ifneq (,$(findstring ios,$(platform)))
 #	armplatform := 1
 #	TARGETLIB := $(TARGET)_libretro_ios.dylib
 #	fpic := -fPIC
