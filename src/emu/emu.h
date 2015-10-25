@@ -79,6 +79,7 @@ typedef device_t * (*machine_config_constructor)(machine_config &config, device_
 #include "schedule.h"
 #include "timer.h"
 #include "dinetwork.h"
+#include "dipty.h"
 
 // machine and driver configuration
 #include "mconfig.h"

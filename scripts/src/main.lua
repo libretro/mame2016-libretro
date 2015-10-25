@@ -2,7 +2,7 @@
 -- copyright-holders:MAMEdev Team
 
 function mainProject(_target, _subtarget)
-if (_OPTIONS["DRIVERS"] == nil) then 
+if (_OPTIONS["SOURCES"] == nil) then 
 	if (_target == _subtarget) then
 		project (_target)
 	else
@@ -38,7 +38,7 @@ end
 	flags {
 		"Unicode",
 	}
-if (_OPTIONS["DRIVERS"] == nil) then 
+if (_OPTIONS["SOURCES"] == nil) then 
 	configuration { "x64", "Release" }
 		targetsuffix "64"
 		if _OPTIONS["PROFILE"] then
@@ -122,7 +122,7 @@ end
 	links {
 		"osd_" .. _OPTIONS["osd"],
 	}
-	if (_OPTIONS["DRIVERS"] == nil) then 
+	if (_OPTIONS["SOURCES"] == nil) then 
 		links {
 			"bus",
 		}
@@ -132,7 +132,13 @@ end
 		"optional",
 		"emu",
 		"formats",
+	}
+if #disasm_files > 0 then
+	links {
 		"dasm",
+	}
+end
+	links {
 		"utils",
 		"expat",
 		"softfloat",
@@ -243,7 +249,7 @@ end
 			"-sectcreate __TEXT __info_plist " .. GEN_DIR .. "/resource/" .. _subtarget .. "-Info.plist"
 		}
 		custombuildtask {
-			{ MAME_DIR .. "src/version.c" ,  GEN_DIR  .. "/resource/" .. _subtarget .. "-Info.plist",    {  MAME_DIR .. "src/build/verinfo.py" }, {"@echo Emitting " .. _subtarget .. "-Info.plist" .. "...",    PYTHON .. " $(1)  -p -b " .. _subtarget .. " $(<) > $(@)" }},
+			{ MAME_DIR .. "src/version.c" ,  GEN_DIR  .. "/resource/" .. _subtarget .. "-Info.plist",    {  MAME_DIR .. "scripts/build/verinfo.py" }, {"@echo Emitting " .. _subtarget .. "-Info.plist" .. "...",    PYTHON .. " $(1)  -p -b " .. _subtarget .. " $(<) > $(@)" }},
 		}
 		dependency {
 			{ "$(TARGET)" ,  GEN_DIR  .. "/resource/" .. _subtarget .. "-Info.plist", true  },
@@ -285,13 +291,13 @@ end
 		GEN_DIR  .. _target .. "/" .. _subtarget .."/drivlist.c",
 	}
 	
-if (_OPTIONS["DRIVERS"] == nil) then 	
+if (_OPTIONS["SOURCES"] == nil) then 	
 	dependency {
 		{ "../../../../generated/mame/mame/drivlist.c",  MAME_DIR .. "src/mame/mess.lst", true },
 		{ "../../../../generated/mame/mame/drivlist.c" , MAME_DIR .. "src/mame/arcade.lst", true},
 	}
 	custombuildtask {
-		{ MAME_DIR .. "src/".._target .."/" .. _subtarget ..".lst" ,  GEN_DIR  .. _target .. "/" .. _subtarget .."/drivlist.c",    {  MAME_DIR .. "src/build/makelist.py" }, {"@echo Building driver list...",    PYTHON .. " $(1) $(<) > $(@)" }},
+		{ MAME_DIR .. "src/".._target .."/" .. _subtarget ..".lst" ,  GEN_DIR  .. _target .. "/" .. _subtarget .."/drivlist.c",    {  MAME_DIR .. "scripts/build/makelist.py" }, {"@echo Building driver list...",    PYTHON .. " $(1) $(<) > $(@)" }},
 	}
 end	
 
@@ -304,14 +310,14 @@ if _OPTIONS["FORCE_VERSION_COMPILE"]=="1" then
 end
 	configuration { "mingw*" }
 		custombuildtask {	
-			{ MAME_DIR .. "src/version.c" ,  GEN_DIR  .. "/resource/" .. rctarget .. "vers.rc",    {  MAME_DIR .. "src/build/verinfo.py" }, {"@echo Emitting " .. rctarget .. "vers.rc" .. "...",    PYTHON .. " $(1)  -r -b " .. rctarget .. " $(<) > $(@)" }},
+			{ MAME_DIR .. "src/version.c" ,  GEN_DIR  .. "/resource/" .. rctarget .. "vers.rc",    {  MAME_DIR .. "scripts/build/verinfo.py" }, {"@echo Emitting " .. rctarget .. "vers.rc" .. "...",    PYTHON .. " $(1)  -r -b " .. rctarget .. " $(<) > $(@)" }},
 		}	
 	
 	configuration { "vs*" }
 		prebuildcommands {	
 			"mkdir " .. path.translate(GEN_DIR  .. "/resource/","\\") .. " 2>NUL",
 			"@echo Emitting ".. rctarget .. "vers.rc...",
-			PYTHON .. " " .. path.translate(MAME_DIR .. "src/build/verinfo.py","\\") .. " -r -b " .. rctarget .. " " .. path.translate(MAME_DIR .. "src/version.c","\\") .. " > " .. path.translate(GEN_DIR  .. "/resource/" .. rctarget .. "vers.rc", "\\") ,
+			PYTHON .. " " .. path.translate(MAME_DIR .. "scripts/build/verinfo.py","\\") .. " -r -b " .. rctarget .. " " .. path.translate(MAME_DIR .. "src/version.c","\\") .. " > " .. path.translate(GEN_DIR  .. "/resource/" .. rctarget .. "vers.rc", "\\") ,
 		}	
 	
 	 
