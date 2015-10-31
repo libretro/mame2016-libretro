@@ -56,6 +56,11 @@ static UINT32 create_path_recursive(char *path);
 //  error_to_file_error
 //  (does filling this out on non-Windows make any sense?)
 //============================================================
+//
+file_error osd_openpty(osd_file **file, char *name, size_t name_len)
+{
+   return FILERR_NONE;
+}
 
 file_error error_to_file_error(UINT32 error)
 {
