@@ -121,7 +121,9 @@ enum
 
 // core vector options
 #define OPTION_ANTIALIAS            "antialias"
-#define OPTION_BEAM                 "beam"
+#define OPTION_BEAM_WIDTH_MIN       "beam_width_min"
+#define OPTION_BEAM_WIDTH_MAX       "beam_width_max"
+#define OPTION_BEAM_INTENSITY_WEIGHT   "beam_intensity_weight"
 #define OPTION_FLICKER              "flicker"
 
 // core sound options
@@ -189,6 +191,7 @@ enum
 #define OPTION_AUTOBOOT_DELAY       "autoboot_delay"
 #define OPTION_AUTOBOOT_SCRIPT      "autoboot_script"
 
+<<<<<<< HEAD
 /* MKChamp Hiscore Diff Options */
 #define OPTION_DISABLE_HISCORE_PATCH		"disable_hiscore_patch"
 //#define OPTION_DISABLE_NAGSCREEN_PATCH		"disable_nagscreen_patch"
@@ -197,6 +200,8 @@ enum
 #define OPTION_HTTP                 "http"
 #define OPTION_HTTP_PORT            "http_port"
 #define OPTION_HTTP_PATH            "http_path"
+=======
+>>>>>>> upstream/master
 #define OPTION_CONSOLE              "console"
 
 //**************************************************************************
@@ -306,7 +311,9 @@ public:
 
 	// core vector options
 	bool antialias() const { return bool_value(OPTION_ANTIALIAS); }
-	float beam() const { return float_value(OPTION_BEAM); }
+	float beam_width_min() const { return float_value(OPTION_BEAM_WIDTH_MIN); }
+	float beam_width_max() const { return float_value(OPTION_BEAM_WIDTH_MAX); }
+	float beam_intensity_weight() const { return float_value(OPTION_BEAM_INTENSITY_WEIGHT); }
 	float flicker() const { return float_value(OPTION_FLICKER); }
 
 	// core sound options
@@ -372,16 +379,13 @@ public:
 	int autoboot_delay() const { return int_value(OPTION_AUTOBOOT_DELAY); }
 	const char *autoboot_script() const { return value(OPTION_AUTOBOOT_SCRIPT); }
 
-	bool http() const { return bool_value(OPTION_HTTP); }
-	const char *http_port() const { return value(OPTION_HTTP_PORT); }
-	const char *http_path() const { return value(OPTION_HTTP_PATH); }
 	bool console() const { return bool_value(OPTION_CONSOLE); }
 
 	// FIXME: Couriersud: This should be in image_device_exit
 	void remove_device_options();
 
-	const char *main_value(std::string &buffer, const char *option) const;
-	const char *sub_value(std::string &buffer, const char *name, const char *subname) const;
+	std::string main_value(const char *option) const;
+	std::string sub_value(const char *name, const char *subname) const;
 	bool add_slot_options(bool isfirst);
 
 private:
@@ -390,7 +394,7 @@ private:
 	void update_slot_options();
 
 	// INI parsing helper
-	bool parse_one_ini(const char *basename, int priority, std::string *error_string = NULL);
+	bool parse_one_ini(const char *basename, int priority, std::string *error_string = nullptr);
 
 	// cache frequently used options in members
 	void update_cached_options();

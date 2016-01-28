@@ -155,7 +155,7 @@ public:
 	static void static_set_irq_acknowledge_callback(device_t &device, device_irq_acknowledge_delegate callback);
 
 	// execution management
-	device_scheduler &scheduler() const { assert(m_scheduler != NULL); return *m_scheduler; }
+	device_scheduler &scheduler() const { assert(m_scheduler != nullptr); return *m_scheduler; }
 	bool executing() const;
 	INT32 cycles_remaining() const;
 	void eat_cycles(int cycles);
@@ -166,12 +166,12 @@ public:
 	void set_input_line(int linenum, int state) { m_input[linenum].set_state_synced(state); }
 	void set_input_line_vector(int linenum, int vector) { m_input[linenum].set_vector(vector); }
 	void set_input_line_and_vector(int linenum, int state, int vector) { m_input[linenum].set_state_synced(state, vector); }
-	int input_state(int linenum) { return m_input[linenum].m_curstate; }
+	int input_state(int linenum) const { return m_input[linenum].m_curstate; }
 
 	// suspend/resume
 	void suspend(UINT32 reason, bool eatcycles);
 	void resume(UINT32 reason);
-	bool suspended(UINT32 reason = SUSPEND_ANY_REASON) { return (m_nextsuspend & reason) != 0; }
+	bool suspended(UINT32 reason = SUSPEND_ANY_REASON) const { return (m_nextsuspend & reason) != 0; }
 	void yield() { suspend(SUSPEND_REASON_TIMESLICE, false); }
 	void spin() { suspend(SUSPEND_REASON_TIMESLICE, true); }
 	void spin_until_trigger(int trigid) { suspend_until_trigger(trigid, true); }
@@ -195,9 +195,6 @@ public:
 	device_execute_interface &execute() { return *this; }
 
 protected:
-	// internal helpers
-	void run_thread_wrapper();
-
 	// clock and cycle information getters
 	virtual UINT64 execute_clocks_to_cycles(UINT64 clocks) const;
 	virtual UINT64 execute_cycles_to_clocks(UINT64 cycles) const;
@@ -214,12 +211,12 @@ protected:
 	virtual void execute_set_input(int linenum, int state);
 
 	// interface-level overrides
-	virtual void interface_validity_check(validity_checker &valid) const;
-	virtual void interface_pre_start();
-	virtual void interface_post_start();
-	virtual void interface_pre_reset();
-	virtual void interface_post_reset();
-	virtual void interface_clock_changed();
+	virtual void interface_validity_check(validity_checker &valid) const override;
+	virtual void interface_pre_start() override;
+	virtual void interface_post_start() override;
+	virtual void interface_pre_reset() override;
+	virtual void interface_post_reset() override;
+	virtual void interface_clock_changed() override;
 
 	// for use by devcpu for now...
 	IRQ_CALLBACK_MEMBER(standard_irq_callback_member);

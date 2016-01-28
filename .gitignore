@@ -8,10 +8,12 @@
 !/hlsl/
 !/keymaps/
 !/nl_examples/
+!/regtests/
 !/samples/
 !/scripts/
 !/src/
 !/tests/
+!/doxygen/
 !/web/
 !/.gitattributes
 !/.gitignore
@@ -19,6 +21,12 @@
 !/makefile
 !/mame.doxygen
 !/*.md
-src/regtests/chdman/temp
-src/regtests/jedutil/output
+/.idea
+regtests/chdman/temp
+regtests/jedutil/output
 *.pyc
+/CMakeLists.txt
+/src/devices/cpu/m68000/m68kops.cpp
+/src/devices/cpu/m68000/m68kops.h
+/src/devices/cpu/m68000/m68kmake.*
+!/src/devices/cpu/m68000/m68kmake.cpp

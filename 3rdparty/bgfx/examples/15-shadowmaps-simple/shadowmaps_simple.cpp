@@ -1,6 +1,6 @@
 /*
  * Copyright 2013-2014 Dario Manesku. All rights reserved.
- * License: http://www.opensource.org/licenses/BSD-2-Clause
+ * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
 #include <string>
@@ -66,14 +66,16 @@ static const uint16_t s_planeIndices[] =
 	1, 3, 2,
 };
 
-int _main_(int /*_argc*/, char** /*_argv*/)
+int _main_(int _argc, char** _argv)
 {
+	Args args(_argc, _argv);
+
 	uint32_t width = 1280;
 	uint32_t height = 720;
 	uint32_t debug = BGFX_DEBUG_TEXT;
 	uint32_t reset = BGFX_RESET_VSYNC;
 
-	bgfx::init();
+	bgfx::init(args.m_type, args.m_pciId);
 	bgfx::reset(width, height, reset);
 
 	bgfx::RendererType::Enum renderer = bgfx::getRendererType();
@@ -131,7 +133,7 @@ int _main_(int /*_argc*/, char** /*_argv*/)
 		progShadow = loadProgram("vs_sms_shadow", "fs_sms_shadow");
 		progMesh   = loadProgram("vs_sms_mesh",   "fs_sms_mesh");
 
-		shadowMapTexture = bgfx::createTexture2D(shadowMapSize, shadowMapSize, 1, bgfx::TextureFormat::D16, BGFX_TEXTURE_COMPARE_LEQUAL);
+		shadowMapTexture = bgfx::createTexture2D(shadowMapSize, shadowMapSize, 1, bgfx::TextureFormat::D16, BGFX_TEXTURE_RT | BGFX_TEXTURE_COMPARE_LEQUAL);
 		bgfx::TextureHandle fbtextures[] = { shadowMapTexture };
 		shadowMapFB = bgfx::createFrameBuffer(BX_COUNTOF(fbtextures), fbtextures, true);
 	}

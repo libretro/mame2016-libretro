@@ -197,25 +197,6 @@ enum
 #define MIPS3_MAX_FASTRAM       3
 #define MIPS3_MAX_HOTSPOTS      16
 
-enum
-{
-	CPUINFO_INT_MIPS3_DRC_OPTIONS = CPUINFO_INT_CPU_SPECIFIC,
-
-	CPUINFO_INT_MIPS3_FASTRAM_SELECT,
-	CPUINFO_INT_MIPS3_FASTRAM_START,
-	CPUINFO_INT_MIPS3_FASTRAM_END,
-	CPUINFO_INT_MIPS3_FASTRAM_READONLY,
-
-	CPUINFO_INT_MIPS3_HOTSPOT_SELECT,
-	CPUINFO_INT_MIPS3_HOTSPOT_PC,
-	CPUINFO_INT_MIPS3_HOTSPOT_OPCODE,
-	CPUINFO_INT_MIPS3_HOTSPOT_CYCLES,
-
-	CPUINFO_PTR_MIPS3_FASTRAM_BASE = CPUINFO_PTR_CPU_SPECIFIC
-};
-
-
-
 /***************************************************************************
     INTERRUPT CONSTANTS
 ***************************************************************************/
@@ -300,32 +281,34 @@ public:
 	void clear_fastram(UINT32 select_start);
 	void mips3drc_set_options(UINT32 options);
 	void mips3drc_add_hotspot(offs_t pc, UINT32 opcode, UINT32 cycles);
+	void burn_cycles(INT32 cycles);
 
 protected:
 	// device-level overrides
-	virtual void device_start();
-	virtual void device_reset();
-	virtual void device_stop();
+	virtual void device_start() override;
+	virtual void device_reset() override;
+	virtual void device_stop() override;
 
 	// device_execute_interface overrides
-	virtual UINT32 execute_min_cycles() const { return 1; }
-	virtual UINT32 execute_max_cycles() const { return 40; }
-	virtual UINT32 execute_input_lines() const { return 6; }
-	virtual void execute_run();
-	virtual void execute_set_input(int inputnum, int state);
+	virtual UINT32 execute_min_cycles() const override { return 1; }
+	virtual UINT32 execute_max_cycles() const override { return 40; }
+	virtual UINT32 execute_input_lines() const override { return 6; }
+	virtual void execute_run() override;
+	virtual void execute_set_input(int inputnum, int state) override;
+	virtual void execute_burn(INT32 cycles) override { m_totalcycles += cycles; }
 
 	// device_memory_interface overrides
-	virtual const address_space_config *memory_space_config(address_spacenum spacenum = AS_0) const { return (spacenum == AS_PROGRAM) ? &m_program_config : NULL; }
-	virtual bool memory_translate(address_spacenum spacenum, int intention, offs_t &address);
+	virtual const address_space_config *memory_space_config(address_spacenum spacenum = AS_0) const override { return (spacenum == AS_PROGRAM) ? &m_program_config : nullptr; }
+	virtual bool memory_translate(address_spacenum spacenum, int intention, offs_t &address) override;
 
 	// device_state_interface overrides
-	virtual void state_export(const device_state_entry &entry);
-	void state_string_export(const device_state_entry &entry, std::string &str);
+	virtual void state_export(const device_state_entry &entry) override;
+	virtual void state_string_export(const device_state_entry &entry, std::string &str) const override;
 
 	// device_disasm_interface overrides
-	virtual UINT32 disasm_min_opcode_bytes() const { return 4; }
-	virtual UINT32 disasm_max_opcode_bytes() const { return 4; }
-	virtual offs_t disasm_disassemble(char *buffer, offs_t pc, const UINT8 *oprom, const UINT8 *opram, UINT32 options);
+	virtual UINT32 disasm_min_opcode_bytes() const override { return 4; }
+	virtual UINT32 disasm_max_opcode_bytes() const override { return 4; }
+	virtual offs_t disasm_disassemble(char *buffer, offs_t pc, const UINT8 *oprom, const UINT8 *opram, UINT32 options) override;
 
 
 private:
@@ -366,7 +349,7 @@ private:
 	UINT32      m_nextpc;
 	UINT32      m_pcbase;
 	UINT8       m_cf[4][8];
-	bool	    m_delayslot;
+	bool        m_delayslot;
 	int         m_op;
 	int         m_interrupt_cycles;
 	UINT32      m_ll_value;
@@ -426,8 +409,8 @@ private:
 
 	/* core state */
 	drc_cache           m_cache;                      /* pointer to the DRC code cache */
-	drcuml_state *      m_drcuml;                     /* DRC UML generator state */
-	mips3_frontend *    m_drcfe;                      /* pointer to the DRC front-end state */
+	std::unique_ptr<drcuml_state>      m_drcuml;                     /* DRC UML generator state */
+	std::unique_ptr<mips3_frontend>    m_drcfe;                      /* pointer to the DRC front-end state */
 	UINT32              m_drcoptions;                 /* configurable DRC options */
 
 	/* internal stuff */
@@ -745,7 +728,7 @@ public:
 
 protected:
 	// required overrides
-	virtual bool describe(opcode_desc &desc, const opcode_desc *prev);
+	virtual bool describe(opcode_desc &desc, const opcode_desc *prev) override;
 
 private:
 	// internal helpers

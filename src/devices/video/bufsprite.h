@@ -76,8 +76,8 @@ public:
 	// operations
 	_Type *copy(UINT32 srcoffset = 0, UINT32 srclength = 0x7fffffff)
 	{
-		assert(m_spriteram != NULL);
-		if (m_spriteram != NULL)
+		assert(m_spriteram != nullptr);
+		if (m_spriteram != nullptr)
 			memcpy(&m_buffered[0], m_spriteram + srcoffset, MIN(srclength, m_spriteram.bytes() / sizeof(_Type) - srcoffset) * sizeof(_Type));
 	#ifndef OSD_RETRO
 		return &m_buffered[0];
@@ -99,9 +99,9 @@ public:
 
 protected:
 	// first-time setup
-	virtual void device_start()
+	virtual void device_start() override
 	{
-		if (m_spriteram != NULL)
+		if (m_spriteram != nullptr)
 		{
 			m_buffered.resize(m_spriteram.bytes() / sizeof(_Type));
 			save_item(NAME(m_buffered));

@@ -32,6 +32,7 @@ public:
 	virtual ~drcbe_c();
 
 	// required overrides
+<<<<<<< HEAD
 	virtual void reset();
 #ifdef ANDROID
 	// libretro: Disabling optimization for Android here is a hack we
@@ -43,6 +44,13 @@ public:
 	virtual void generate(drcuml_block &block, const uml::instruction *instlist, UINT32 numinst);
 	virtual bool hash_exists(UINT32 mode, UINT32 pc);
 	virtual void get_info(drcbe_info &info);
+=======
+	virtual void reset() override;
+	virtual int execute(uml::code_handle &entry) override;
+	virtual void generate(drcuml_block &block, const uml::instruction *instlist, UINT32 numinst) override;
+	virtual bool hash_exists(UINT32 mode, UINT32 pc) override;
+	virtual void get_info(drcbe_info &info) override;
+>>>>>>> upstream/master
 
 private:
 	// helpers

@@ -1,6 +1,6 @@
 /*
- * Copyright 2011-2015 Branimir Karadzic. All rights reserved.
- * License: http://www.opensource.org/licenses/BSD-2-Clause
+ * Copyright 2011-2016 Branimir Karadzic. All rights reserved.
+ * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
 #include "bgfx_p.h"
@@ -110,6 +110,10 @@ namespace bgfx { namespace noop
 		}
 
 		void updateTextureEnd() BX_OVERRIDE
+		{
+		}
+
+		void readTexture(TextureHandle /*_handle*/, void* /*_data*/) BX_OVERRIDE
 		{
 		}
 

@@ -170,7 +170,7 @@ public:
 
 private:
 	static ui_menu *menu_free;
-	static bitmap_rgb32 *hilight_bitmap;
+	static std::unique_ptr<bitmap_rgb32> hilight_bitmap;
 	static render_texture *hilight_texture, *arrow_texture;
 
 	bool m_special_main_menu;
@@ -180,7 +180,6 @@ private:
 	void draw_text_box();
 	void handle_events();
 	void handle_keys(UINT32 flags);
-	void clear_free_list();
 
 	inline bool exclusive_input_pressed(int key, int repeat);
 	static void clear_free_list(running_machine &machine);
