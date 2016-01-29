@@ -1029,14 +1029,10 @@ void lua_engine::initialize()
 
 void lua_engine::start_console()
 {
-<<<<<<< HEAD:src/emu/luaengine.c
 #ifndef OSD_RETRO
-	mg_start_thread(::serve_lua, this);
-#endif
-=======
 	std::thread th(::serve_lua, this);
 	th.detach();
->>>>>>> upstream/master:src/emu/luaengine.cpp
+#endif
 }
 
 //-------------------------------------------------

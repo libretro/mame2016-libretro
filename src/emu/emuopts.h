@@ -191,17 +191,11 @@ enum
 #define OPTION_AUTOBOOT_DELAY       "autoboot_delay"
 #define OPTION_AUTOBOOT_SCRIPT      "autoboot_script"
 
-<<<<<<< HEAD
 /* MKChamp Hiscore Diff Options */
 #define OPTION_DISABLE_HISCORE_PATCH		"disable_hiscore_patch"
 //#define OPTION_DISABLE_NAGSCREEN_PATCH		"disable_nagscreen_patch"
 //#define OPTION_DISABLE_LOADING_PATCH		"disable_loading_patch"
 
-#define OPTION_HTTP                 "http"
-#define OPTION_HTTP_PORT            "http_port"
-#define OPTION_HTTP_PATH            "http_path"
-=======
->>>>>>> upstream/master
 #define OPTION_CONSOLE              "console"
 
 //**************************************************************************

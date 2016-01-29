@@ -190,16 +190,12 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_AUTOBOOT_DELAY,                             "2",         OPTION_INTEGER,    "timer delay in sec to trigger command execution on autoboot" },
 	{ OPTION_AUTOBOOT_SCRIPT ";script",                  nullptr,        OPTION_STRING,     "lua script to execute after machine boot" },
 	{ OPTION_CONSOLE,                                    "0",         OPTION_BOOLEAN,    "enable emulator LUA console" },
-<<<<<<< HEAD:src/emu/emuopts.c
 	// MKChamp Hiscore Diff options
-	{ NULL,                                              NULL,        OPTION_HEADER,     "CORE MKChamp OPTIONS" },
+	{ nullptr,                                              NULL,        OPTION_HEADER,     "CORE MKChamp OPTIONS" },
 	{ OPTION_DISABLE_HISCORE_PATCH,                      "0",         OPTION_BOOLEAN,    "disable hiscore saving" },
 	//{ OPTION_DISABLE_NAGSCREEN_PATCH,                    "0",         OPTION_BOOLEAN,    "disable suppression of nagscreens" },
 	//{ OPTION_DISABLE_LOADING_PATCH,                      "0",         OPTION_BOOLEAN,    "disable suppression of loading screens /white box" },
-	{ NULL }
-=======
 	{ nullptr }
->>>>>>> upstream/master:src/emu/emuopts.cpp
 };
 
 

@@ -46,14 +46,11 @@
 #define UNEXPECTED(exp)         __builtin_expect(!!(exp), 0)
 #define EXPECTED(exp)           __builtin_expect(!!(exp), 1)
 #define RESTRICT                __restrict__
-<<<<<<< HEAD
 #ifdef RETRO_SETJMP_HACK
 #define SETJMP_GNUC_PROTECT()   (void)__builtin_return_address(0)
 #else
 #define SETJMP_GNUC_PROTECT()   (void)__builtin_return_address(1)
 #endif
-=======
->>>>>>> upstream/master
 #else
 #define ATTR_UNUSED
 #define ATTR_NORETURN           __declspec(noreturn)

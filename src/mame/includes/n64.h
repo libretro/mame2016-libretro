@@ -7,15 +7,10 @@
 #include "cpu/mips/mips3.h"
 #include "sound/dmadac.h"
 
-<<<<<<< HEAD
 #ifdef __ANDROID__
 #undef si_status
 #endif
 
-/*----------- forward decls -----------*/
-
-=======
->>>>>>> upstream/master
 /*----------- driver state -----------*/
 
 class n64_rdp;

@@ -444,13 +444,8 @@ osd_work_item *osd_work_item_queue_multiple(osd_work_queue *queue, osd_work_call
 		do
 		{
 			item = (osd_work_item *)queue->free;
-<<<<<<< HEAD:src/osd/modules/sync/work_osd.c
 		} while (item != NULL && compare_exchange_ptr((void * volatile *)&queue->free, item, item->next) != item);
-		osd_scalable_lock_release(queue->lock, lockslot);
-=======
-		} while (item != NULL && compare_exchange_ptr((PVOID volatile *)&queue->free, item, item->next) != item);
 		osd_scalable_lock_release(queue->lock, myslot);
->>>>>>> upstream/master:src/osd/modules/sync/work_osd.cpp
 
 		// if nothing, allocate something new
 		if (item == NULL)
