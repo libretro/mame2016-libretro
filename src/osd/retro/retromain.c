@@ -1663,7 +1663,7 @@ void retro_osd_interface::update(bool skip_redraw)
 
 	if(ui_ipt_pushchar!=-1)
    {
-		//ui_input_push_char_event(machine(), our_target, (unicode_char)ui_ipt_pushchar);
+		machine().ui_input().push_char_event( our_target, (unicode_char)ui_ipt_pushchar);
 		ui_ipt_pushchar=-1;
 	}
 
