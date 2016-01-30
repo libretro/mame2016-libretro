@@ -111,7 +111,7 @@ end
 		-- rather than the OSD to keep linkers from being "helpful"
 		-- and stripping it out.
 		files {
-			MAME_DIR .. "src/osd/retro/libretro.c"
+			MAME_DIR .. "src/osd/retro/libretro.cpp"
 		}
 
 		-- Ensure the public API is made public with GNU ld
@@ -133,9 +133,15 @@ end
 	links {
 		"osd_" .. _OPTIONS["osd"],
 	}
-	links {
-		"qtdbg_" .. _OPTIONS["osd"],
-	}
+
+	if _OPTIONS["osd"]=="retro" then
+
+	else
+		links {
+			"qtdbg_" .. _OPTIONS["osd"],
+		}
+	end
+
 	if (_OPTIONS["SOURCES"] == nil) then 
 		links {
 			"bus",
@@ -250,8 +256,8 @@ end
 		}
 
 		files {
-			MAME_DIR .. "src/osd/retro/retromain.c",
-			MAME_DIR .. "src/osd/retro/libretro.c",
+			MAME_DIR .. "src/osd/retro/retromain.cpp",
+			MAME_DIR .. "src/osd/retro/libretro.cpp",
 		}
 	end
 -- RETRO HACK

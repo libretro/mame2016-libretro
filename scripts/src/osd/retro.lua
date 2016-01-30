@@ -75,7 +75,7 @@ project ("osd_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/modules/lib/osdobj_common.cpp",
 		MAME_DIR .. "src/osd/modules/sound/none.cpp",
 		MAME_DIR .. "src/osd/modules/sound/retro_sound.c",
-		MAME_DIR .. "src/osd/retro/retromain.c",
+		MAME_DIR .. "src/osd/retro/retromain.cpp",
 
 		-- The public API in libretro.c is "unused" and tends to get
 		-- stripped by the "helpful" linker, so we compile it into
