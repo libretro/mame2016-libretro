@@ -1,11 +1,11 @@
 /*
- * Copyright 2011-2015 Branimir Karadzic. All rights reserved.
- * License: http://www.opensource.org/licenses/BSD-2-Clause
+ * Copyright 2011-2016 Branimir Karadzic. All rights reserved.
+ * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
 #include "entry_p.h"
 
-#if ENTRY_CONFIG_USE_NATIVE && (BX_PLATFORM_FREEBSD || BX_PLATFORM_LINUX || BX_PLATFORM_RPI)
+#if ENTRY_CONFIG_USE_NATIVE && (BX_PLATFORM_BSD || BX_PLATFORM_LINUX || BX_PLATFORM_RPI)
 
 #define XK_MISCELLANY
 #define XK_LATIN1
@@ -316,7 +316,7 @@ namespace entry
 			m_window[0] = XCreateWindow(m_display
 									, m_root
 									, 0, 0
-									, ENTRY_DEFAULT_WIDTH, ENTRY_DEFAULT_HEIGHT, 0
+									, 1, 1, 0
 									, m_depth
 									, InputOutput
 									, m_visual
@@ -362,7 +362,7 @@ namespace entry
 			thread.init(mte.threadFunc, &mte);
 
 			WindowHandle defaultWindow = { 0 };
-			m_eventQueue.postSizeEvent(defaultWindow, ENTRY_DEFAULT_WIDTH, ENTRY_DEFAULT_HEIGHT);
+			m_eventQueue.postSizeEvent(defaultWindow, 1, 1);
 
 			s_joystick.init();
 
@@ -713,4 +713,4 @@ int main(int _argc, char** _argv)
 	return s_ctx.run(_argc, _argv);
 }
 
-#endif // ENTRY_CONFIG_USE_NATIVE && (BX_PLATFORM_FREEBSD || BX_PLATFORM_LINUX || BX_PLATFORM_RPI)
+#endif // ENTRY_CONFIG_USE_NATIVE && (BX_PLATFORM_BSD || BX_PLATFORM_LINUX || BX_PLATFORM_RPI)

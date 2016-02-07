@@ -66,16 +66,16 @@ project ("osd_" .. _OPTIONS["osd"])
 	}
 
 	files {
-		MAME_DIR .. "src/osd/osdnet.c",
-		MAME_DIR .. "src/osd/modules/netdev/taptun.c",
-		MAME_DIR .. "src/osd/modules/netdev/pcap.c",
-		MAME_DIR .. "src/osd/modules/netdev/none.c",
-		MAME_DIR .. "src/osd/modules/debugger/debugint.c",
-		MAME_DIR .. "src/osd/modules/debugger/none.c",
-		MAME_DIR .. "src/osd/modules/lib/osdobj_common.c",
-		MAME_DIR .. "src/osd/modules/sound/none.c",
+		MAME_DIR .. "src/osd/osdnet.cpp",
+		MAME_DIR .. "src/osd/modules/netdev/taptun.cpp",
+		MAME_DIR .. "src/osd/modules/netdev/pcap.cpp",
+		MAME_DIR .. "src/osd/modules/netdev/none.cpp",
+		MAME_DIR .. "src/osd/modules/debugger/debugint.cpp",
+		MAME_DIR .. "src/osd/modules/debugger/none.cpp",
+		MAME_DIR .. "src/osd/modules/lib/osdobj_common.cpp",
+		MAME_DIR .. "src/osd/modules/sound/none.cpp",
 		MAME_DIR .. "src/osd/modules/sound/retro_sound.c",
-		MAME_DIR .. "src/osd/retro/retromain.c",
+		MAME_DIR .. "src/osd/retro/retromain.cpp",
 
 		-- The public API in libretro.c is "unused" and tends to get
 		-- stripped by the "helpful" linker, so we compile it into
@@ -91,7 +91,7 @@ project ("osd_" .. _OPTIONS["osd"])
 		}
 
 		files {
-			MAME_DIR .. "src/osd/modules/midi/none.c",
+			MAME_DIR .. "src/osd/modules/midi/none.cpp",
 		}
 	--else
 	--	files {
@@ -161,12 +161,12 @@ project ("ocore_" .. _OPTIONS["osd"])
 	end
 
 	files {
-		MAME_DIR .. "src/osd/osdcore.c",
-		MAME_DIR .. "src/osd/modules/osdmodule.c",
-		MAME_DIR .. "src/osd/modules/font/font_none.c",
+		MAME_DIR .. "src/osd/osdcore.cpp",
+		MAME_DIR .. "src/osd/modules/osdmodule.cpp",
+		MAME_DIR .. "src/osd/modules/font/font_none.cpp",
 		MAME_DIR .. "src/osd/modules/lib/osdlib_retro.c",
-		MAME_DIR .. "src/osd/modules/midi/none.c",
-		MAME_DIR .. "src/osd/modules/osdmodule.c",
+		MAME_DIR .. "src/osd/modules/midi/none.cpp",
+		MAME_DIR .. "src/osd/modules/osdmodule.cpp",
 		MAME_DIR .. "src/osd/modules/sync/sync_retro.c",
 		MAME_DIR .. "src/osd/retro/retrodir.c",
 		MAME_DIR .. "src/osd/retro/retrofile.c",
@@ -175,11 +175,11 @@ project ("ocore_" .. _OPTIONS["osd"])
 
 	if _OPTIONS["NOASM"]=="1" then
 		files {
-			MAME_DIR .. "src/osd/modules/sync/work_mini.c",
+			MAME_DIR .. "src/osd/modules/sync/work_mini.cpp",
 		}
 	else
 		files {
-			MAME_DIR .. "src/osd/modules/sync/work_osd.c",
+			MAME_DIR .. "src/osd/modules/sync/work_osd.cpp",
 		}
 	end
 
