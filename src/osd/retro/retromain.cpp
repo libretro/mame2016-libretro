@@ -1510,6 +1510,7 @@ void retro_osd_interface::osd_exit()
    retro = NULL:
 #endif
 
+   machine().render().target_free(our_target);
    osd_common_t::osd_exit();
 }
 
