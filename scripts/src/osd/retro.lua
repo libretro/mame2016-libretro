@@ -66,6 +66,7 @@ project ("osd_" .. _OPTIONS["osd"])
 	}
 
 	files {
+      MAME_DIR .. "src/osd/retro/libretro-common/libco/libco.c",
 		MAME_DIR .. "src/osd/osdnet.cpp",
 		MAME_DIR .. "src/osd/modules/netdev/taptun.cpp",
 		MAME_DIR .. "src/osd/modules/netdev/pcap.cpp",
@@ -162,7 +163,6 @@ project ("ocore_" .. _OPTIONS["osd"])
 
 	files {
 		MAME_DIR .. "src/osd/osdcore.cpp",
-		MAME_DIR .. "src/osd/modules/osdmodule.cpp",
 		MAME_DIR .. "src/osd/modules/font/font_none.cpp",
 		MAME_DIR .. "src/osd/modules/lib/osdlib_retro.c",
 		MAME_DIR .. "src/osd/modules/midi/none.cpp",
