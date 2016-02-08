@@ -937,7 +937,7 @@ ifndef ANDROID_NDK_ROOT
 	$(error ANDROID_NDK_ROOT is not set)
 endif
 ifndef COMPILE
-	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-arm --gcc_version=4.8 gmake
+	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-arm --gcc_version=4.9 gmake
 endif
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/gmake-android-arm config=$(CONFIG)
 
