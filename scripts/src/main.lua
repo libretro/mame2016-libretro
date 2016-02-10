@@ -97,8 +97,8 @@ end
 		kind "SharedLib"		
 		if _OPTIONS["targetos"]=="android-arm" then		
 			targetsuffix "_libretro_android"
-		else
-			targetsuffix "_libretro"
+		elseif _OPTIONS["targetos"]=="ios-arm" then		
+			targetsuffix "_libretro_ios"
 		end
 		targetprefix ""
 
