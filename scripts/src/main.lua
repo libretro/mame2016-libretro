@@ -94,13 +94,21 @@ end
 
 	-- BEGIN libretro overrides to MAME's GENie build
 	configuration { "libretro*" }
-		kind "SharedLib"		
-		if _OPTIONS["targetos"]=="android-arm" then		
+		kind "SharedLib"	
+		targetsuffix "_libretro"
+		if _OPTIONS["targetos"]=="android-arm" then
 			targetsuffix "_libretro_android"
-		elseif _OPTIONS["targetos"]=="ios-arm" then		
+			defines {
+ 				"SDLMAME_ARM=1",
+			}
+		elseif _OPTIONS["targetos"]=="ios-arm" then
 			targetsuffix "_libretro_ios"
+			targetextension ".dylib"
 		elseif _OPTIONS["targetos"]=="windows" then
 			targetextension ".dll"
+		elseif _OPTIONS["targetos"]=="osx" then
+			targetextension ".dylib"
+		else
 			targetsuffix "_libretro"
 		end
 
