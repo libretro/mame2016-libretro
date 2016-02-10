@@ -71,6 +71,7 @@ ifeq ($(platform),)
 		platform = win
 	else ifneq ($(findstring MINGW,$(UNAME_S)),)
 		platform = win
+		EXE := .dll
 	else ifneq ($(findstring Darwin,$(UNAME_S)),)
 		platform = osx
 	else ifneq ($(findstring win,$(UNAME_S)),)
