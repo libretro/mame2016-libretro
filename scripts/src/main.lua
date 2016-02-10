@@ -99,7 +99,10 @@ end
 			targetsuffix "_libretro_android"
 		elseif _OPTIONS["targetos"]=="ios-arm" then		
 			targetsuffix "_libretro_ios"
+		elseif _OPTIONS["targetos"]=="windows" then
+			targetextension ".dll"
 		end
+
 		targetprefix ""
 
 		includedirs {
