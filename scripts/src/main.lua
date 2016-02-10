@@ -101,6 +101,7 @@ end
 			targetsuffix "_libretro_ios"
 		elseif _OPTIONS["targetos"]=="windows" then
 			targetextension ".dll"
+			targetsuffix "_libretro"
 		end
 
 		targetprefix ""
