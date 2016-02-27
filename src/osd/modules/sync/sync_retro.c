@@ -347,9 +347,17 @@ void osd_event_reset(osd_event *event)
 int osd_event_wait(osd_event *event, osd_ticks_t timeout)
 {
 #ifdef WIN32
-	int ret = WaitForSingleObject((HANDLE) event, timeout * 1000 / osd_ticks_per_second());
-	return ( ret == WAIT_OBJECT_0);
+	DWORD timeout_param;
+	if (timeout == OSD_EVENT_WAIT_INFINITE)
+		timeout_param = INFINITE;
+	else
+		timeout_param = timeout * 1000 / osd_ticks_per_second();
+
+	int ret = WaitForSingleObject((HANDLE) event, timeout_param);
+	return (ret == WAIT_OBJECT_0);
 #else
+	if (timeout == OSD_EVENT_WAIT_INFINITE)
+			timeout = osd_ticks_per_second() * (osd_ticks_t)10000;
 
 	pthread_mutex_lock(&event->mutex);
 	if (!timeout)
