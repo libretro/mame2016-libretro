@@ -382,7 +382,7 @@ enum ioport_type
 		IPT_UI_EXPORT,
 		IPT_UI_AUDIT_FAST,
 		IPT_UI_AUDIT_ALL,
-		IPT_UI_TOGGLE_AUTOFIRE,
+		//IPT_UI_TOGGLE_AUTOFIRE,
 
 		IPT_UI_TOGGLE_AUTOFIRE,			// autofire toggle button
 		// additional OSD-specified UI port types (up to 16)
@@ -1101,7 +1101,7 @@ public:
 		ioport_value    value;                  // for DIP switches
 		bool            autofire;               // for autofire settings
 		input_seq       seq[SEQ_TYPE_TOTAL];    // sequences of all types
-		int				autofire;				// autofire
+		//int				autofire;				// autofire
 		int				autopressed;			// autofire
 		INT32           sensitivity;            // for analog controls
 		INT32           delta;                  // for analog controls

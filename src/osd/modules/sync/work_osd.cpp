@@ -36,6 +36,10 @@
 //  DEBUGGING
 //============================================================
 
+#if defined(OSD_SDL) || defined(__LIBRETRO__)
+typedef void *PVOID;
+#endif
+
 #define KEEP_STATISTICS         (0)
 
 //============================================================

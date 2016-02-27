@@ -73,11 +73,12 @@ struct osd_event {
 typedef BOOL (WINAPI *try_enter_critical_section_ptr)(LPCRITICAL_SECTION lpCriticalSection);
 static try_enter_critical_section_ptr try_enter_critical_section = NULL;
 static int checked_for_try_enter = FALSE;
-
+/*
 struct osd_lock
 {
 	CRITICAL_SECTION    critsect;
 };
+*/
 #endif
 
 struct osd_thread {
@@ -89,7 +90,7 @@ struct osd_thread {
 	pthread_t           thread;
 #endif
 };
-
+/*
 struct osd_scalable_lock
 {
 #ifdef WIN32
@@ -98,7 +99,8 @@ struct osd_scalable_lock
 	osd_lock            *lock;
 #endif
 };
-
+*/
+#if 0
 //============================================================
 //  Scalable Locks
 //============================================================
@@ -264,6 +266,8 @@ void osd_lock_free(osd_lock *lock)
 #endif
 }
 
+#endif
+
 //============================================================
 //  osd_event_alloc
 //============================================================
@@ -347,9 +351,20 @@ void osd_event_reset(osd_event *event)
 int osd_event_wait(osd_event *event, osd_ticks_t timeout)
 {
 #ifdef WIN32
-	int ret = WaitForSingleObject((HANDLE) event, timeout * 1000 / osd_ticks_per_second());
+	//int ret = WaitForSingleObject((HANDLE) event, timeout * 1000 / osd_ticks_per_second());
+	DWORD timeout_param;
+	if (timeout == OSD_EVENT_WAIT_INFINITE)
+		timeout_param = INFINITE;
+	else
+		timeout_param = timeout * 1000 / osd_ticks_per_second();
+
+	int ret = WaitForSingleObject((HANDLE) event, timeout_param);
+
 	return ( ret == WAIT_OBJECT_0);
 #else
+
+	if (timeout == OSD_EVENT_WAIT_INFINITE)
+			timeout = osd_ticks_per_second() * (osd_ticks_t)10000;
 
 	pthread_mutex_lock(&event->mutex);
 	if (!timeout)
@@ -366,7 +381,9 @@ int osd_event_wait(osd_event *event, osd_ticks_t timeout)
 		{
 			struct timespec   ts;
 			struct timeval    tp;
+
 			UINT64 msec = timeout * 1000 / osd_ticks_per_second();
+
 			UINT64 nsec;
 
 			gettimeofday(&tp, NULL);
@@ -375,7 +392,7 @@ int osd_event_wait(osd_event *event, osd_ticks_t timeout)
 			nsec = (UINT64) tp.tv_usec * (UINT64) 1000 + (msec * (UINT64) 1000000);
 			ts.tv_nsec = nsec % (UINT64) 1000000000;
 			ts.tv_sec += nsec / (UINT64) 1000000000;
-
+	
 			do {
 				int ret = pthread_cond_timedwait(&event->cond, &event->mutex, &ts);
 				if ( ret == ETIMEDOUT )

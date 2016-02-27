@@ -942,7 +942,9 @@ endif
 ifndef ANDROID_NDK_ROOT
 	$(error ANDROID_NDK_ROOT is not set)
 endif
-	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-arm --gcc_version=3.6.0 --osd=osdmini --targetos=android-arm --targetos=android --PLATFORM=arm --NOASM=1 gmake
+
+	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-arm --gcc_version=4.9 -osd=retro --targetos=android-arm --targetos=android --PLATFORM=arm --NOASM=1 gmake
+#	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-arm --gcc_version=3.6.0 --osd=osdmini --targetos=android-arm --targetos=android --PLATFORM=arm --NOASM=1 gmake
 
 .PHONY: android-arm
 android-arm: generate $(PROJECTDIR_MINI)/gmake-android-arm/Makefile
@@ -987,13 +989,9 @@ $(PROJECTDIR_MINI)/gmake-android-mips/Makefile: makefile $(SCRIPTS) $(GENIE)
 ifndef ANDROID_NDK_MIPS
 	$(error ANDROID_NDK_MIPS is not set)
 endif
-<<<<<<< HEAD
-ifndef COMPILE
-	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-arm --gcc_version=4.9 gmake
-=======
+
 ifndef ANDROID_NDK_ROOT
 	$(error ANDROID_NDK_ROOT is not set)
->>>>>>> upstream/master
 endif
 	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-mips --gcc_version=3.6.0 --osd=osdmini --targetos=android-mips --targetos=android --PLATFORM=mips --NOASM=1 gmake
 
