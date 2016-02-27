@@ -12,6 +12,7 @@
 
 // MAME headers
 #include "emu.h"
+#include "ui/ui.h"
 #include "emuopts.h"
 #include "render.h"
 #include "uiinput.h"
@@ -22,6 +23,8 @@
 #include "window.h"
 #include "input.h"
 #include "strconv.h"
+
+#include "modules/osdwindow.h"
 
 //============================================================
 //  CONSTANTS
@@ -64,8 +67,6 @@ static osd_window_config   windows[MAX_WINDOWS];        // configuration data pe
 
 bool windows_osd_interface::video_init()
 {
-	int index;
-
 	// extract data from the options
 	extract_video_config();
 
@@ -77,14 +78,25 @@ bool windows_osd_interface::video_init()
 
 	// create the windows
 	windows_options &options = downcast<windows_options &>(machine().options());
-	for (index = 0; index < video_config.numscreens; index++)
+	for (int index = 0; index < video_config.numscreens; index++)
+	{
 		win_window_info::create(machine(), index, osd_monitor_info::pick_monitor(options, index), &windows[index]);
+	}
+
 	if (video_config.mode != VIDEO_MODE_NONE)
 		SetForegroundWindow(win_window_list->m_hwnd);
 
 	return true;
 }
 
+//============================================================
+//  get_slider_list
+//============================================================
+
+slider_state *windows_osd_interface::get_slider_list()
+{
+	return m_sliders;
+}
 
 //============================================================
 //  video_exit
@@ -181,6 +193,8 @@ void windows_osd_interface::update(bool skip_redraw)
 	// ping the watchdog on each update
 	winmain_watchdog_ping();
 
+	update_slider_list();
+
 	// if we're not skipping this redraw, update all windows
 	if (!skip_redraw)
 	{
@@ -266,8 +280,9 @@ static void init_monitors(void)
 //  pick_monitor
 //============================================================
 
-osd_monitor_info *osd_monitor_info::pick_monitor(windows_options &options, int index)
+osd_monitor_info *osd_monitor_info::pick_monitor(osd_options &osdopts, int index)
 {
+	windows_options &options = reinterpret_cast<windows_options &>(osdopts);
 	osd_monitor_info *monitor;
 	const char *scrname, *scrname2;
 	int moncount = 0;
@@ -355,6 +370,7 @@ void windows_osd_interface::extract_video_config()
 	video_config.filter        = options().filter();
 	video_config.keepaspect    = options().keep_aspect();
 	video_config.numscreens    = options().numscreens();
+	video_config.fullstretch   = options().uneven_stretch();
 
 	// if we are in debug mode, never go full screen
 	if (machine().debug_flags & DEBUG_FLAG_OSD_ENABLED)
@@ -373,14 +389,10 @@ void windows_osd_interface::extract_video_config()
 		video_config.mode = VIDEO_MODE_D3D;
 	else if (strcmp(stemp, "auto") == 0)
 		video_config.mode = VIDEO_MODE_D3D;
-	else if (strcmp(stemp, "ddraw") == 0)
-		video_config.mode = VIDEO_MODE_DDRAW;
 	else if (strcmp(stemp, "gdi") == 0)
 		video_config.mode = VIDEO_MODE_GDI;
-#if defined (USE_BGFX)
 	else if (strcmp(stemp, "bgfx") == 0)
 		video_config.mode = VIDEO_MODE_BGFX;
-#endif
 	else if (strcmp(stemp, "none") == 0)
 	{
 		video_config.mode = VIDEO_MODE_NONE;
@@ -400,9 +412,6 @@ void windows_osd_interface::extract_video_config()
 	video_config.syncrefresh   = options().sync_refresh();
 	video_config.triplebuf     = options().triple_buffer();
 	video_config.switchres     = options().switch_res();
-
-	// ddraw options: extract the data
-	video_config.hwstretch     = options().hwstretch();
 
 	if (video_config.prescale < 1 || video_config.prescale > 3)
 	{

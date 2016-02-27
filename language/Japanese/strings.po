@@ -1,0 +1,1365 @@
+# PACKAGE パッケージに対する英訳.
+# Copyright (C) 2016 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Automatically generated, 2016.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: MAME\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-02-25 16:33+0100\n"
+"PO-Revision-Date: 2016-02-23 01:39+0900\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: MAME Language Team\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 1.6.11\n"
+
+#: src/emu/ui/auditmenu.cpp:111
+msgid "Audit in progress..."
+msgstr "検証中...\v"
+
+#: src/emu/ui/barcode.cpp:72
+msgid "New Barcode:"
+msgstr "新しいバーコード:"
+
+#: src/emu/ui/barcode.cpp:76
+msgid "Enter Code"
+msgstr "コードを入れる"
+
+#: src/emu/ui/barcode.cpp:118
+msgid "Barcode length invalid!"
+msgstr "バーコードの長さが合いません!"
+
+#: src/emu/ui/cheatopt.cpp:77
+#, c-format
+msgid ""
+"Cheat Comment:\n"
+"%s"
+msgstr ""
+"チートのコメント:\n"
+"%s"
+
+#: src/emu/ui/cheatopt.cpp:90
+msgid "All cheats reloaded"
+msgstr "全チート再ロード完了"
+
+#: src/emu/ui/cheatopt.cpp:121
+msgid "Autofire Settings"
+msgstr "連射設定"
+
+#: src/emu/ui/cheatopt.cpp:139
+msgid "Reset All"
+msgstr "全てリセット"
+
+#: src/emu/ui/cheatopt.cpp:142
+msgid "Reload All"
+msgstr "全て再読み込み"
+
+#: src/emu/ui/cheatopt.cpp:258
+msgid "Autofire Status"
+msgstr "連射設定ステータス"
+
+#: src/emu/ui/cheatopt.cpp:258 src/emu/ui/ui.cpp:1755
+#: src/emu/ui/videoopt.cpp:207 src/emu/ui/videoopt.cpp:211
+#: src/emu/ui/videoopt.cpp:215 src/emu/ui/videoopt.cpp:219
+#: src/emu/ui/videoopt.cpp:223
+msgid "Disabled"
+msgstr "無効"
+
+#: src/emu/ui/cheatopt.cpp:258 src/emu/ui/ui.cpp:1755
+#: src/emu/ui/videoopt.cpp:207 src/emu/ui/videoopt.cpp:211
+#: src/emu/ui/videoopt.cpp:215 src/emu/ui/videoopt.cpp:219
+#: src/emu/ui/videoopt.cpp:223
+msgid "Enabled"
+msgstr "有効"
+
+#: src/emu/ui/cheatopt.cpp:284 src/emu/ui/cheatopt.cpp:290
+msgid "On"
+msgstr "オン"
+
+#: src/emu/ui/cheatopt.cpp:284 src/emu/ui/cheatopt.cpp:290
+msgid "Off"
+msgstr "オフ"
+
+#: src/emu/ui/cheatopt.cpp:301
+msgid "No buttons found on this machine!"
+msgstr "このマシンにはボタンがありません!"
+
+#: src/emu/ui/cheatopt.cpp:312 src/emu/ui/cheatopt.cpp:316
+msgid "Autofire Delay"
+msgstr "連射間隔"
+
+#: src/emu/ui/ctrlmenu.cpp:20
+msgid "Lightgun Device Assignment"
+msgstr "光線銃デバイス割り当て"
+
+#: src/emu/ui/ctrlmenu.cpp:21
+msgid "Trackball Device Assignment"
+msgstr "トラックボールデバイス割り当て"
+
+#: src/emu/ui/ctrlmenu.cpp:22
+msgid "Pedal Device Assignment"
+msgstr "ペダルデバイス割り当て"
+
+#: src/emu/ui/ctrlmenu.cpp:23
+msgid "Adstick Device Assignment"
+msgstr "アナログスティックデバイス割り当て"
+
+#: src/emu/ui/ctrlmenu.cpp:24
+msgid "Paddle Device Assignment"
+msgstr "パドルデバイス割り当て"
+
+#: src/emu/ui/ctrlmenu.cpp:25
+msgid "Dial Device Assignment"
+msgstr "ダイヤルデバイス割り当て"
+
+#: src/emu/ui/ctrlmenu.cpp:26
+msgid "Positional Device Assignment"
+msgstr "位置デバイス割り当て"
+
+#: src/emu/ui/ctrlmenu.cpp:27
+msgid "Mouse Device Assignment"
+msgstr "マウスデバイス割り当て"
+
+#: src/emu/ui/ctrlmenu.cpp:106 src/emu/ui/ctrlmenu.cpp:126
+#: src/emu/ui/optsmenu.cpp:253
+msgid "Device Mapping"
+msgstr "デバイスマッピング"
+
+#: src/emu/ui/custmenu.cpp:156 src/emu/ui/custmenu.cpp:441
+msgid "Main filter"
+msgstr "メインフィルタ"
+
+#: src/emu/ui/custmenu.cpp:165 src/emu/ui/custmenu.cpp:450
+msgid "Other filter"
+msgstr "他のフィルタ"
+
+#: src/emu/ui/custmenu.cpp:192 src/emu/ui/custmenu.cpp:504
+msgid "Remove last filter"
+msgstr "最後のフィルタを削除"
+
+#: src/emu/ui/custmenu.cpp:195 src/emu/ui/custmenu.cpp:507
+msgid "Add filter"
+msgstr "フィルタを追加"
+
+#: src/emu/ui/custmenu.cpp:210 src/emu/ui/custmenu.cpp:230
+#: src/emu/ui/custmenu.cpp:523 src/emu/ui/custmenu.cpp:543
+msgid "Select custom filters:"
+msgstr "カスタムフィルタ選択:"
+
+#: src/emu/ui/custui.cpp:20
+msgid "Show All"
+msgstr "全て表示"
+
+#: src/emu/ui/custui.cpp:21
+msgid "Hide Filters"
+msgstr "フィルタを非表示にする"
+
+#: src/emu/ui/custui.cpp:22
+msgid "Hide Info/Image"
+msgstr "情報/画像を非表示にする"
+
+#: src/emu/ui/custui.cpp:23
+msgid "Hide Both"
+msgstr "両方を非表示にする"
+
+#: src/emu/ui/custui.cpp:139
+msgid "Fonts"
+msgstr "フォント"
+
+#: src/emu/ui/custui.cpp:140
+msgid "Colors"
+msgstr "色"
+
+#: src/emu/ui/custui.cpp:145 src/emu/ui/dirmenu.cpp:33
+msgid "Language"
+msgstr "言語"
+
+#: src/emu/ui/custui.cpp:149
+msgid "Show side panels"
+msgstr "サイドパネルを表示"
+
+#: src/emu/ui/custui.cpp:164 src/emu/ui/custui.cpp:184
+msgid "Custom UI Settings"
+msgstr "カスタムUI設定"
+
+#: src/emu/ui/custui.cpp:372
+msgid "UI Font"
+msgstr "UIフォント"
+
+#: src/emu/ui/custui.cpp:376
+msgid "Bold"
+msgstr "太字"
+
+#: src/emu/ui/custui.cpp:377
+msgid "Italic"
+msgstr "イタリック"
+
+#: src/emu/ui/custui.cpp:383
+msgid "Lines"
+msgstr "行数"
+
+#: src/emu/ui/custui.cpp:391
+msgid "Infos text size"
+msgstr "情報のテキストサイズ"
+
+#: src/emu/ui/custui.cpp:408
+msgid "UI Fonts Settings"
+msgstr "UIフォント設定"
+
+#: src/emu/ui/custui.cpp:435
+msgid "Sample text - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+msgstr ""
+"サンプルテキスト - Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+
+#: src/emu/ui/custui.cpp:533
+msgid "Normal text"
+msgstr "通常のテキスト"
+
+#: src/emu/ui/custui.cpp:534
+msgid "Selected color"
+msgstr "選択色"
+
+#: src/emu/ui/custui.cpp:535
+msgid "Normal text background"
+msgstr "通常テキストの背景"
+
+#: src/emu/ui/custui.cpp:536
+msgid "Selected background color"
+msgstr "選択済テキストの背景"
+
+#: src/emu/ui/custui.cpp:537
+msgid "Subitem color"
+msgstr "サブ項目の色"
+
+#: src/emu/ui/custui.cpp:538 src/emu/ui/custui.cpp:633
+msgid "Clone"
+msgstr "クローン"
+
+#: src/emu/ui/custui.cpp:539
+msgid "Border"
+msgstr "枠線"
+
+#: src/emu/ui/custui.cpp:540
+msgid "Background"
+msgstr "背景"
+
+#: src/emu/ui/custui.cpp:541
+msgid "Dipswitch"
+msgstr "DIPスイッチ"
+
+#: src/emu/ui/custui.cpp:542
+msgid "Unavailable color"
+msgstr "動作不可の色"
+
+#: src/emu/ui/custui.cpp:543
+msgid "Slider color"
+msgstr "スライダの色"
+
+#: src/emu/ui/custui.cpp:544
+msgid "Gfx viewer background"
+msgstr "グラフィックビューアの背景"
+
+#: src/emu/ui/custui.cpp:545
+msgid "Mouse over color"
+msgstr "マウスオーバー時の色"
+
+#: src/emu/ui/custui.cpp:546
+msgid "Mouse over background color"
+msgstr "マウスオーバー時の背景色"
+
+#: src/emu/ui/custui.cpp:547
+msgid "Mouse down color"
+msgstr "マウスダウン時の色"
+
+#: src/emu/ui/custui.cpp:548
+msgid "Mouse down background color"
+msgstr "マウスダウン時の背景色"
+
+#: src/emu/ui/custui.cpp:551
+msgid "Restore originals colors"
+msgstr "オリジナルの色に戻す"
+
+#: src/emu/ui/custui.cpp:567
+msgid "UI Colors Settings"
+msgstr "UIの色設定"
+
+#: src/emu/ui/custui.cpp:595 src/emu/ui/selector.cpp:181
+msgid "Double click or press "
+msgstr "値を変更するには"
+
+#: src/emu/ui/custui.cpp:595
+msgid " to change the color value"
+msgstr "を押すかダブルクリックしてください"
+
+#: src/emu/ui/custui.cpp:621
+msgid "Menu Preview"
+msgstr "メニューのプレビュー"
+
+#: src/emu/ui/custui.cpp:629
+msgid "Normal"
+msgstr "通常項目"
+
+#: src/emu/ui/custui.cpp:630
+msgid "Subitem"
+msgstr "サブ項目"
+
+#: src/emu/ui/custui.cpp:631
+msgid "Selected"
+msgstr "選択済の項目"
+
+#: src/emu/ui/custui.cpp:632
+msgid "Mouse Over"
+msgstr "マウスオーバー"
+
+#: src/emu/ui/custui.cpp:899
+msgid "Choose from palette"
+msgstr "パレットから選ぶ"
+
+#: src/emu/ui/custui.cpp:915
+msgid " - ARGB Settings"
+msgstr " - ARGB設定"
+
+#: src/emu/ui/custui.cpp:939
+msgid "Color preview ="
+msgstr "色のプレビュー ="
+
+#: src/emu/ui/datmenu.cpp:59
+msgid "Software History"
+msgstr "ソフトウェアのヒストリ"
+
+#: src/emu/ui/datmenu.cpp:61
+msgid "Software Usage"
+msgstr "ソフトウェアの使い方"
+
+#: src/emu/ui/datmenu.cpp:199
+msgid "Revision: "
+msgstr "リビジョン: "
+
+#: src/emu/ui/datmenu.cpp:291 src/emu/ui/selgame.cpp:40
+#: src/emu/ui/selgame.cpp:2067 src/emu/ui/selgame.cpp:2076
+#: src/emu/ui/selsoft.cpp:1490 src/emu/ui/selsoft.cpp:1499
+msgid "History"
+msgstr "ヒストリファイル"
+
+#: src/emu/ui/datmenu.cpp:293 src/emu/ui/selgame.cpp:41
+msgid "Mameinfo"
+msgstr "Mameinfoファイル"
+
+#: src/emu/ui/datmenu.cpp:295 src/emu/ui/selgame.cpp:43
+msgid "Messinfo"
+msgstr "Messinfoファイル"
+
+#: src/emu/ui/datmenu.cpp:297 src/emu/ui/selgame.cpp:42
+msgid "Sysinfo"
+msgstr "Sysinfoファイル"
+
+#: src/emu/ui/datmenu.cpp:299 src/emu/ui/selgame.cpp:45
+msgid "Mamescore"
+msgstr "Mamescoreファイル"
+
+#: src/emu/ui/datmenu.cpp:301 src/emu/ui/selgame.cpp:44
+msgid "Command"
+msgstr "コマンドファイル"
+
+#: src/emu/ui/dirmenu.cpp:31
+msgid "ROMs"
+msgstr "ROMファイル"
+
+#: src/emu/ui/dirmenu.cpp:32
+msgid "UI"
+msgstr "UIファイル"
+
+#: src/emu/ui/dirmenu.cpp:34
+msgid "Samples"
+msgstr "サンプルファイル"
+
+#: src/emu/ui/dirmenu.cpp:35
+msgid "DATs"
+msgstr "DATファイル"
+
+#: src/emu/ui/dirmenu.cpp:36
+msgid "INIs"
+msgstr "INIファイル"
+
+#: src/emu/ui/dirmenu.cpp:37
+msgid "Extra INIs"
+msgstr "追加のINIファイル"
+
+#: src/emu/ui/dirmenu.cpp:38
+msgid "Icons"
+msgstr "アイコンファイル"
+
+#: src/emu/ui/dirmenu.cpp:39 src/emu/ui/miscmenu.cpp:566
+msgid "Cheats"
+msgstr "チートファイル"
+
+#: src/emu/ui/dirmenu.cpp:40
+msgid "Snapshots"
+msgstr "スクリーンショット"
+
+#: src/emu/ui/dirmenu.cpp:41
+msgid "Cabinets"
+msgstr "筐体画像ファイル"
+
+#: src/emu/ui/dirmenu.cpp:42
+msgid "Flyers"
+msgstr "フライヤー画像"
+
+#: src/emu/ui/dirmenu.cpp:43
+msgid "Titles"
+msgstr "タイトル画像"
+
+#: src/emu/ui/dirmenu.cpp:44
+msgid "Ends"
+msgstr "終了画像"
+
+#: src/emu/ui/dirmenu.cpp:45
+msgid "PCBs"
+msgstr "基板画像"
+
+#: src/emu/ui/dirmenu.cpp:46 src/emu/ui/videoopt.cpp:223
+msgid "Marquees"
+msgstr "マーキー画像"
+
+#: src/emu/ui/dirmenu.cpp:47
+msgid "Controls Panels"
+msgstr "操作パネル画像"
+
+#: src/emu/ui/dirmenu.cpp:48
+msgid "Crosshairs"
+msgstr "照準画像ファイル"
+
+#: src/emu/ui/dirmenu.cpp:49
+msgid "Artworks"
+msgstr "アートワークファイル"
+
+#: src/emu/ui/dirmenu.cpp:50
+msgid "Bosses"
+msgstr "ボス画像ファイル"
+
+#: src/emu/ui/dirmenu.cpp:51
+msgid "Artworks Preview"
+msgstr "アートワークのプレビュー"
+
+#: src/emu/ui/dirmenu.cpp:52
+msgid "Select"
+msgstr "選択"
+
+#: src/emu/ui/dirmenu.cpp:53
+msgid "GameOver"
+msgstr "ゲームオーバー"
+
+#: src/emu/ui/dirmenu.cpp:54
+msgid "HowTo"
+msgstr "HOWTO"
+
+#: src/emu/ui/dirmenu.cpp:55
+msgid "Logos"
+msgstr "ロゴ"
+
+#: src/emu/ui/dirmenu.cpp:56
+msgid "Scores"
+msgstr "スコア"
+
+#: src/emu/ui/dirmenu.cpp:57
+msgid "Versus"
+msgstr "バーサス"
+
+#: src/emu/ui/dirmenu.cpp:116 src/emu/ui/dirmenu.cpp:136
+msgid "Folders Setup"
+msgstr "フォルダ設定"
+
+#: src/emu/ui/dirmenu.cpp:183
+msgid "Current "
+msgstr "現在の"
+
+#: src/emu/ui/dirmenu.cpp:183
+msgid " Folders"
+msgstr " フォルダ"
+
+#: src/emu/ui/dirmenu.cpp:195
+msgid "Change Folder"
+msgstr "フォルダを変更"
+
+#: src/emu/ui/dirmenu.cpp:195
+msgid "Add Folder"
+msgstr "フォルダを追加"
+
+#: src/emu/ui/dirmenu.cpp:198
+msgid "Remove Folder"
+msgstr "フォルダを削除"
+
+#: src/emu/ui/dirmenu.cpp:497
+msgid "Change)"
+msgstr "変更)"
+
+#: src/emu/ui/dirmenu.cpp:497
+msgid "Add"
+msgstr "フォルダを"
+
+#: src/emu/ui/dirmenu.cpp:498
+msgid " Folder - Search: "
+msgstr " 追加 - 検索:"
+
+#: src/emu/ui/dirmenu.cpp:533
+msgid "Press TAB to set"
+msgstr "TABを押して設定"
+
+#: src/emu/ui/dirmenu.cpp:639
+msgid "Remove "
+msgstr "フォルダを"
+
+#: src/emu/ui/dirmenu.cpp:639
+msgid " Folder"
+msgstr " 削除する"
+
+#: src/emu/ui/dsplmenu.cpp:205 src/emu/ui/dsplmenu.cpp:225
+#: src/emu/ui/optsmenu.cpp:250
+msgid "Display Options"
+msgstr "表示オプション"
+
+#: src/emu/ui/mainmenu.cpp:53
+msgid "Input (general)"
+msgstr "入力 (一般)"
+
+#: src/emu/ui/mainmenu.cpp:55
+msgid "Input (this Machine)"
+msgstr "入力 (現在のマシン)"
+
+#: src/emu/ui/mainmenu.cpp:59
+msgid "Analog Controls"
+msgstr "アナログ操作"
+
+#: src/emu/ui/mainmenu.cpp:61
+msgid "Dip Switches"
+msgstr "DIPスイッチ"
+
+#: src/emu/ui/mainmenu.cpp:64
+msgid "Machine Configuration"
+msgstr "マシン設定"
+
+#: src/emu/ui/mainmenu.cpp:68
+msgid "Bookkeeping Info"
+msgstr "ブックキーピング情報"
+
+#: src/emu/ui/mainmenu.cpp:71
+msgid "Machine Information"
+msgstr "マシン情報"
+
+#: src/emu/ui/mainmenu.cpp:77
+msgid "Image Information"
+msgstr "イメージ情報"
+
+#: src/emu/ui/mainmenu.cpp:80
+msgid "File Manager"
+msgstr "ファイルマネージャ"
+
+#: src/emu/ui/mainmenu.cpp:85
+msgid "Tape Control"
+msgstr "テープ操作"
+
+#: src/emu/ui/mainmenu.cpp:90
+msgid "Pseudo terminals"
+msgstr "擬似ターミナル"
+
+#: src/emu/ui/mainmenu.cpp:93
+msgid "Bios Selection"
+msgstr "BIOS選択"
+
+#: src/emu/ui/mainmenu.cpp:99
+msgid "Slot Devices"
+msgstr "スロットデバイス"
+
+#: src/emu/ui/mainmenu.cpp:106
+msgid "Barcode Reader"
+msgstr "バーコードリーダ"
+
+#: src/emu/ui/mainmenu.cpp:113
+msgid "Network Devices"
+msgstr "ネットワークデバイス"
+
+#: src/emu/ui/mainmenu.cpp:118
+msgid "Keyboard Mode"
+msgstr "キーボードモード"
+
+#: src/emu/ui/mainmenu.cpp:121
+msgid "Slider Controls"
+msgstr "スライダ設定"
+
+#: src/emu/ui/mainmenu.cpp:124
+msgid "Video Options"
+msgstr "表示設定"
+
+#: src/emu/ui/mainmenu.cpp:128
+msgid "Crosshair Options"
+msgstr "照準設定"
+
+#: src/emu/ui/mainmenu.cpp:132
+msgid "Cheat"
+msgstr "チート"
+
+#: src/emu/ui/mainmenu.cpp:136
+msgid "External DAT View"
+msgstr "外部DATビュー"
+
+#: src/emu/ui/mainmenu.cpp:142
+msgid "Add To Favorites"
+msgstr "お気に入りに追加"
+
+#: src/emu/ui/mainmenu.cpp:144
+msgid "Remove From Favorites"
+msgstr "お気に入りから削除"
+
+#: src/emu/ui/mainmenu.cpp:151
+msgid "Select New Machine"
+msgstr "新しいマシンを選択"
+
+#: src/emu/ui/miscmenu.cpp:36
+msgid "Keyboard Mode:"
+msgstr "キーボードモード:"
+
+#: src/emu/ui/miscmenu.cpp:36
+msgid "Natural"
+msgstr "ナチュラル"
+
+#: src/emu/ui/miscmenu.cpp:36
+msgid "Emulated"
+msgstr "エミュレート"
+
+#: src/emu/ui/miscmenu.cpp:90 src/emu/ui/slotopt.cpp:172
+msgid "Reset"
+msgstr "リセット"
+
+#: src/emu/ui/miscmenu.cpp:264
+msgid " (locked)"
+msgstr " (ロック)"
+
+#: src/emu/ui/miscmenu.cpp:524
+msgid "Visible Delay"
+msgstr "目に見えるディレイ"
+
+#: src/emu/ui/miscmenu.cpp:563
+msgid "Re-select last machine played"
+msgstr "最後にプレイしたマシンを再選択"
+
+#: src/emu/ui/miscmenu.cpp:564
+msgid "Enlarge images in the right panel"
+msgstr "右パネルの画像を拡大する"
+
+#: src/emu/ui/miscmenu.cpp:565
+msgid "DATs info"
+msgstr "DAT情報"
+
+#: src/emu/ui/miscmenu.cpp:567
+msgid "Show mouse pointer"
+msgstr "マウスポインタを表示"
+
+#: src/emu/ui/miscmenu.cpp:568
+msgid "Confirm quit from machines"
+msgstr "マシン終了時に確認"
+
+#: src/emu/ui/miscmenu.cpp:569
+msgid "Skip displaying information's screen at startup"
+msgstr "起動時に情報画面をスキップ"
+
+#: src/emu/ui/miscmenu.cpp:570
+msgid "Force 4:3 appearance for software snapshot"
+msgstr "スクリーンショットを4:3の比率で保存する"
+
+#: src/emu/ui/miscmenu.cpp:571
+msgid "Use image as background"
+msgstr "画像を背景に使用する"
+
+#: src/emu/ui/miscmenu.cpp:572
+msgid "Skip bios selection menu"
+msgstr "BIOS選択メニューをスキップする"
+
+#: src/emu/ui/miscmenu.cpp:573
+msgid "Skip software parts selection menu"
+msgstr "ソフトウェアパーツ選択メニューをスキップする"
+
+#: src/emu/ui/miscmenu.cpp:654 src/emu/ui/miscmenu.cpp:674
+#: src/emu/ui/optsmenu.cpp:252
+msgid "Miscellaneous Options"
+msgstr "その他の設定"
+
+#: src/emu/ui/miscmenu.cpp:740
+#, c-format
+msgid "%s.xml saved under ui folder."
+msgstr ""
+
+#: src/emu/ui/miscmenu.cpp:769
+msgid "Name:             Description:\n"
+msgstr ""
+
+#: src/emu/ui/miscmenu.cpp:781
+#, c-format
+msgid "%s.txt saved under ui folder."
+msgstr ""
+
+#: src/emu/ui/miscmenu.cpp:801
+msgid "Export XML format"
+msgstr ""
+
+#: src/emu/ui/miscmenu.cpp:802
+msgid "Export TXT format"
+msgstr ""
+
+#: src/emu/ui/optsmenu.cpp:203
+msgid "Filter"
+msgstr "フィルタ"
+
+#: src/emu/ui/optsmenu.cpp:248
+msgid "Customize UI"
+msgstr "UIをカスタマイズする"
+
+#: src/emu/ui/optsmenu.cpp:251 src/emu/ui/sndmenu.cpp:152
+#: src/emu/ui/sndmenu.cpp:172
+msgid "Sound Options"
+msgstr "サウンド設定"
+
+#: src/emu/ui/optsmenu.cpp:254
+msgid "General Inputs"
+msgstr "共通の入力設定"
+
+#: src/emu/ui/optsmenu.cpp:269 src/emu/ui/optsmenu.cpp:289
+msgid "Settings"
+msgstr "設定"
+
+#: src/emu/ui/optsmenu.cpp:309
+msgid "**Error to save ui.ini**"
+msgstr "*** ui.iniの保存エラー ***"
+
+#: src/emu/ui/selector.cpp:152
+msgid "Selection List - Search: "
+msgstr "選択リスト - 検索:"
+
+#: src/emu/ui/selector.cpp:181
+msgid " to select"
+msgstr "を押すかダブルクリックで選択してください"
+
+#: src/emu/ui/selgame.cpp:39
+#, fuzzy
+msgid "General Info"
+msgstr "共通の入力設定"
+
+#: src/emu/ui/selgame.cpp:133
+#, fuzzy, c-format
+msgid "**Error to load %s.ini**"
+msgstr "*** ui.iniの保存エラー ***"
+
+#: src/emu/ui/selgame.cpp:158
+#, fuzzy, c-format
+msgid "**Error to save %s.ini**"
+msgstr "*** ui.iniの保存エラー ***"
+
+#: src/emu/ui/selgame.cpp:162
+msgid ""
+"\n"
+"    Configuration saved    \n"
+"\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:440
+#, c-format
+msgid ""
+"%s\n"
+" added to favorites list."
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:446 src/emu/ui/selgame.cpp:455
+#, fuzzy, c-format
+msgid ""
+"%s\n"
+" removed from favorites list."
+msgstr "お気に入りから削除"
+
+#: src/emu/ui/selgame.cpp:514
+msgid ""
+"The selected machine is missing one or more required ROM or CHD images. "
+"Please select a different machine.\n"
+"\n"
+"Press any key (except ESC) to continue."
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:651 src/emu/ui/simpleselgame.cpp:264
+msgid "Configure Options"
+msgstr "オプションの設定"
+
+#: src/emu/ui/selgame.cpp:652
+msgid "Configure Directories"
+msgstr "ディレクトリの設定"
+
+#: src/emu/ui/selgame.cpp:653 src/emu/ui/simpleselgame.cpp:265
+msgid "Save Configuration"
+msgstr "設定を保存する"
+
+#: src/emu/ui/selgame.cpp:762
+#, c-format
+msgid "MAME %s ( %d / %d machines (%d BIOS) )"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:782
+msgid " Search: "
+msgstr " 検索:"
+
+#: src/emu/ui/selgame.cpp:1474
+#, c-format
+msgid "Romset: %-.100s\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1475
+msgid "Year: "
+msgstr "年度:"
+
+#: src/emu/ui/selgame.cpp:1476
+#, c-format
+msgid "Manufacturer: %-.100s\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1480
+#, c-format
+msgid "Driver is Clone of: %-.100s\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1482
+msgid "Driver is Parent\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1485
+msgid "Overall: NOT WORKING\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1487
+msgid "Overall: Unemulated Protection\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1489
+msgid "Overall: Working\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1492
+msgid "Graphics: Imperfect Colors\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1494
+msgid "Graphics: Wrong Colors\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1496
+msgid "Graphics: Imperfect\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1498
+msgid "Graphics: OK\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1501
+msgid "Sound: Unimplemented\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1503
+msgid "Sound: Imperfect\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1505
+#, fuzzy
+msgid "Sound: OK\n"
+msgstr ""
+"\n"
+"サウンド:\n"
+
+#: src/emu/ui/selgame.cpp:1507
+#, c-format
+msgid "Driver is Skeleton: %s\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1507 src/emu/ui/selgame.cpp:1508
+#: src/emu/ui/selgame.cpp:1509 src/emu/ui/selgame.cpp:1510
+#: src/emu/ui/selgame.cpp:1511 src/emu/ui/selgame.cpp:1512
+#: src/emu/ui/selgame.cpp:1513
+msgid "Yes"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1507 src/emu/ui/selgame.cpp:1508
+#: src/emu/ui/selgame.cpp:1509 src/emu/ui/selgame.cpp:1510
+#: src/emu/ui/selgame.cpp:1511 src/emu/ui/selgame.cpp:1512
+#: src/emu/ui/selgame.cpp:1513
+msgid "No"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1508
+#, c-format
+msgid "Game is Mechanical: %s\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1509
+#, c-format
+msgid "Requires Artwork: %s\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1510
+#, c-format
+msgid "Requires Clickable Artwork: %s\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1511
+#, c-format
+msgid "Support Cocktail: %s\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1512
+#, c-format
+msgid "Driver is Bios: %s\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1513
+#, c-format
+msgid "Support Save: %s\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1514
+#, c-format
+msgid "Screen Orentation: %s\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1514
+msgid "Vertical"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1514
+msgid "Horizontal"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1522
+#, c-format
+msgid "Requires CHD: %s\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1535
+msgid "Roms Audit Pass: OK\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1537
+msgid "Roms Audit Pass: BAD\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1540
+msgid "Samples Audit Pass: None Needed\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1542
+msgid "Samples Audit Pass: OK\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1544
+msgid "Samples Audit Pass: BAD\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1547
+msgid ""
+"Roms Audit Pass: Disabled\n"
+"Samples Audit Pass: Disabled\n"
+msgstr ""
+
+#: src/emu/ui/selgame.cpp:1964 src/emu/ui/selgame.cpp:2111
+#: src/emu/ui/selsoft.cpp:1535
+msgid "No Infos Available"
+msgstr "利用可能な情報はありません"
+
+#: src/emu/ui/selgame.cpp:2077 src/emu/ui/selsoft.cpp:1500
+msgid "Usage"
+msgstr "使い方"
+
+#: src/emu/ui/selsoft.cpp:109
+msgid " (default)"
+msgstr " (デフォルト)"
+
+#: src/emu/ui/selsoft.cpp:642
+#, fuzzy, c-format
+msgid "Region: %s -"
+msgstr "リージョン:"
+
+#: src/emu/ui/selsoft.cpp:644
+#, fuzzy, c-format
+msgid "Publisher: %s -"
+msgstr "発売元:"
+
+#: src/emu/ui/selsoft.cpp:646
+#, fuzzy, c-format
+msgid "Year: %s -"
+msgstr "年度:"
+
+#: src/emu/ui/selsoft.cpp:648
+#, fuzzy, c-format
+msgid "Software List: %s -"
+msgstr "ソフトウェアリスト:"
+
+#: src/emu/ui/selsoft.cpp:650
+#, fuzzy, c-format
+msgid "Device type: %s -"
+msgstr "デバイスタイプ:"
+
+#: src/emu/ui/selsoft.cpp:652
+#, fuzzy, c-format
+msgid "%s Search: %s_"
+msgstr " 検索:"
+
+#: src/emu/ui/selsoft.cpp:1872 src/emu/ui/selsoft.cpp:1892
+msgid "Software part selection:"
+msgstr "選択中のソフトウェアパーツ:"
+
+#: src/emu/ui/selsoft.cpp:2010 src/emu/ui/selsoft.cpp:2030
+msgid "Bios selection:"
+msgstr "BIOS選択: "
+
+#: src/emu/ui/slotopt.cpp:166
+msgid " [internal]"
+msgstr " [内部]"
+
+#: src/emu/ui/sndmenu.cpp:136
+msgid "Sound"
+msgstr "サウンド"
+
+#: src/emu/ui/sndmenu.cpp:137
+msgid "Sample Rate"
+msgstr "サンプルレート"
+
+#: src/emu/ui/sndmenu.cpp:138
+msgid "Use External Samples"
+msgstr "外部サンプル使用"
+
+#: src/emu/ui/ui.cpp:415
+msgid "This driver requires images to be loaded in the following device(s): "
+msgstr "このドライバは以下のデバイスでイメージの読み込みが必要です:"
+
+#: src/emu/ui/ui.cpp:1062
+msgid ""
+"Usage of emulators in conjunction with ROMs you don't own is forbidden by "
+"copyright law.\n"
+"\n"
+msgstr ""
+"あなたが所有していないROMをエミュレータで利用することは著作権法で禁じられてい"
+"ます。\n"
+"\n"
+
+#: src/emu/ui/ui.cpp:1063
+#, c-format
+msgid ""
+"IF YOU ARE NOT LEGALLY ENTITLED TO PLAY \"%s\" ON THIS EMULATOR, PRESS ESC.\n"
+"\n"
+msgstr ""
+"もしあなたが合法的に「%s」をプレイする資格がない場合は、ESCキーを押して下さ"
+"い。\n"
+"\n"
+
+#: src/emu/ui/ui.cpp:1064
+msgid "Otherwise, type OK or move the joystick left then right to continue"
+msgstr ""
+"そうでなければOKとタイプするかジョイスティックを左右に入力して進みます。"
+
+#: src/emu/ui/ui.cpp:1099
+msgid ""
+"One or more ROMs/CHDs for this machine are incorrect. The machine may not "
+"run correctly.\n"
+msgstr ""
+"このマシン用のROM/CHDが正しくありません。そのため正しく動作しない可能性があり"
+"ます。\n"
+
+#: src/emu/ui/ui.cpp:1112
+msgid ""
+"There are known problems with this machine\n"
+"\n"
+msgstr ""
+"このマシンには以下のような問題点があります\n"
+"\n"
+
+#: src/emu/ui/ui.cpp:1116
+msgid ""
+"One or more ROMs/CHDs for this machine have not been correctly dumped.\n"
+msgstr ""
+"このマシン用のROM/CHDは全て正しく吸い出されていません。\n"
+"\n"
+
+#: src/emu/ui/ui.cpp:1120
+#, c-format
+msgid "The keyboard emulation may not be 100% accurate.\n"
+msgstr "キーボードエミュレーションが100%正確ではありません。\n"
+
+#: src/emu/ui/ui.cpp:1122
+#, c-format
+msgid "The colors aren't 100% accurate.\n"
+msgstr "表示色が100%正確ではありません。\n"
+
+#: src/emu/ui/ui.cpp:1124
+msgid "The colors are completely wrong.\n"
+msgstr "表示色が完全に間違っています。\n"
+
+#: src/emu/ui/ui.cpp:1126
+#, c-format
+msgid "The video emulation isn't 100% accurate.\n"
+msgstr "表示系のエミュレーションが100%正確ではありません。\n"
+
+#: src/emu/ui/ui.cpp:1128
+#, c-format
+msgid "The sound emulation isn't 100% accurate.\n"
+msgstr "サウンドエミュレーションが100%正確ではありません。\n"
+
+#: src/emu/ui/ui.cpp:1130
+msgid "The machine lacks sound.\n"
+msgstr "このマシンは音が鳴りません。\n"
+
+#: src/emu/ui/ui.cpp:1133
+msgid "Screen flipping in cocktail mode is not supported.\n"
+msgstr "カクテルモードでの画面反転表示はサポートされていません。\n"
+
+#: src/emu/ui/ui.cpp:1137
+msgid "The machine requires external artwork files\n"
+msgstr "このマシンは別途アートワークファイルが必要です。\n"
+
+#: src/emu/ui/ui.cpp:1142
+msgid ""
+"This machine was never completed. It may exhibit strange behavior or missing "
+"elements that are not bugs in the emulation.\n"
+msgstr ""
+"このマシンは未完成です。動作の不具合や不足した要素があってもエミュレーション"
+"のバグではありません。\n"
+
+#: src/emu/ui/ui.cpp:1147
+msgid ""
+"This machine has no sound hardware, MAME will produce no sounds, this is "
+"expected behaviour.\n"
+msgstr ""
+"このマシンにはサウンドハードウェアがありません。音が出なくても正常な動作で"
+"す。\n"
+
+#: src/emu/ui/ui.cpp:1155
+msgid "The machine has protection which isn't fully emulated.\n"
+msgstr "このマシンのプロテクトは完全にエミュレートされていません。\n"
+
+#: src/emu/ui/ui.cpp:1158
+msgid ""
+"\n"
+"THIS MACHINE DOESN'T WORK. The emulation for this machine is not yet "
+"complete. There is nothing you can do to fix this problem except wait for "
+"the developers to improve the emulation.\n"
+msgstr ""
+"\n"
+"このマシンは動作しません。エミュレーションは未完成です。開発者がエミュレー"
+"ションを改良するのをお待ち下さい。\n"
+
+#: src/emu/ui/ui.cpp:1162
+msgid ""
+"\n"
+"Certain elements of this machine cannot be emulated as it requires actual "
+"physical interaction or consists of mechanical devices. It is not possible "
+"to fully play this machine.\n"
+msgstr ""
+"\n"
+"このマシンの一部の要素は、機械的デバイスによる実際の動作が必要なためエミュ"
+"レートできません。そのため、このマシンを完全にプレイすることはできません。\n"
+
+#: src/emu/ui/ui.cpp:1181
+msgid ""
+"\n"
+"\n"
+"There are working clones of this machine: "
+msgstr ""
+"\n"
+"\n"
+"このマシンの動作可能なクローンセット:"
+
+#: src/emu/ui/ui.cpp:1195
+msgid ""
+"\n"
+"\n"
+"Type OK or move the joystick left then right to continue"
+msgstr ""
+"\n"
+"\n"
+"OKとタイプするか、ジョイスティックを左右に動かして進む"
+
+#: src/emu/ui/ui.cpp:1254
+msgid ""
+"\n"
+"Sound:\n"
+msgstr ""
+"\n"
+"サウンド:\n"
+
+#: src/emu/ui/ui.cpp:1282
+msgid ""
+"\n"
+"Video:\n"
+msgstr ""
+"\n"
+"表示:\n"
+
+#: src/emu/ui/ui.cpp:1286
+msgid "None\n"
+msgstr "なし\n"
+
+#: src/emu/ui/ui.cpp:1298
+msgid "Vector\n"
+msgstr "ベクター\n"
+
+#: src/emu/ui/ui.cpp:1590 src/emu/ui/ui.cpp:1600
+msgid "Keyboard Emulation Status"
+msgstr "キーボードエミュレーションステータス"
+
+#: src/emu/ui/ui.cpp:1592
+msgid "Mode: PARTIAL Emulation"
+msgstr "モード: 部分的エミュレーション"
+
+#: src/emu/ui/ui.cpp:1593
+msgid "UI:   Enabled"
+msgstr "UI:   有効"
+
+#: src/emu/ui/ui.cpp:1595 src/emu/ui/ui.cpp:1605
+msgid "**Use ScrLock to toggle**"
+msgstr "** ScrLockキーで切り替え **"
+
+#: src/emu/ui/ui.cpp:1602
+msgid "Mode: FULL Emulation"
+msgstr "モード: 完全エミュレーション"
+
+#: src/emu/ui/ui.cpp:1603
+msgid "UI:   Disabled"
+msgstr "UI:   無効"
+
+#: src/emu/ui/ui.cpp:1749
+msgid "Autofire can't be enabled"
+msgstr "連射機能は有効にできません"
+
+#: src/emu/ui/ui.cpp:1788
+msgid "Select position to save to"
+msgstr "セーブ先を選択"
+
+#: src/emu/ui/ui.cpp:1790
+msgid "Select position to load from"
+msgstr "セーブ元を選択"
+
+#: src/emu/ui/ui.cpp:1814
+msgid "Save cancelled"
+msgstr "セーブはキャンセルされました"
+
+#: src/emu/ui/ui.cpp:1816
+msgid "Load cancelled"
+msgstr "ロードはキャンセルされました"
+
+#: src/emu/ui/ui.cpp:1859
+#, c-format
+msgid "Save to position %s"
+msgstr "%sにセーブしました"
+
+#: src/emu/ui/ui.cpp:1864
+#, c-format
+msgid "Load from position %s"
+msgstr "%sからロードしました"
+
+#: src/emu/ui/ui.cpp:1904
+#, c-format
+msgid ""
+"Are you sure you want to quit?\n"
+"\n"
+"Press ''%s'' to quit,\n"
+"Press ''%s'' to return to emulation."
+msgstr ""
+"終了しますか?\n"
+"\n"
+"「%s」で終了\n"
+"「%s」でエミュレーションに戻る"
+
+#: src/emu/ui/ui.cpp:1980
+msgid "Master Volume"
+msgstr "マスター音量"
+
+#: src/emu/ui/ui.cpp:1991
+msgid " Volume"
+msgstr "  音量"
+
+#: src/emu/ui/ui.cpp:2094
+msgid "Vector Flicker"
+msgstr "ベクターのちらつき"
+
+#: src/emu/ui/ui.cpp:2096
+msgid "Beam Width Minimum"
+msgstr "ビーム幅(最小)"
+
+#: src/emu/ui/ui.cpp:2098
+msgid "Beam Width Maximum"
+msgstr "ビーム幅(最大)"
+
+#: src/emu/ui/ui.cpp:2100
+msgid "Beam Intensity Weight"
+msgstr "ビーム強度比重"
+
+#: src/emu/ui/ui.cpp:2540
+#, c-format
+msgid "Screen '%s'"
+msgstr "画面 '%s'"
+
+#: src/emu/ui/ui.cpp:2542
+msgid "Screen"
+msgstr "画面"
+
+#: src/emu/ui/ui.cpp:2560
+msgid "Crosshair Scale"
+msgstr "照準の大きさ"
+
+#: src/emu/ui/ui.cpp:2579
+msgid "Crosshair Offset"
+msgstr "照準のオフセット"
+
+#: src/emu/ui/videoopt.cpp:55
+#, c-format
+msgid "Screen #%d"
+msgstr "画面 #%d"
+
+#: src/emu/ui/videoopt.cpp:203
+msgid "Rotate"
+msgstr "回転"
+
+#: src/emu/ui/videoopt.cpp:207
+msgid "Backdrops"
+msgstr "背景画像"
+
+#: src/emu/ui/videoopt.cpp:211
+msgid "Overlays"
+msgstr "オーバーレイ画像"
+
+#: src/emu/ui/videoopt.cpp:215
+msgid "Bezels"
+msgstr "ベゼル画像"
+
+#: src/emu/ui/videoopt.cpp:219
+msgid "CPanels"
+msgstr "Cパネル"
+
+#: src/emu/ui/videoopt.cpp:227
+msgid "View"
+msgstr "ビュー"
+
+#: src/emu/ui/videoopt.cpp:227
+msgid "Cropped"
+msgstr "切り落とし"
+
+#: src/emu/ui/videoopt.cpp:227
+msgid "Full"
+msgstr "全体"
+
+#: src/emu/ui/viewgfx.cpp:391
+msgid " COLORS"
+msgstr " 色"
+
+#: src/emu/ui/viewgfx.cpp:391
+msgid " PENS"
+msgstr " ペン"
+
+#~ msgid "Search: "
+#~ msgstr "検索:"

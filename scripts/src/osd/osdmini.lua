@@ -58,8 +58,6 @@ project ("osd_" .. _OPTIONS["osd"])
 	}
 
 	files {
-		MAME_DIR .. "src/osd/osdnet.cpp",
-		MAME_DIR .. "src/osd/osdnet.h",
 		MAME_DIR .. "src/osd/osdmini/minimain.cpp",
 		MAME_DIR .. "src/osd/osdmini/osdmini.h",
 		MAME_DIR .. "src/osd/osdepend.h",
@@ -79,6 +77,7 @@ project ("osd_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/modules/sound/coreaudio_sound.cpp",		
 		MAME_DIR .. "src/osd/modules/sound/sdl_sound.cpp",
 		MAME_DIR .. "src/osd/modules/sound/none.cpp",
+		MAME_DIR .. "src/osd/modules/sound/xaudio2_sound.cpp",
 	}
 	
 project ("ocore_" .. _OPTIONS["osd"])
@@ -117,6 +116,8 @@ project ("ocore_" .. _OPTIONS["osd"])
 	end
 
 	files {
+		MAME_DIR .. "src/osd/osdnet.cpp",
+		MAME_DIR .. "src/osd/osdnet.h",
 		MAME_DIR .. "src/osd/osdcore.cpp",
 		MAME_DIR .. "src/osd/osdcore.h",
 		MAME_DIR .. "src/osd/modules/osdmodule.cpp",
@@ -124,7 +125,6 @@ project ("ocore_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/osdmini/minidir.cpp",
 		MAME_DIR .. "src/osd/osdmini/minifile.cpp",
 		MAME_DIR .. "src/osd/osdmini/minimisc.cpp",
-		MAME_DIR .. "src/osd/osdmini/minisync.cpp",
 		MAME_DIR .. "src/osd/osdmini/minitime.cpp",
 		MAME_DIR .. "src/osd/modules/sync/work_mini.cpp",
 	}

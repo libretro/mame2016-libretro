@@ -78,6 +78,8 @@
 #include "uiinput.h"
 #include "crsshair.h"
 #include "unzip.h"
+#include "ui/datfile.h"
+#include "ui/inifile.h"
 #include "debug/debugvw.h"
 #include "image.h"
 #include "luaengine.h"
@@ -188,7 +190,10 @@ const char *running_machine::describe_context()
 	{
 		cpu_device *cpu = dynamic_cast<cpu_device *>(&executing->device());
 		if (cpu != nullptr)
-			strprintf(m_context, "'%s' (%s)", cpu->tag(), core_i64_format(cpu->pc(), cpu->space(AS_PROGRAM).logaddrchars(), cpu->is_octal()));
+		{
+			address_space &prg = cpu->space(AS_PROGRAM);
+			strprintf(m_context, "'%s' (%s)", cpu->tag(), core_i64_format(cpu->pc(), prg.logaddrchars(), prg.is_octal()));
+		}
 	}
 	else
 		m_context.assign("(no context)");
@@ -234,6 +239,10 @@ void running_machine::start()
 	// create the video manager
 	m_video = std::make_unique<video_manager>(*this);
 	m_ui = std::make_unique<ui_manager>(*this);
+	m_ui->init();
+
+	// start the inifile manager
+	m_inifile = std::make_unique<inifile_manager>(*this);
 
 	// initialize the base time (needed for doing record/playback)
 	::time(&m_base_time);
@@ -307,6 +316,12 @@ void running_machine::start()
 	// allocate autoboot timer
 	m_autoboot_timer = scheduler().timer_alloc(timer_expired_delegate(FUNC(running_machine::autoboot_callback), this));
 
+	// start datfile manager
+	m_datfile = std::make_unique<datfile_manager>(*this);
+
+	// start favorite manager
+	m_favorite = std::make_unique<favorite_manager>(*this);
+
 	manager().update_machine();
 }
 
@@ -374,8 +389,10 @@ int running_machine::run(bool firstrun)
 
 			// execute CPUs if not paused
 			if (!m_paused)
+			{
 				m_scheduler.timeslice();
-
+				manager().lua()->periodic_check();
+			}
 			// otherwise, just pump video updates through
 			else
 				m_video->frame_update();
@@ -1316,7 +1333,7 @@ void system_time::full_time::set(struct tm &t)
 	month   = t.tm_mon;
 	year    = t.tm_year + 1900;
 	weekday = t.tm_wday;
-	day     = t.tm_yday;
+	day  = t.tm_yday;
 	is_dst  = t.tm_isdst;
 }
 
