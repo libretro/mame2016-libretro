@@ -1035,6 +1035,10 @@ static void Set_Default_Option(void)
       Add_Option("-nothrottle");
 
    Add_Option("-joystick");
+   Add_Option("-joystick_deadzone");
+   Add_Option("0");
+   Add_Option("-joystick_saturation");
+   Add_Option("1");
    Add_Option("-samplerate");
    Add_Option("48000");
 
