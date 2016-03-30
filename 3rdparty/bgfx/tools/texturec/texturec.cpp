@@ -27,8 +27,8 @@
 #endif // DEBUG
 
 #include <bx/bx.h>
-#include <bx/allocator.h>
 #include <bx/commandline.h>
+#include <bx/crtimpl.h>
 #include <bx/uint32_t.h>
 
 namespace bgfx
@@ -117,7 +117,7 @@ namespace bgfx
 		case TextureFormat::PTC14:
 			{
 				using namespace Javelin;
-				RgbBitmap bmp;
+				RgbaBitmap bmp;
 				bmp.width  = _width;
 				bmp.height = _height;
 				bmp.data   = (uint8_t*)const_cast<void*>(_src);
@@ -472,7 +472,12 @@ int main(int _argc, const char* _argv[])
 
 				if (normalMap)
 				{
-					uint32_t size = imageGetSize(TextureFormat::RGBA32F, mip.m_width, mip.m_height);
+					output = imageAlloc(imageContainer, format, mip.m_width, mip.m_height, 0, false, mips);
+
+					ImageMip dstMip;
+					imageGetRawData(imageContainer, 0, 0, NULL, 0, dstMip);
+
+					uint32_t size = imageGetSize(TextureFormat::RGBA32F, dstMip.m_width, dstMip.m_height);
 					temp = BX_ALLOC(&allocator, size);
 					float* rgba = (float*)temp;
 					float* rgbaDst = (float*)BX_ALLOC(&allocator, size);
@@ -502,17 +507,13 @@ int main(int _argc, const char* _argv[])
 						}
 					}
 
-					output = imageAlloc(imageContainer, format, mip.m_width, mip.m_height, 0, false, mips);
-
-					imageRgba32f11to01(rgbaDst, mip.m_width, mip.m_height, mip.m_width*16, rgba);
-					imageEncodeFromRgba32f(&allocator, output->data, rgbaDst, mip.m_width, mip.m_height, format);
+					imageRgba32f11to01(rgbaDst, dstMip.m_width, dstMip.m_height, dstMip.m_width*16, rgba);
+					imageEncodeFromRgba32f(&allocator, output->data, rgbaDst, dstMip.m_width, dstMip.m_height, format);
 
 					for (uint8_t lod = 1; lod < numMips; ++lod)
 					{
-						imageRgba32fDownsample2x2NormalMap(mip.m_width, mip.m_height, mip.m_width*16, rgba, rgba);
-						imageRgba32f11to01(rgbaDst, mip.m_width, mip.m_height, mip.m_width*16, rgba);
-
-						ImageMip dstMip;
+						imageRgba32fDownsample2x2NormalMap(dstMip.m_width, dstMip.m_height, dstMip.m_width*16, rgba, rgba);
+						imageRgba32f11to01(rgbaDst, dstMip.m_width, dstMip.m_height, dstMip.m_width*16, rgba);
 						imageGetRawData(imageContainer, 0, lod, output->data, output->size, dstMip);
 						uint8_t* data = const_cast<uint8_t*>(dstMip.m_data);
 						imageEncodeFromRgba32f(&allocator, data, rgbaDst, dstMip.m_width, dstMip.m_height, format);
@@ -522,8 +523,14 @@ int main(int _argc, const char* _argv[])
 				}
 				else
 				{
-					uint32_t size = imageGetSize(TextureFormat::RGBA8, mip.m_width, mip.m_height);
+					output = imageAlloc(imageContainer, format, mip.m_width, mip.m_height, 0, false, mips);
+
+					ImageMip dstMip;
+					imageGetRawData(imageContainer, 0, 0, NULL, 0, dstMip);
+
+					uint32_t size = imageGetSize(TextureFormat::RGBA8, dstMip.m_width, dstMip.m_height);
 					temp = BX_ALLOC(&allocator, size);
+					memset(temp, 0, size);
 					uint8_t* rgba = (uint8_t*)temp;
 
 					imageDecodeToRgba8(rgba
@@ -534,15 +541,11 @@ int main(int _argc, const char* _argv[])
 						, mip.m_format
 						);
 
-					output = imageAlloc(imageContainer, format, mip.m_width, mip.m_height, 0, false, mips);
-
-					imageEncodeFromRgba8(output->data, rgba, mip.m_width, mip.m_height, format);
+					imageEncodeFromRgba8(output->data, rgba, dstMip.m_width, dstMip.m_height, format);
 
 					for (uint8_t lod = 1; lod < numMips; ++lod)
 					{
-						imageRgba8Downsample2x2(mip.m_width, mip.m_height, mip.m_width*4, rgba, rgba);
-
-						ImageMip dstMip;
+						imageRgba8Downsample2x2(dstMip.m_width, dstMip.m_height, dstMip.m_width*4, rgba, rgba);
 						imageGetRawData(imageContainer, 0, lod, output->data, output->size, dstMip);
 						uint8_t* data = const_cast<uint8_t*>(dstMip.m_data);
 						imageEncodeFromRgba8(data, rgba, dstMip.m_width, dstMip.m_height, format);

@@ -59,12 +59,12 @@ ui_menu_control_device_image::ui_menu_control_device_image(running_machine &mach
 		if (image->exists())
 		{
 			current_file.assign(image->filename());
-			zippath_parent(current_directory, current_file.c_str());
+			util::zippath_parent(current_directory, current_file.c_str());
 		} else
 			current_directory.assign(image->working_directory());
 
 		/* check to see if the path exists; if not clear it */
-		if (zippath_opendir(current_directory.c_str(), nullptr) != FILERR_NONE)
+		if (util::zippath_opendir(current_directory.c_str(), nullptr) != osd_file::error::NONE)
 			current_directory.clear();
 	}
 }
@@ -90,7 +90,7 @@ void ui_menu_control_device_image::test_create(bool &can_create, bool &need_conf
 	osd_dir_entry_type file_type;
 
 	/* assemble the full path */
-	zippath_combine(path, current_directory.c_str(), current_file.c_str());
+	util::zippath_combine(path, current_directory.c_str(), current_file.c_str());
 
 	/* does a file or a directory exist at the path */
 	entry = osd_stat(path.c_str());
@@ -112,7 +112,7 @@ void ui_menu_control_device_image::test_create(bool &can_create, bool &need_conf
 
 		case ENTTYPE_DIR:
 			/* a directory exists here - we can't save over it */
-			machine().ui().popup_time(5, "Cannot save over directory");
+			machine().ui().popup_time(5, "%s", _("Cannot save over directory"));
 			can_create = false;
 			need_confirm = false;
 			break;
@@ -146,7 +146,7 @@ void ui_menu_control_device_image::load_software_part()
 		hook_load(temp_name, true);
 	else
 	{
-		machine().popmessage("The software selected is missing one or more required ROM or CHD images. Please select a different one.");
+		machine().popmessage(_("The software selected is missing one or more required ROM or CHD images. Please select a different one."));
 		state = SELECT_SOFTLIST;
 	}
 }
@@ -183,11 +183,11 @@ void ui_menu_control_device_image::handle()
 	case START_FILE: {
 		bool can_create = false;
 		if(image->is_creatable()) {
-			zippath_directory *directory = nullptr;
-			file_error err = zippath_opendir(current_directory.c_str(), &directory);
-			can_create = err == FILERR_NONE && !zippath_is_zip(directory);
+			util::zippath_directory *directory = nullptr;
+			osd_file::error err = util::zippath_opendir(current_directory.c_str(), &directory);
+			can_create = err == osd_file::error::NONE && !util::zippath_is_zip(directory);
 			if(directory)
-				zippath_closedir(directory);
+				util::zippath_closedir(directory);
 		}
 		submenu_result = -1;
 		ui_menu::stack_push(global_alloc_clear<ui_menu_file_selector>(machine(), container, image, current_directory, current_file, true, image->image_interface()!=nullptr, can_create, &submenu_result));
@@ -335,7 +335,7 @@ void ui_menu_control_device_image::handle()
 
 	case DO_CREATE: {
 		std::string path;
-		zippath_combine(path, current_directory.c_str(), current_file.c_str());
+		util::zippath_combine(path, current_directory.c_str(), current_file.c_str());
 		int err = image->create(path.c_str(), nullptr, nullptr);
 		if (err != 0)
 			machine().popmessage("Error: %s", image->error());

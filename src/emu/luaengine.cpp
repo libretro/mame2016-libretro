@@ -10,7 +10,7 @@
 
 #include <limits>
 #include <thread>
-#include "lua.hpp"
+#include <lua.hpp>
 #include "luabridge/Source/LuaBridge/LuaBridge.h"
 #include <signal.h>
 #include "emu.h"
@@ -19,9 +19,6 @@
 #include "ui/ui.h"
 #include "luaengine.h"
 #include <mutex>
-#if !defined(NO_LIBUV)
-#include "libuv/include/uv.h"
-#endif
 
 #ifdef OSD_RETRO
 #ifdef __ANDROID__
@@ -58,10 +55,6 @@ extern "C" {
 	int luaopen_lsqlite3(lua_State *L);
 	int luaopen_zlib(lua_State *L);
 	int luaopen_lfs(lua_State *L);
-#if !defined(NO_LIBUV)
-	int luaopen_luv(lua_State *L);
-	uv_loop_t* luv_loop(lua_State* L);
-#endif
 }
 
 static void lstop(lua_State *L, lua_Debug *ar)
@@ -254,6 +247,16 @@ int lua_engine::l_emu_gamename(lua_State *L)
 int lua_engine::l_emu_romname(lua_State *L)
 {
 	lua_pushstring(L, luaThis->machine().basename());
+	return 1;
+}
+
+//-------------------------------------------------
+//  emu_softname - returns softlist name
+//-------------------------------------------------
+
+int lua_engine::l_emu_softname(lua_State *L)
+{
+	lua_pushstring(L, luaThis->machine().options().software_name());
 	return 1;
 }
 
@@ -851,6 +854,54 @@ int lua_engine::lua_screen::l_width(lua_State *L)
 	return 1;
 }
 
+
+//-------------------------------------------------
+//  screen_orientation - return screen orientation
+//  -> manager:machine().screens[":screen"]:orientation()
+//     -> rotation_angle (0, 90, 180, 270)
+//     -> flipx (true, false)
+//     -> flipy (true, false)
+//-------------------------------------------------
+
+int lua_engine::lua_screen::l_orientation(lua_State *L)
+{
+	UINT32 flags = (luaThis->machine().system().flags & ORIENTATION_MASK);
+
+	int rotation_angle = 0;
+	switch (flags)
+	{
+		case ORIENTATION_FLIP_X:
+			rotation_angle = 0;
+			break;
+		case ORIENTATION_SWAP_XY:
+		case ORIENTATION_SWAP_XY|ORIENTATION_FLIP_X:
+			rotation_angle = 90;
+			break;
+		case ORIENTATION_FLIP_Y:
+		case ORIENTATION_FLIP_X|ORIENTATION_FLIP_Y:
+			rotation_angle = 180;
+			break;
+		case ORIENTATION_SWAP_XY|ORIENTATION_FLIP_Y:
+		case ORIENTATION_SWAP_XY|ORIENTATION_FLIP_X|ORIENTATION_FLIP_Y:
+			rotation_angle = 270;
+			break;
+	}
+
+	lua_createtable(L, 2, 2);
+	lua_pushliteral(L, "rotation_angle");
+	lua_pushinteger(L, rotation_angle);
+
+	lua_settable(L, -3);
+	lua_pushliteral(L, "flipx");
+	lua_pushboolean(L, (flags & ORIENTATION_FLIP_X));
+
+	lua_settable(L, -3);
+	lua_pushliteral(L, "flipy");
+	lua_pushboolean(L, (flags & ORIENTATION_FLIP_Y));
+	lua_settable(L, -3);
+	return 1;
+}
+
 //-------------------------------------------------
 //  screen_refresh - return screen refresh rate
 //  -> manager:machine().screens[":screen"]:refresh()
@@ -883,7 +934,7 @@ int lua_engine::lua_screen::l_snapshot(lua_State *L)
 	luaL_argcheck(L, lua_isstring(L, 2) || lua_isnone(L, 2), 2, "optional argument: filename, string expected");
 
 	emu_file file(sc->machine().options().snapshot_directory(), OPEN_FLAG_WRITE | OPEN_FLAG_CREATE | OPEN_FLAG_CREATE_PATHS);
-	file_error filerr;
+	osd_file::error filerr;
 
 	if (!lua_isnone(L, 2)) {
 		const char *filename = lua_tostring(L, 2);
@@ -897,9 +948,9 @@ int lua_engine::lua_screen::l_snapshot(lua_State *L)
 		filerr = sc->machine().video().open_next(file, "png");
 	}
 
-	if (filerr != FILERR_NONE)
+	if (filerr != osd_file::error::NONE)
 	{
-		luaL_error(L, "file_error=%d", filerr);
+		luaL_error(L, "osd_file::error=%d", filerr);
 		return 0;
 	}
 
@@ -1205,12 +1256,6 @@ lua_engine::lua_engine()
 	lua_getfield(m_lua_state, -1, "preload");
 	lua_remove(m_lua_state, -2); // Remove package
 
-#if !defined(NO_LIBUV)
-	// Store uv module definition at preload.uv
-	lua_pushcfunction(m_lua_state, luaopen_luv);
-	lua_setfield(m_lua_state, -2, "luv");
-#endif
-
 	lua_pushcfunction(m_lua_state, luaopen_zlib);
 	lua_setfield(m_lua_state, -2, "zlib");
 
@@ -1280,6 +1325,11 @@ int lua_engine::register_function(lua_State *L, const char *id)
 	return 1;
 }
 
+int lua_engine::l_emu_register_prestart(lua_State *L)
+{
+	return register_function(L, "LUA_ON_PRESTART");
+}
+
 int lua_engine::l_emu_register_start(lua_State *L)
 {
 	return register_function(L, "LUA_ON_START");
@@ -1303,6 +1353,11 @@ int lua_engine::l_emu_register_resume(lua_State *L)
 int lua_engine::l_emu_register_frame(lua_State *L)
 {
 	return register_function(L, "LUA_ON_FRAME");
+}
+
+void lua_engine::on_machine_prestart()
+{
+	execute_function("LUA_ON_PRESTART");
 }
 
 void lua_engine::on_machine_start()
@@ -1348,15 +1403,35 @@ void lua_engine::update_machine()
 			}
 			port = port->next();
 		}
-		machine().add_notifier(MACHINE_NOTIFY_RESET, machine_notify_delegate(FUNC(lua_engine::on_machine_start), this));
-		machine().add_notifier(MACHINE_NOTIFY_EXIT, machine_notify_delegate(FUNC(lua_engine::on_machine_stop), this));
-		machine().add_notifier(MACHINE_NOTIFY_PAUSE, machine_notify_delegate(FUNC(lua_engine::on_machine_pause), this));
-		machine().add_notifier(MACHINE_NOTIFY_RESUME, machine_notify_delegate(FUNC(lua_engine::on_machine_resume), this));
-		machine().add_notifier(MACHINE_NOTIFY_FRAME, machine_notify_delegate(FUNC(lua_engine::on_machine_frame), this));
 	}
 	lua_setglobal(m_lua_state, "ioport");
 }
 
+void lua_engine::attach_notifiers()
+{
+	machine().add_notifier(MACHINE_NOTIFY_RESET, machine_notify_delegate(FUNC(lua_engine::on_machine_prestart), this), true);
+	machine().add_notifier(MACHINE_NOTIFY_RESET, machine_notify_delegate(FUNC(lua_engine::on_machine_start), this));
+	machine().add_notifier(MACHINE_NOTIFY_EXIT, machine_notify_delegate(FUNC(lua_engine::on_machine_stop), this));
+	machine().add_notifier(MACHINE_NOTIFY_PAUSE, machine_notify_delegate(FUNC(lua_engine::on_machine_pause), this));
+	machine().add_notifier(MACHINE_NOTIFY_RESUME, machine_notify_delegate(FUNC(lua_engine::on_machine_resume), this));
+	machine().add_notifier(MACHINE_NOTIFY_FRAME, machine_notify_delegate(FUNC(lua_engine::on_machine_frame), this));
+}
+
+int lua_engine::lua_machine::l_popmessage(lua_State *L)
+{
+	running_machine *m = luabridge::Stack<running_machine *>::get(L, 1);
+	luaL_argcheck(L, lua_isstring(L, 2), 2, "message (string) expected");
+	m->popmessage("%s", luaL_checkstring(L, 2));
+	return 0;
+}
+
+int lua_engine::lua_machine::l_logerror(lua_State *L)
+{
+	running_machine *m = luabridge::Stack<running_machine *>::get(L, 1);
+	luaL_argcheck(L, lua_isstring(L, 2), 2, "message (string) expected");
+	m->logerror("[luaengine] %s\n", luaL_checkstring(L, 2));
+	return 0;
+}
 
 //-------------------------------------------------
 //  initialize - initialize lua hookup to emu engine
@@ -1370,6 +1445,7 @@ void lua_engine::initialize()
 			.addCFunction ("app_version", l_emu_app_version )
 			.addCFunction ("gamename",    l_emu_gamename )
 			.addCFunction ("romname",     l_emu_romname )
+			.addCFunction ("softname",    l_emu_softname )
 			.addCFunction ("keypost",     l_emu_keypost )
 			.addCFunction ("hook_output", l_emu_hook_output )
 			.addCFunction ("sethook",     l_emu_set_hook )
@@ -1380,6 +1456,7 @@ void lua_engine::initialize()
 			.addCFunction ("start",       l_emu_start )
 			.addCFunction ("pause",       l_emu_pause )
 			.addCFunction ("unpause",     l_emu_unpause )
+			.addCFunction ("register_prestart", l_emu_register_prestart )
 			.addCFunction ("register_start", l_emu_register_start )
 			.addCFunction ("register_stop",  l_emu_register_stop )
 			.addCFunction ("register_pause", l_emu_register_pause )
@@ -1388,8 +1465,13 @@ void lua_engine::initialize()
 			.beginClass <machine_manager> ("manager")
 				.addFunction ("machine", &machine_manager::machine)
 				.addFunction ("options", &machine_manager::options)
+				.addFunction ("plugins", &machine_manager::plugins)
 			.endClass ()
-			.beginClass <running_machine> ("machine")
+			.beginClass <lua_machine> ("lua_machine")
+				.addCFunction ("popmessage", &lua_machine::l_popmessage)
+				.addCFunction ("logerror", &lua_machine::l_logerror)
+			.endClass ()
+			.deriveClass <running_machine, lua_machine> ("machine")
 				.addFunction ("exit", &running_machine::schedule_exit)
 				.addFunction ("hard_reset", &running_machine::schedule_hard_reset)
 				.addFunction ("soft_reset", &running_machine::schedule_soft_reset)
@@ -1512,6 +1594,8 @@ void lua_engine::initialize()
 			.endClass()
 			.deriveClass <ui_options, core_options> ("ui_options")
 			.endClass()
+			.deriveClass <plugin_options, core_options> ("plugin_options")
+			.endClass()
 			.beginClass <parameters_manager> ("parameters")
 				.addFunction ("add", &parameters_manager::add)
 				.addFunction ("lookup", &parameters_manager::lookup)
@@ -1595,6 +1679,7 @@ void lua_engine::initialize()
 				.addCFunction ("draw_text", &lua_screen::l_draw_text)
 				.addCFunction ("height", &lua_screen::l_height)
 				.addCFunction ("width", &lua_screen::l_width)
+				.addCFunction ("orientation", &lua_screen::l_orientation)
 				.addCFunction ("refresh", &lua_screen::l_refresh)
 				.addCFunction ("snapshot", &lua_screen::l_snapshot)
 				.addCFunction ("type", &lua_screen::l_type)
@@ -1675,11 +1760,6 @@ void lua_engine::periodic_check()
 		msg.ready = 0;
 		msg.done = 1;
 	}
-#if !defined(NO_LIBUV)	
-	auto loop = luv_loop(m_lua_state);
-	if (loop!=nullptr)
-		uv_run(loop, UV_RUN_NOWAIT);
-#endif
 }
 
 //-------------------------------------------------
@@ -1732,13 +1812,13 @@ void lua_engine::start()
 
 namespace luabridge {
 	template <>
-	struct Stack <UINT64> {
-		static inline void push (lua_State* L, UINT64 value) {
+	struct Stack <unsigned long long> {
+		static inline void push (lua_State* L, unsigned long long value) {
 			lua_pushunsigned(L, static_cast <lua_Unsigned> (value));
 		}
 
-		static inline UINT64 get (lua_State* L, int index) {
-			return static_cast <UINT64> (luaL_checkunsigned (L, index));
+		static inline unsigned long long get (lua_State* L, int index) {
+			return static_cast <unsigned long long> (luaL_checkunsigned (L, index));
 		}
 	};
 }

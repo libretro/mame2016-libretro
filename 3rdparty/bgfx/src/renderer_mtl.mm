@@ -661,7 +661,6 @@ namespace bgfx { namespace mtl
 			bx::write(&writer, magic);
 
 			TextureCreate tc;
-			tc.m_flags   = texture.m_flags;
 			tc.m_width   = _width;
 			tc.m_height  = _height;
 			tc.m_sides   = 0;
@@ -673,7 +672,7 @@ namespace bgfx { namespace mtl
 			bx::write(&writer, tc);
 
 			texture.destroy();
-			texture.create(mem, tc.m_flags, 0);
+			texture.create(mem, texture.m_flags, 0);
 
 			release(mem);
 		}
@@ -1855,20 +1854,10 @@ namespace bgfx { namespace mtl
 			const uint32_t textureHeight = bx::uint32_max(blockInfo.blockHeight, imageContainer.m_height>>startLod);
 
 			m_flags = _flags;
-			m_requestedFormat = (uint8_t)imageContainer.m_format;
-			m_textureFormat   = MTLPixelFormatInvalid == s_textureFormat[m_requestedFormat].m_fmt
-				? uint8_t(TextureFormat::BGRA8)
-				: m_requestedFormat
-				;
-
-			const bool convert = m_requestedFormat != m_textureFormat;
-
-			uint8_t bpp = getBitsPerPixel(TextureFormat::Enum(m_textureFormat) );
-			if (convert)
-			{
-				m_textureFormat = (uint8_t)TextureFormat::RGBA8;
-				bpp = 32;
-			}
+			m_requestedFormat  = uint8_t(imageContainer.m_format);
+			m_textureFormat    = uint8_t(getViableTextureFormat(imageContainer) );
+			const bool convert = m_textureFormat != m_requestedFormat;
+			const uint8_t bpp = getBitsPerPixel(TextureFormat::Enum(m_textureFormat) );
 
 			TextureDescriptor desc = s_renderMtl->m_textureDescriptor;
 
