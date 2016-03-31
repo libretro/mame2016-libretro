@@ -985,13 +985,10 @@ endif
 ifndef ANDROID_NDK_ROOT
 	$(error ANDROID_NDK_ROOT is not set)
 endif
-<<<<<<< HEAD
 
 	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-arm --gcc_version=4.9 -osd=retro --targetos=android-arm --targetos=android --PLATFORM=arm --NOASM=1 gmake
 #	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-arm --gcc_version=3.6.0 --osd=osdmini --targetos=android-arm --targetos=android --PLATFORM=arm --NOASM=1 gmake
-=======
-	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-arm --gcc_version=3.8.0 --osd=sdl --targetos=android --PLATFORM=arm --NO_USE_MIDI=1 --NO_OPENGL=1 --USE_QTDEBUG=0 --NO_X11=1 --DONT_USE_NETWORK=1 --NOASM=1 gmake
->>>>>>> mame0172
+#	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-arm --gcc_version=3.8.0 --osd=sdl --targetos=android --PLATFORM=arm --NO_USE_MIDI=1 --NO_OPENGL=1 --USE_QTDEBUG=0 --NO_X11=1 --DONT_USE_NETWORK=1 --NOASM=1 gmake
 
 .PHONY: android-arm
 android-arm: generate $(PROJECTDIR_SDL)/gmake-android-arm/Makefile

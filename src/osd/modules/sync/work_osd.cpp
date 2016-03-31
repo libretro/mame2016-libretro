@@ -32,23 +32,16 @@
 #if defined(SDLMAME_MACOSX)
 #include "osxutils.h"
 #endif
-<<<<<<< HEAD
-=======
 #if defined(SDLMAME_LINUX) || defined(SDLMAME_BSD) || defined(SDLMAME_HAIKU) || defined(SDLMAME_EMSCRIPTEN) || defined(SDLMAME_MACOSX)
 #include <pthread.h>
 #endif
-#if defined(OSD_SDL)
+#if defined(OSD_SDL) || defined(__LIBRETRO__)
 typedef void *PVOID;
 #endif
->>>>>>> mame0172
 
 //============================================================
 //  DEBUGGING
 //============================================================
-
-#if defined(OSD_SDL) || defined(__LIBRETRO__)
-typedef void *PVOID;
-#endif
 
 #define KEEP_STATISTICS         (0)
 
@@ -483,13 +476,7 @@ osd_work_item *osd_work_item_queue_multiple(osd_work_queue *queue, osd_work_call
 
 		// first allocate a new work item; try the free list first
 		{
-<<<<<<< HEAD
-
-
-			queue->lock->lock();
-=======
 			std::lock_guard<std::mutex> lock(*queue->lock);
->>>>>>> mame0172
 			do
 			{
 				item = (osd_work_item *)queue->free;
@@ -634,14 +621,7 @@ void osd_work_item_release(osd_work_item *item)
 	{
 		next = (osd_work_item *)item->queue->free;
 		item->next = next;
-<<<<<<< HEAD
-
-	} while (compare_exchange_ptr((PVOID volatile *)&item->queue->free, next, item) != next);
-	item->queue->lock->unlock();
-
-=======
 	} while (!item->queue->free.compare_exchange_weak(next, item, std::memory_order_release, std::memory_order_relaxed));
->>>>>>> mame0172
 }
 
 

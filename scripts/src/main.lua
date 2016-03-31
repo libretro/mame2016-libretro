@@ -219,7 +219,6 @@ end
 	links {
 		"osd_" .. _OPTIONS["osd"],
 	}
-<<<<<<< HEAD
 
 	if _OPTIONS["osd"]=="retro" then
 
@@ -234,11 +233,6 @@ end
 			"bus",
 		}
 	end
-=======
-	links {
-		"qtdbg_" .. _OPTIONS["osd"],
-	}
->>>>>>> mame0172
 	links {
 		"netlist",
 		"optional",
@@ -300,7 +294,6 @@ end
 		ext_includedir("flac"),
 	}
 
-<<<<<<< HEAD
 	if _OPTIONS["with-bundled-zlib"] then
 		includedirs {
 			MAME_DIR .. "3rdparty/zlib",
@@ -335,8 +328,6 @@ end
 	end
 -- RETRO HACK
 
-=======
->>>>>>> mame0172
 	if _OPTIONS["targetos"]=="macosx" and (not override_resources) then
 		linkoptions {
 			"-sectcreate __TEXT __info_plist " .. _MAKE.esc(GEN_DIR) .. "resource/" .. _subtarget .. "-Info.plist"

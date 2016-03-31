@@ -1058,8 +1058,7 @@ configuration { "pnacl" }
 	}
 	archivesplit_size "20"
 
-<<<<<<< HEAD
-configuration { "linux-*" }
+configuration { "linux-* or rpi or ci20" }
 --RETRO HACK
 if _OPTIONS["osd"]=="retro" then
 		links {
@@ -1076,9 +1075,6 @@ if _OPTIONS["osd"]=="retro" then
 		}
 else
 -- ORIGIN
-=======
-configuration { "linux-* or rpi or ci20"}
->>>>>>> mame0172
 		links {
 			"dl",
 			"rt",

@@ -359,7 +359,6 @@ UINT32 ui_manager::set_handler(ui_callback callback, UINT32 param)
 //  various startup screens
 //-------------------------------------------------
 
-<<<<<<< HEAD
 #if 0
 #ifdef OSD_RETRO
 extern bool hide_nagscreen;
@@ -367,10 +366,7 @@ extern bool hide_warnings;
 #endif
 #endif
 
-void ui_manager::display_startup_screens(bool first_time, bool show_disclaimer)
-=======
 void ui_manager::display_startup_screens(bool first_time)
->>>>>>> mame0172
 {
 	const int maxstate = 3;
 	int str = machine().options().seconds_to_run();
