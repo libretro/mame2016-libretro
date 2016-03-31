@@ -167,7 +167,7 @@ project ("ocore_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/modules/lib/osdlib_retro.c",
 		MAME_DIR .. "src/osd/modules/midi/none.cpp",
 		MAME_DIR .. "src/osd/modules/osdmodule.cpp",
-		MAME_DIR .. "src/osd/modules/sync/sync_retro.c",
+		MAME_DIR .. "src/osd/modules/sync/osdsync.cpp",
 		MAME_DIR .. "src/osd/retro/retrodir.c",
 		MAME_DIR .. "src/osd/retro/retrofile.c",
 		MAME_DIR .. "src/osd/retro/retroos.c",
