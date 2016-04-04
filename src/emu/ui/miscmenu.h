@@ -142,8 +142,6 @@ private:
 	const game_driver *m_drv;
 };
 
-<<<<<<< HEAD
-=======
 //-------------------------------------------------
 //  plugins configure menu
 //-------------------------------------------------
@@ -158,5 +156,4 @@ public:
 	virtual void custom_render(void *selectedref, float top, float bottom, float x, float y, float x2, float y2) override;
 };
 
->>>>>>> mame0172
 #endif  /* __UI_MISCMENU_H__ */

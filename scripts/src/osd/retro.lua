@@ -74,6 +74,10 @@ project ("osd_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/modules/debugger/debugint.cpp",
 		MAME_DIR .. "src/osd/modules/debugger/none.cpp",
 		MAME_DIR .. "src/osd/modules/lib/osdobj_common.cpp",
+		MAME_DIR .. "src/osd/modules/input/input_module.h",
+		MAME_DIR .. "src/osd/modules/input/input_common.cpp",
+		MAME_DIR .. "src/osd/modules/input/input_common.h",
+		MAME_DIR .. "src/osd/modules/input/input_none.cpp",
 		MAME_DIR .. "src/osd/modules/sound/none.cpp",
 		MAME_DIR .. "src/osd/modules/sound/retro_sound.c",
 		MAME_DIR .. "src/osd/retro/retromain.cpp",
@@ -169,8 +173,11 @@ project ("ocore_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/modules/osdmodule.cpp",
 		MAME_DIR .. "src/osd/modules/sync/osdsync.cpp",
 		MAME_DIR .. "src/osd/retro/retrodir.c",
-		MAME_DIR .. "src/osd/retro/retrofile.c",
+		MAME_DIR .. "src/osd/retro/retrofile.cpp",
 		MAME_DIR .. "src/osd/retro/retroos.c",
+		MAME_DIR .. "src/osd/modules/file/posixfile.cpp",
+		MAME_DIR .. "src/osd/modules/file/posixptty.cpp",
+		MAME_DIR .. "src/osd/modules/file/posixsocket.cpp",
 	}
 
 	if _OPTIONS["NOASM"]=="1" then

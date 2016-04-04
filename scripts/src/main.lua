@@ -229,9 +229,13 @@ end
 	end
 
 	if (_OPTIONS["SOURCES"] == nil) then 
-		links {
-			"bus",
-		}
+		if _OPTIONS["osd"]=="retro" then
+	
+		else
+			links {
+				"bus",
+			}
+		end
 	end
 	links {
 		"netlist",

@@ -141,7 +141,7 @@ osd_file::error posix_open_ptty(std::uint32_t openflags, osd_file::ptr &file, st
 		::close(masterfd);
 		return errno_to_file_error(err);
 	}
-#elif defined(__ANDROID__)
+#elif defined(__ANDROID__) || defined(__LIBRETRO__)
 	int masterfd = -1, slavefd = -1;
 	char slavepath[PATH_MAX];
 #else

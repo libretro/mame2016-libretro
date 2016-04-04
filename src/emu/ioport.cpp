@@ -485,8 +485,8 @@ const char_info charinfo[] =
 };
 
 
-int autofire_delay;
-int autofire_toggle;
+//int autofire_delay;
+//int autofire_toggle;
 
 //**************************************************************************
 //  COMMON SHARED STRINGS
@@ -2506,8 +2506,8 @@ ioport_manager::ioport_manager(running_machine &machine)
 
 time_t ioport_manager::initialize()
 {
-	autofire_delay = 1;
-	autofire_toggle = 0;
+//	autofire_delay = 1;
+//	autofire_toggle = 0;
 
 	// add an exit callback and a frame callback
 	machine().add_notifier(MACHINE_NOTIFY_EXIT, machine_notify_delegate(FUNC(ioport_manager::exit), this));
