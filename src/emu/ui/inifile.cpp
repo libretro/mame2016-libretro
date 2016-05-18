@@ -1,5 +1,5 @@
 // license:BSD-3-Clause
-// copyright-holders:Dankan1890
+// copyright-holders:Maurizio Petrarota
 /***************************************************************************
 
     ui/inifile.cpp
@@ -18,8 +18,8 @@
 //-------------------------------------------------
 //  GLOBAL VARIABLES
 //-------------------------------------------------
-UINT16 inifile_manager::current_category = 0;
-UINT16 inifile_manager::current_file = 0;
+UINT16 inifile_manager::c_cat = 0;
+UINT16 inifile_manager::c_file = 0;
 
 //-------------------------------------------------
 //  ctor
@@ -47,10 +47,6 @@ void inifile_manager::directory_scan()
 	{
 		int length = strlen(dir->name);
 		std::string filename(dir->name);
-
-		// skip ui_favorite file
-		if (!core_stricmp("ui_favorite.ini", filename.c_str()))
-			continue;
 
 		// check .ini file ending
 		if ((length > 4) && dir->name[length - 4] == '.' && tolower((UINT8)dir->name[length - 3]) == 'i' &&
@@ -103,8 +99,8 @@ void inifile_manager::load_ini_category(std::vector<int> &temp_filter)
 		return;
 
 	bool search_clones = false;
-	std::string filename(ini_index[current_file].name);
-	long offset = ini_index[current_file].category[current_category].offset;
+	std::string filename(ini_index[c_file].first);
+	long offset = ini_index[c_file].second[c_cat].second;
 
 	if (!core_stricmp(filename.c_str(), "category.ini") || !core_stricmp(filename.c_str(), "alltime.ini"))
 		search_clones = true;
@@ -151,7 +147,7 @@ bool inifile_manager::parseopen(const char *filename)
 	// so it's better and faster use standard C fileio functions.
 
 	emu_file file(machine().ui().options().extraini_path(), OPEN_FLAG_READ);
-	if (file.open(filename) != FILERR_NONE)
+	if (file.open(filename) != osd_file::error::NONE)
 		return false;
 
 	m_fullpath = file.fullpath();
@@ -359,7 +355,7 @@ bool favorite_manager::isgame_favorite(ui_software_info &swinfo)
 void favorite_manager::parse_favorite()
 {
 	emu_file file(machine().ui().options().ui_path(), OPEN_FLAG_READ);
-	if (file.open(favorite_filename) == FILERR_NONE)
+	if (file.open(favorite_filename) == osd_file::error::NONE)
 	{
 		char readbuf[1024];
 		file.gets(readbuf, 1024);
@@ -418,7 +414,7 @@ void favorite_manager::save_favorite_games()
 {
 	// attempt to open the output file
 	emu_file file(machine().ui().options().ui_path(), OPEN_FLAG_WRITE | OPEN_FLAG_CREATE | OPEN_FLAG_CREATE_PATHS);
-	if (file.open(favorite_filename) == FILERR_NONE)
+	if (file.open(favorite_filename) == osd_file::error::NONE)
 	{
 		if (m_list.empty())
 		{
@@ -428,27 +424,28 @@ void favorite_manager::save_favorite_games()
 		}
 
 		// generate the favorite INI
-		std::string text("[ROOT_FOLDER]\n[Favorite]\n\n");
+		std::ostringstream text;
+		text << "[ROOT_FOLDER]\n[Favorite]\n\n";
 		for (auto & elem : m_list)
 		{
-			text += elem.shortname + "\n";
-			text += elem.longname + "\n";
-			text += elem.parentname + "\n";
-			text += elem.year + "\n";
-			text += elem.publisher + "\n";
-			strcatprintf(text, "%d\n", elem.supported);
-			text += elem.part + "\n";
-			strcatprintf(text, "%s\n", elem.driver->name);
-			text += elem.listname + "\n";
-			text += elem.interface + "\n";
-			text += elem.instance + "\n";
-			strcatprintf(text, "%d\n", elem.startempty);
-			text += elem.parentlongname + "\n";
-			text += elem.usage + "\n";
-			text += elem.devicetype + "\n";
-			strcatprintf(text, "%d\n", elem.available);
+			text << elem.shortname << '\n';
+			text << elem.longname << '\n';
+			text << elem.parentname << '\n';
+			text << elem.year << '\n';
+			text << elem.publisher << '\n';
+			util::stream_format(text, "%d\n", elem.supported);
+			text << elem.part << '\n';
+			util::stream_format(text, "%s\n", elem.driver->name);
+			text << elem.listname << '\n';
+			text << elem.interface << '\n';
+			text << elem.instance << '\n';
+			util::stream_format(text, "%d\n", elem.startempty);
+			text << elem.parentlongname << '\n';
+			text << elem.usage << '\n';
+			text << elem.devicetype << '\n';
+			util::stream_format(text, "%d\n", elem.available);
 		}
-		file.puts(text.c_str());
+		file.puts(text.str().c_str());
 		file.close();
 	}
 }

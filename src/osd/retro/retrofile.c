@@ -19,7 +19,9 @@
 #include <errno.h>
 
 // MAME headers
-#include "../sdl/sdlfile.h"
+#include "../osdcore.h"
+#include "../osdcomm.h"
+#include "../modules/file/posixfile.h"
 #include "retroos.h"
 
 
@@ -50,25 +52,25 @@ extern const char *sdlfile_ptty_identifier;
 //  Prototypes
 //============================================================
 
-static UINT32 create_path_recursive(char *path);
+static std::uint32_t create_path_recursive(char *path);
 
 //============================================================
 //  error_to_file_error
 //  (does filling this out on non-Windows make any sense?)
 //============================================================
 //
-file_error osd_openpty(osd_file **file, char *name, size_t name_len)
+osd_file::error osd_openpty(osd_file::ptr *file, char *name, size_t name_len)
 {
-   return FILERR_NONE;
+   return osd_file::error::NONE;
 }
 
-file_error error_to_file_error(UINT32 error)
+osd_file::error error_to_file_error(std::uint32_t error)
 {
    switch (error)
    {
       case ENOENT:
       case ENOTDIR:
-         return FILERR_NOT_FOUND;
+         return osd_file::error::NOT_FOUND;
 
       case EACCES:
       case EROFS:
@@ -79,14 +81,14 @@ file_error error_to_file_error(UINT32 error)
       case EPERM:
       case EISDIR:
       case EINVAL:
-         return FILERR_ACCESS_DENIED;
+         return osd_file::error::ACCESS_DENIED;
 
       case ENFILE:
       case EMFILE:
-         return FILERR_TOO_MANY_FILES;
+         return osd_file::error::TOO_MANY_FILES;
    }
 
-   return FILERR_FAILURE;
+   return osd_file::error::FAILURE;
 }
 
 
@@ -94,9 +96,9 @@ file_error error_to_file_error(UINT32 error)
 //  osd_open
 //============================================================
 
-file_error osd_open(const char *path, UINT32 openflags, osd_file **file, UINT64 *filesize)
+osd_file::error osd_file::open(const char *path, std::uint32_t openflags, osd_file::ptr *file, UINT64 *filesize)
 {
-   UINT32 access;
+   std::uint32_t access;
    const char *src;
    char *dst;
 #if defined(__MACH__) || defined(_WIN32) ||  defined(SDLMAME_NO64BITIO) || defined(SDLMAME_ARM) || defined(SDLMAME_BSD) || defined(SDLMAME_OS2) || defined(SDLMAME_HAIKU)
@@ -106,15 +108,15 @@ file_error osd_open(const char *path, UINT32 openflags, osd_file **file, UINT64 
 #endif
    char *tmpstr, *envstr;
    int i, j;
-   file_error filerr = FILERR_NONE;
+   osd_file::error filerr = osd_file::error::NONE;
 
    tmpstr = NULL;
 
    // allocate a file object, plus space for the converted filename
-   *file = (osd_file *) osd_malloc_array(sizeof(**file) + sizeof(char) * strlen(path));
+   *file = (osd_file::ptr) osd_malloc_array(sizeof(**file) + sizeof(char) * strlen(path));
    if (*file == NULL)
    {
-      filerr = FILERR_OUT_OF_MEMORY;
+      filerr = osd_file::error::OUT_OF_MEMORY;
       goto error;
    }
 
@@ -154,7 +156,7 @@ file_error osd_open(const char *path, UINT32 openflags, osd_file **file, UINT64 
    }
    else
    {
-      filerr = FILERR_INVALID_ACCESS;
+      filerr = osd_file::error::INVALID_ACCESS;
       goto error;
    }
 
@@ -193,7 +195,7 @@ file_error osd_open(const char *path, UINT32 openflags, osd_file **file, UINT64 
          strcat(tmpstr, &envstr[i]);
       }
       else
-         fprintf(stderr, "Warning: osd_open environment variable %s not found.\n", envstr);
+         fprintf(stderr, "Warning: osd_file::open environment variable %s not found.\n", envstr);
       osd_free(envstr);
    }
 
@@ -257,7 +259,7 @@ file_error osd_open(const char *path, UINT32 openflags, osd_file **file, UINT64 
 
 error:
    // cleanup
-   if (filerr != FILERR_NONE && *file != NULL)
+   if (filerr != osd_file::error::NONE && *file != NULL)
    {
       osd_free(*file);
       *file = NULL;
@@ -272,7 +274,7 @@ error:
 //  osd_read
 //============================================================
 
-file_error osd_read(osd_file *file, void *buffer, UINT64 offset, UINT32 count, UINT32 *actual)
+osd_file::error osd_read(osd_file::ptr file, void *buffer, UINT64 offset, std::uint32_t count, std::uint32_t *actual)
 {
    ssize_t result;
 
@@ -283,7 +285,7 @@ file_error osd_read(osd_file *file, void *buffer, UINT64 offset, UINT32 count, U
          result = pread(file->handle, buffer, count, offset);
          if (result < 0)
 #elif defined(_WIN32) || defined(SDLMAME_NO64BITIO) || defined(SDLMAME_ARM) || defined(SDLMAME_OS2)
-            lseek(file->handle, (UINT32)offset&0xffffffff, SEEK_SET);
+            lseek(file->handle, (std::uint32_t)offset&0xffffffff, SEEK_SET);
          result = read(file->handle, buffer, count);
          if (result < 0)
 #elif defined(SDLMAME_UNIX)
@@ -297,7 +299,7 @@ file_error osd_read(osd_file *file, void *buffer, UINT64 offset, UINT32 count, U
          if (actual != NULL)
             *actual = result;
 
-         return FILERR_NONE;
+         return osd_file::error::NONE;
          break;
 #if 0
       case SDLFILE_SOCKET:
@@ -310,7 +312,7 @@ file_error osd_read(osd_file *file, void *buffer, UINT64 offset, UINT32 count, U
 #endif
    }
 
-   return FILERR_FAILURE;
+   return osd_file::error::FAILURE;
 }
 
 
@@ -318,9 +320,9 @@ file_error osd_read(osd_file *file, void *buffer, UINT64 offset, UINT32 count, U
 //  osd_write
 //============================================================
 
-file_error osd_write(osd_file *file, const void *buffer, UINT64 offset, UINT32 count, UINT32 *actual)
+osd_file::error osd_write(osd_file::ptr file, const void *buffer, UINT64 offset, std::uint32_t count, std::uint32_t *actual)
 {
-   UINT32 result;
+   std::uint32_t result;
 
    switch (file->type)
    {
@@ -329,7 +331,7 @@ file_error osd_write(osd_file *file, const void *buffer, UINT64 offset, UINT32 c
          result = pwrite(file->handle, buffer, count, offset);
          if (!result)
 #elif defined(_WIN32) || defined(SDLMAME_NO64BITIO) || defined(SDLMAME_ARM) || defined(SDLMAME_OS2)
-            lseek(file->handle, (UINT32)offset&0xffffffff, SEEK_SET);
+            lseek(file->handle, (std::uint32_t)offset&0xffffffff, SEEK_SET);
          result = write(file->handle, buffer, count);
          if (!result)
 #elif defined(SDLMAME_UNIX)
@@ -342,7 +344,7 @@ file_error osd_write(osd_file *file, const void *buffer, UINT64 offset, UINT32 c
 
          if (actual != NULL)
             *actual = result;
-         return FILERR_NONE;
+         return osd_file::error::NONE;
          break;
 #if 0
       case SDLFILE_SOCKET:
@@ -354,7 +356,7 @@ file_error osd_write(osd_file *file, const void *buffer, UINT64 offset, UINT32 c
          break;
 #endif
       default:
-         return FILERR_FAILURE;
+         return osd_file::error::FAILURE;
    }
 }
 
@@ -363,7 +365,7 @@ file_error osd_write(osd_file *file, const void *buffer, UINT64 offset, UINT32 c
 //  osd_close
 //============================================================
 
-file_error osd_close(osd_file *file)
+osd_file::error osd_close(osd_file::ptr file)
 {
    // close the file handle and free the file structure
    switch (file->type)
@@ -371,7 +373,7 @@ file_error osd_close(osd_file *file)
       case SDLFILE_FILE:
          close(file->handle);
          osd_free(file);
-         return FILERR_NONE;
+         return osd_file::error::NONE;
          break;
 #if 0
       case SDLFILE_SOCKET:
@@ -383,7 +385,7 @@ file_error osd_close(osd_file *file)
          break;
 #endif
       default:
-         return FILERR_FAILURE;
+         return osd_file::error::FAILURE;
    }
 }
 
@@ -391,21 +393,21 @@ file_error osd_close(osd_file *file)
 //  osd_rmfile
 //============================================================
 
-file_error osd_rmfile(const char *filename)
+osd_file::error osd_rmfile(const char *filename)
 {
 	if (unlink(filename) == -1)
 		return error_to_file_error(errno);
 
-	return FILERR_NONE;
+	return osd_file::error::NONE;
 }
 
 //============================================================
 //  create_path_recursive
 //============================================================
 
-static UINT32 create_path_recursive(char *path)
+static std::uint32_t create_path_recursive(char *path)
 {
-	UINT32 filerr;
+	std::uint32_t filerr;
 	struct stat st;
 	char *sep = strrchr(path, PATHSEPCH);
 
@@ -439,7 +441,7 @@ static UINT32 create_path_recursive(char *path)
 //============================================================
 
 int osd_get_physical_drive_geometry(const char *filename,
-      UINT32 *cylinders, UINT32 *heads, UINT32 *sectors, UINT32 *bps)
+      std::uint32_t *cylinders, std::uint32_t *heads, std::uint32_t *sectors, std::uint32_t *bps)
 {
 	return FALSE;
 }
@@ -479,7 +481,7 @@ int osd_is_absolute_path(const char *path)
 }
 
 
-int osd_uchar_from_osdchar(UINT32 /* unicode_char */ *uchar,
+int osd_uchar_from_osdchar(std::uint32_t /* unicode_char */ *uchar,
       const char *osdchar, size_t count)
 {
 	/* we assume a standard 1:1 mapping of characters 
@@ -541,17 +543,17 @@ const char *osd_get_volume_name(int idx)
 //  osd_get_full_path
 //============================================================
 
-file_error osd_get_full_path(char **dst, const char *path)
+osd_file::error osd_get_full_path(char **dst, const char *path)
 {
-	file_error err;
+	osd_file::error err;
 	char path_buffer[512];
 
-	err = FILERR_NONE;
+	err = osd_file::error::NONE;
 
 	if (getcwd(path_buffer, 511) == NULL)
 	{
 		printf("osd_get_full_path: failed!\n");
-		err = FILERR_FAILURE;
+		err = osd_file::error::FAILURE;
 	}
 	else
 	{
@@ -570,7 +572,7 @@ file_error osd_get_full_path(char **dst, const char *path)
 //============================================================
 //  osd_truncate
 //============================================================
-file_error osd_truncate(osd_file *file, UINT64 offset)
+osd_file::error osd_truncate(osd_file::ptr file, UINT64 offset)
 {
 	int result;
 
@@ -578,5 +580,5 @@ file_error osd_truncate(osd_file *file, UINT64 offset)
 	if (!result)
 		return error_to_file_error(errno);
 
-	return FILERR_NONE;
+	return osd_file::error::NONE;
 }

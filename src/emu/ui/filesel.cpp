@@ -2,7 +2,7 @@
 // copyright-holders:Nathan Woods
 /***************************************************************************
 
-    ui/filesel.c
+    ui/filesel.cpp
 
     MESS's clunky built-in file manager
 
@@ -18,6 +18,8 @@
 #include "zippath.h"
 #include "ui/filesel.h"
 #include "imagedev/floppy.h"
+
+#include <cstring>
 
 
 /***************************************************************************
@@ -156,10 +158,10 @@ ui_menu_confirm_save_as::~ui_menu_confirm_save_as()
 
 void ui_menu_confirm_save_as::populate()
 {
-	item_append("File Already Exists - Override?", nullptr, MENU_FLAG_DISABLE, nullptr);
+	item_append(_("File Already Exists - Override?"), nullptr, MENU_FLAG_DISABLE, nullptr);
 	item_append(MENU_SEPARATOR_ITEM, nullptr, MENU_FLAG_DISABLE, nullptr);
-	item_append("No", nullptr, 0, ITEMREF_NO);
-	item_append("Yes", nullptr, 0, ITEMREF_YES);
+	item_append(_("No"), nullptr, 0, ITEMREF_NO);
+	item_append(_("Yes"), nullptr, 0, ITEMREF_YES);
 }
 
 //-------------------------------------------------
@@ -224,6 +226,8 @@ ui_menu_file_create::ui_menu_file_create(running_machine &machine, render_contai
 	m_image = image;
 	m_ok = ok;
 	*m_ok = true;
+	auto const sep = current_file.rfind(PATH_SEPARATOR);
+	std::strncpy(m_filename_buffer, current_file.c_str() + ((std::string::npos == sep) ? 0 : (sep + 1)), sizeof(m_filename_buffer));
 }
 
 
@@ -268,19 +272,19 @@ void ui_menu_file_create::populate()
 	{
 		new_image_name = m_filename_buffer;
 	}
-	item_append("New Image Name:", new_image_name, 0, ITEMREF_NEW_IMAGE_NAME);
+	item_append(_("New Image Name:"), new_image_name, 0, ITEMREF_NEW_IMAGE_NAME);
 
 	// do we support multiple formats?
 	if (ENABLE_FORMATS) format = m_image->formatlist();
 	if (ENABLE_FORMATS && (format != nullptr))
 	{
-		item_append("Image Format:", m_current_format->description(), 0, ITEMREF_FORMAT);
+		item_append(_("Image Format:"), m_current_format->description(), 0, ITEMREF_FORMAT);
 		m_current_format = format;
 	}
 
 	// finish up the menu
 	item_append(MENU_SEPARATOR_ITEM, nullptr, 0, nullptr);
-	item_append("Create", nullptr, 0, ITEMREF_CREATE);
+	item_append(_("Create"), nullptr, 0, ITEMREF_CREATE);
 
 	customtop = machine().ui().get_line_height() + 3.0f * UI_BOX_TB_BORDER;
 }
@@ -307,11 +311,11 @@ void ui_menu_file_create::handle()
 					std::string tmp_file(m_filename_buffer);
 					if (tmp_file.find(".") != -1 && tmp_file.find(".") < tmp_file.length() - 1)
 					{
-						m_current_file.append(m_filename_buffer);
+						m_current_file = m_filename_buffer;
 						ui_menu::stack_pop(machine());
 					}
 					else
-						machine().ui().popup_time(1, "Please enter a file extension too");
+						machine().ui().popup_time(1, "%s", _("Please enter a file extension too"));
 				}
 				break;
 
@@ -474,7 +478,7 @@ ui_menu_file_selector::file_selector_entry *ui_menu_file_selector::append_dirent
 	}
 
 	// determine the full path
-	zippath_combine(buffer, m_current_directory.c_str(), dirent->name);
+	util::zippath_combine(buffer, m_current_directory.c_str(), dirent->name);
 
 	// create the file selector entry
 	entry = append_entry(
@@ -499,15 +503,15 @@ void ui_menu_file_selector::append_entry_menu_item(const file_selector_entry *en
 	switch(entry->type)
 	{
 		case SELECTOR_ENTRY_TYPE_EMPTY:
-			text = "[empty slot]";
+			text = _("[empty slot]");
 			break;
 
 		case SELECTOR_ENTRY_TYPE_CREATE:
-			text = "[create]";
+			text = _("[create]");
 			break;
 
 		case SELECTOR_ENTRY_TYPE_SOFTWARE_LIST:
-			text = "[software list]";
+			text = _("[software list]");
 			break;
 
 		case SELECTOR_ENTRY_TYPE_DRIVE:
@@ -535,8 +539,8 @@ void ui_menu_file_selector::append_entry_menu_item(const file_selector_entry *en
 
 void ui_menu_file_selector::populate()
 {
-	zippath_directory *directory = nullptr;
-	file_error err;
+	util::zippath_directory *directory = nullptr;
+	osd_file::error err;
 	const osd_directory_entry *dirent;
 	const file_selector_entry *entry;
 	const file_selector_entry *selected_entry = nullptr;
@@ -545,7 +549,7 @@ void ui_menu_file_selector::populate()
 	const char *path = m_current_directory.c_str();
 
 	// open the directory
-	err = zippath_opendir(path, &directory);
+	err = util::zippath_opendir(path, &directory);
 
 	// clear out the menu entries
 	m_entrylist = nullptr;
@@ -579,9 +583,9 @@ void ui_menu_file_selector::populate()
 	}
 
 	// build the menu for each item
-	if (err == FILERR_NONE)
+	if (err == osd_file::error::NONE)
 	{
-		while((dirent = zippath_readdir(directory)) != nullptr)
+		while((dirent = util::zippath_readdir(directory)) != nullptr)
 		{
 			// append a dirent entry
 			entry = append_dirent_entry(dirent);
@@ -611,7 +615,7 @@ void ui_menu_file_selector::populate()
 	customtop = machine().ui().get_line_height() + 3.0f * UI_BOX_TB_BORDER;
 
 	if (directory != nullptr)
-		zippath_closedir(directory);
+		util::zippath_closedir(directory);
 }
 
 
@@ -621,7 +625,7 @@ void ui_menu_file_selector::populate()
 
 void ui_menu_file_selector::handle()
 {
-	file_error err;
+	osd_file::error err;
 	const file_selector_entry *entry;
 	const file_selector_entry *selected_entry = nullptr;
 	int bestmatch = 0;
@@ -656,8 +660,8 @@ void ui_menu_file_selector::handle()
 				case SELECTOR_ENTRY_TYPE_DRIVE:
 				case SELECTOR_ENTRY_TYPE_DIRECTORY:
 					// drive/directory - first check the path
-					err = zippath_opendir(entry->fullpath, nullptr);
-					if (err != FILERR_NONE)
+					err = util::zippath_opendir(entry->fullpath, nullptr);
+					if (err != osd_file::error::NONE)
 					{
 						// this path is problematic; present the user with an error and bail
 						machine().ui().popup_time(1, "Error accessing %s", entry->fullpath);
@@ -712,7 +716,7 @@ void ui_menu_file_selector::handle()
 				// from current entry to the end
 				for (entry = cur_selected; entry != nullptr; entry = entry->next)
 				{
-					if (entry->basename != nullptr && m_filename_buffer != nullptr)
+					if (entry->basename != nullptr && m_filename_buffer[0] != '\0')
 					{
 						int match = 0;
 						for (int i = 0; i < ARRAY_LENGTH(m_filename_buffer); i++)
@@ -731,7 +735,7 @@ void ui_menu_file_selector::handle()
 				// and from the first entry to current one
 				for (entry = m_entrylist; entry != cur_selected; entry = entry->next)
 				{
-					if (entry->basename != nullptr && m_filename_buffer != nullptr)
+					if (entry->basename != nullptr && m_filename_buffer[0] != '\0')
 					{
 						int match = 0;
 						for (int i = 0; i < ARRAY_LENGTH(m_filename_buffer); i++)
@@ -799,7 +803,7 @@ ui_menu_select_format::~ui_menu_select_format()
 
 void ui_menu_select_format::populate()
 {
-	item_append("Select image format", nullptr, MENU_FLAG_DISABLE, nullptr);
+	item_append(_("Select image format"), nullptr, MENU_FLAG_DISABLE, nullptr);
 	for (int i = 0; i < m_total_usable; i++)
 	{
 		const floppy_image_format_t *fmt = m_formats[i];
@@ -859,12 +863,12 @@ ui_menu_select_rw::~ui_menu_select_rw()
 
 void ui_menu_select_rw::populate()
 {
-	item_append("Select access mode", nullptr, MENU_FLAG_DISABLE, nullptr);
-	item_append("Read-only", nullptr, 0, (void *)READONLY);
+	item_append(_("Select access mode"), nullptr, MENU_FLAG_DISABLE, nullptr);
+	item_append(_("Read-only"), nullptr, 0, (void *)READONLY);
 	if (m_can_in_place)
-		item_append("Read-write", nullptr, 0, (void *)READWRITE);
-	item_append("Read this image, write to another image", nullptr, 0, (void *)WRITE_OTHER);
-	item_append("Read this image, write to diff", nullptr, 0, (void *)WRITE_DIFF);
+		item_append(_("Read-write"), nullptr, 0, (void *)READWRITE);
+	item_append(_("Read this image, write to another image"), nullptr, 0, (void *)WRITE_OTHER);
+	item_append(_("Read this image, write to diff"), nullptr, 0, (void *)WRITE_DIFF);
 }
 
 

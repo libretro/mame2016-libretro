@@ -1,5 +1,5 @@
 // license:BSD-3-Clause
-// copyright-holders:Dankan1890
+// copyright-holders:Maurizio Petrarota
 /*********************************************************************
 
     ui/auditmenu.cpp
@@ -84,8 +84,12 @@ bool sorted_game_list(const game_driver *x, const game_driver *y)
 //  ctor / dtor
 //-------------------------------------------------
 
-ui_menu_audit::ui_menu_audit(running_machine &machine, render_container *container, std::vector<const game_driver *> &availablesorted, std::vector<const game_driver *> &unavailablesorted,  int _audit_mode)
-	: ui_menu(machine, container), m_availablesorted(availablesorted), m_unavailablesorted(unavailablesorted), m_audit_mode(_audit_mode), m_first(true)
+ui_menu_audit::ui_menu_audit(running_machine &machine, render_container *container, vptr_game &availablesorted, vptr_game &unavailablesorted,  int _audit_mode)
+	: ui_menu(machine, container)
+	, m_availablesorted(availablesorted)
+	, m_unavailablesorted(unavailablesorted)
+	, m_audit_mode(_audit_mode)
+	, m_first(true)
 {
 	if (m_audit_mode == 2)
 	{
@@ -115,7 +119,7 @@ void ui_menu_audit::handle()
 
 	if (m_audit_mode == 1)
 	{
-		std::vector<const game_driver *>::iterator iter = m_unavailablesorted.begin();
+		vptr_game::iterator iter = m_unavailablesorted.begin();
 		while (iter != m_unavailablesorted.end())
 		{
 			driver_enumerator enumerator(machine().options(), (*iter)->name);
@@ -174,27 +178,28 @@ void ui_menu_audit::save_available_machines()
 {
 	// attempt to open the output file
 	emu_file file(machine().ui().options().ui_path(), OPEN_FLAG_WRITE | OPEN_FLAG_CREATE | OPEN_FLAG_CREATE_PATHS);
-	if (file.open(emulator_info::get_configname(), "_avail.ini") == FILERR_NONE)
+	if (file.open(emulator_info::get_configname(), "_avail.ini") == osd_file::error::NONE)
 	{
 		// generate header
-		std::string buffer = std::string("#\n").append(UI_VERSION_TAG).append(bare_build_version).append("\n#\n\n");
-		strcatprintf(buffer, "%d\n", (int)m_availablesorted.size());
-		strcatprintf(buffer, "%d\n", (int)m_unavailablesorted.size());
+		std::ostringstream buffer;
+		buffer << "#\n" << UI_VERSION_TAG << bare_build_version << "\n#\n\n";
+		util::stream_format(buffer, "%d\n", m_availablesorted.size());
+		util::stream_format(buffer, "%d\n", m_unavailablesorted.size());
 
 		// generate available list
 		for (size_t x = 0; x < m_availablesorted.size(); ++x)
 		{
 			int find = driver_list::find(m_availablesorted[x]->name);
-			strcatprintf(buffer, "%d\n", find);
+			util::stream_format(buffer, "%d\n", find);
 		}
 
 		// generate unavailable list
 		for (size_t x = 0; x < m_unavailablesorted.size(); ++x)
 		{
 			int find = driver_list::find(m_unavailablesorted[x]->name);
-			strcatprintf(buffer, "%d\n", find);
+			util::stream_format(buffer, "%d\n", find);
 		}
-		file.puts(buffer.c_str());
+		file.puts(buffer.str().c_str());
 		file.close();
 	}
 }

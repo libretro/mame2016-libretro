@@ -159,13 +159,13 @@ ADDRESS_MAP_END
 
 static ADDRESS_MAP_START( at32_io, AS_IO, 32, at_state )
 	ADDRESS_MAP_UNMAP_HIGH
-	AM_RANGE(0x0000, 0x00ff) AM_DEVICE16("mb", at_mb_device, map, 0xfffffffff)
+	AM_RANGE(0x0000, 0x00ff) AM_DEVICE16("mb", at_mb_device, map, 0xffffffff)
 ADDRESS_MAP_END
 
 static ADDRESS_MAP_START( ficpio_io, AS_IO, 32, at_state )
 	ADDRESS_MAP_UNMAP_HIGH
 	AM_RANGE(0x00a8, 0x00af) AM_DEVREADWRITE8("chipset", vt82c496_device, read, write, 0xffffffff)
-	AM_RANGE(0x0000, 0x00ff) AM_DEVICE16("mb", at_mb_device, map, 0xfffffffff)
+	AM_RANGE(0x0000, 0x00ff) AM_DEVICE16("mb", at_mb_device, map, 0xffffffff)
 	AM_RANGE(0x0170, 0x0177) AM_DEVREADWRITE("ide2", ide_controller_32_device, read_cs0, write_cs0)
 	AM_RANGE(0x01f0, 0x01f7) AM_DEVREADWRITE("ide", ide_controller_32_device, read_cs0, write_cs0)
 	AM_RANGE(0x0370, 0x0377) AM_DEVREADWRITE("ide2", ide_controller_32_device, read_cs1, write_cs1)
@@ -358,6 +358,8 @@ static MACHINE_CONFIG_DERIVED( xb42639, atvga )
 MACHINE_CONFIG_END
 
 static MACHINE_CONFIG_DERIVED( k286i, ibm5162 )
+	MCFG_DEVICE_MODIFY("kbd")
+	MCFG_DEVICE_SLOT_INTERFACE(pc_at_keyboards, STR_KBD_MICROSOFT_NATURAL, false)
 	MCFG_ISA16_SLOT_ADD("mb:isabus","isa5", pc_isa16_cards, nullptr, false)
 	MCFG_ISA16_SLOT_ADD("mb:isabus","isa6", pc_isa16_cards, nullptr, false)
 	MCFG_ISA16_SLOT_ADD("mb:isabus","isa7", pc_isa16_cards, nullptr, false)

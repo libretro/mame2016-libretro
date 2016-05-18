@@ -103,8 +103,7 @@ struct slider_state
 	INT32           defval;             /* default value */
 	INT32           maxval;             /* maximum value */
 	INT32           incval;             /* increment value */
-	bool            hidden;             /* hidden or not */
-	INT32           id;                 /* unique identifier */
+	int             id;
 	char            description[1];     /* textual description */
 };
 
@@ -130,7 +129,7 @@ public:
 	// methods
 	void initialize(running_machine &machine);
 	UINT32 set_handler(ui_callback callback, UINT32 param);
-	void display_startup_screens(bool first_time, bool show_disclaimer);
+	void display_startup_screens(bool first_time);
 	void set_startup_text(const char *text, bool force);
 	void update_and_render(render_container *container);
 	render_font *get_font();
@@ -144,7 +143,7 @@ public:
 	void draw_text_box(render_container *container, const char *text, int justify, float xpos, float ypos, rgb_t backcolor);
 	void draw_message_window(render_container *container, const char *text);
 
-	void CLIB_DECL popup_time(int seconds, const char *text, ...) ATTR_PRINTF(3,4);
+	template <typename Format, typename... Params> void popup_time(int seconds, Format &&fmt, Params &&... args);
 	void show_fps_temp(double seconds);
 	void set_show_fps(bool show);
 	bool show_fps() const;
@@ -205,13 +204,19 @@ private:
 	bool                    m_load_save_hold;
 	ui_options              m_ui_options;
 
+	// static variables
+	static std::string      messagebox_text;
+	static std::string      messagebox_poptext;
+	static rgb_t            messagebox_backcolor;
+
+	static slider_state     *slider_list;
+	static slider_state     *slider_current;
+
 	// text generators
-	std::string &disclaimer_string(std::string &buffer);
 	std::string &warnings_string(std::string &buffer);
 
 	// UI handlers
 	static UINT32 handler_messagebox(running_machine &machine, render_container *container, UINT32 state);
-	static UINT32 handler_messagebox_ok(running_machine &machine, render_container *container, UINT32 state);
 	static UINT32 handler_messagebox_anykey(running_machine &machine, render_container *container, UINT32 state);
 	static UINT32 handler_ingame(running_machine &machine, render_container *container, UINT32 state);
 	static UINT32 handler_load_save(running_machine &machine, render_container *container, UINT32 state);
@@ -227,4 +232,26 @@ private:
 ***************************************************************************/
 rgb_t decode_ui_color(int id, running_machine *machine = nullptr);
 int get_font_rows(running_machine *machine = nullptr);
+
+
+/***************************************************************************
+    MEMBER TEMPLATES
+***************************************************************************/
+
+//-------------------------------------------------
+//  popup_time - popup a message for a specific
+//  amount of time
+//-------------------------------------------------
+
+template <typename Format, typename... Params>
+inline void ui_manager::popup_time(int seconds, Format &&fmt, Params &&... args)
+{
+	// extract the text
+	messagebox_poptext = string_format(std::forward<Format>(fmt), std::forward<Params>(args)...);
+	messagebox_backcolor = UI_BACKGROUND_COLOR;
+
+	// set a timer
+	m_popup_text_end = osd_ticks() + osd_ticks_per_second() * seconds;
+}
+
 #endif  /* __USRINTRF_H__ */

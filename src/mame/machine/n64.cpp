@@ -651,7 +651,7 @@ READ32_MEMBER(n64_periphs::sp_reg_r)
 			return 0;
 
 		case 0x1c/4:        // SP_SEMAPHORE_REG
-			m_vr4300->yield();
+			//m_vr4300->yield();
 			if( sp_semaphore )
 			{
 				return 1;
@@ -996,7 +996,7 @@ void n64_periphs::vi_recalculate_resolution()
 	// DACRATE is the quarter pixel clock and period will be for a field, not a frame
 	attoseconds_t period = (vi_hsync & 0xfff) * (vi_vsync & 0xfff) * HZ_TO_ATTOSECONDS(DACRATE_NTSC) / 2;
 
-	if (width == 0 || height == 0)
+	if (width == 0 || height == 0 || (vi_control & 3) == 0)
 	{
 		vi_blank = 1;
 		/*
@@ -1043,7 +1043,7 @@ READ32_MEMBER( n64_periphs::vi_reg_r )
 			break;
 
 		case 0x10/4:        // VI_CURRENT_REG
-			ret = (m_screen->vpos() & 0x3FE) + field; // << 1);
+			ret = (m_screen->vpos() & 0x3FE) + field;
 			break;
 
 		case 0x14/4:        // VI_BURST_REG
@@ -1373,7 +1373,7 @@ WRITE32_MEMBER( n64_periphs::ai_reg_w )
 TIMER_CALLBACK_MEMBER(n64_periphs::pi_dma_callback)
 {
 	pi_dma_tick();
-	m_rsp->yield();
+	//m_rsp->yield();
 }
 
 void n64_periphs::pi_dma_tick()
@@ -1742,7 +1742,7 @@ int n64_periphs::pif_channel_handle_command(int channel, int slength, UINT8 *sda
 				{
 					// Read EEPROM status
 					rdata[0] = 0x00;
-					rdata[1] = 0x80;
+					rdata[1] = (machine().root_device().ioport("input")->read() >> 8) & 0xC0;
 					rdata[2] = 0x00;
 
 					return 0;
@@ -2060,7 +2060,7 @@ void n64_periphs::handle_pif()
 			}
 		}
 
-		ram[0x3f ^ BYTE4_XOR_BE(0)] = 0;
+		ram[0x3f ^ BYTE4_XOR_BE(0)] &= ~0x80;
 	}
 
 	/*printf("After:\n"); fflush(stdout);
@@ -2127,9 +2127,7 @@ void n64_periphs::pif_dma(int direction)
 		}
 	}
 	si_status |= 1;
-	si_dma_timer->adjust(attotime::from_hz(1000));
-	//si_status |= 0x1000;
-	//signal_rcp_interrupt(SI_INTERRUPT);
+	si_dma_timer->adjust(attotime::from_hz(10000));
 }
 
 READ32_MEMBER( n64_periphs::si_reg_r )
@@ -2171,6 +2169,7 @@ WRITE32_MEMBER( n64_periphs::si_reg_w )
 
 		case 0x18/4:        // SI_STATUS_REG
 			si_status = 0;
+			si_dma_timer->adjust(attotime::never);
 			clear_rcp_interrupt(SI_INTERRUPT);
 			break;
 
@@ -2278,7 +2277,7 @@ void n64_periphs::dd_update_bm()
 	}
 	else // dd read, BM Mode 1
 	{
-		if(((dd_track_reg & 0xFFF) == 6) && (dd_start_block == 0) && ((machine().root_device().ioport("input")->read() & 0x0100) == 0x0000))
+		if(((dd_track_reg & 0x1FFF) == 6) && (dd_start_block == 0) && ((machine().root_device().ioport("input")->read() & 0x0100) == 0x0000))
 		{
 			//only fail read LBA 12 if retail disk drive
 			dd_status_reg &= ~DD_ASIC_STATUS_DREQ;

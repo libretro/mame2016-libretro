@@ -17,17 +17,14 @@
 
 #include "modules/osdwindow.h"
 
-// I don't like this, but we're going to get spurious "cast to integer of different size" warnings on
-// at least one architecture without doing it this way.
-#ifdef PTR64
-typedef UINT64 HashT;
-#else
-typedef UINT32 HashT;
-#endif
+#include <cstdint>
+
 
 //============================================================
 //  TYPE DEFINITIONS
 //============================================================
+
+typedef uintptr_t HashT;
 
 #define OSDWORK_CALLBACK(name)  void *name(void *param, ATTR_UNUSED int threadid)
 
@@ -88,8 +85,8 @@ public:
 	render_target *target() override { return m_target; }
 	SDL_Window *sdl_window() override { return m_sdl_window; }
 
-	osd_dim blit_surface_size() override;
 	int prescale() const { return m_prescale; }
+	osd_renderer &renderer() const { return *m_renderer; }
 
 	// Pointer to next window
 	sdl_window_info *   m_next;
@@ -125,8 +122,7 @@ private:
 	}
 
 	static OSDWORK_CALLBACK( complete_create_wt );
-protected:
-	osd_renderer &renderer() { return *m_renderer; }
+
 private:
 	int wnd_extra_width();
 	int wnd_extra_height();
