@@ -42,7 +42,7 @@ public:
 	:   hash(0), flags(0), rawwidth(0), rawheight(0),
 		rawwidth_create(0), rawheight_create(0),
 		type(0), format(0), borderpix(0), xprescale(0), yprescale(0), nocopy(0),
-		texture(0), texTarget(0), texpow2(0), mpass_dest_idx(0), pbo(0), data(NULL),
+		texture(0), texTarget(0), texpow2(0), mpass_dest_idx(0), pbo(0), data(nullptr),
 		data_own(0), texCoordBufferName(0)
 	{
 		for (int i=0; i<2; i++)
@@ -95,13 +95,13 @@ public:
 class renderer_ogl : public osd_renderer
 {
 public:
-	renderer_ogl(osd_window *window)
+	renderer_ogl(std::shared_ptr<osd_window> window)
 		: osd_renderer(window, FLAG_NEEDS_OPENGL)
 		, m_blittimer(0)
 		, m_width(0)
 		, m_height(0)
 		, m_blit_dim(0, 0)
-		, m_gl_context(NULL)
+		, m_gl_context(nullptr)
 		, m_initialized(0)
 		, m_last_blendmode(0)
 		, m_texture_max_width(0)
@@ -122,7 +122,7 @@ public:
 		, m_surf_h(0)
 	{
 		for (int i=0; i < HASH_SIZE + OVERFLOW_SIZE; i++)
-			m_texhash[i] = NULL;
+			m_texhash[i] = nullptr;
 		for (int i=0; i < 2*GLSL_SHADER_MAX; i++)
 			m_glsl_program[i] = 0;
 		for (int i=0; i < 8; i++)
@@ -130,7 +130,7 @@ public:
 	}
 	virtual ~renderer_ogl();
 
-	static bool init(running_machine &machine);
+	static void init(running_machine &machine);
 	static void exit();
 
 	virtual int create() override;
@@ -141,14 +141,18 @@ public:
 #endif
 	virtual render_primitive_list *get_primitives() override
 	{
-		osd_dim nd = window().get_size();
+		auto win = try_getwindow();
+		if (win == nullptr)
+			return nullptr;
+
+		osd_dim nd = win->get_size();
 		if (nd != m_blit_dim)
 		{
 			m_blit_dim = nd;
 			notify_changed();
 		}
-		window().target()->set_bounds(m_blit_dim.width(), m_blit_dim.height(), window().pixel_aspect());
-		return &window().target()->get_primitives();
+		win->target()->set_bounds(m_blit_dim.width(), m_blit_dim.height(), win->pixel_aspect());
+		return &win->target()->get_primitives();
 	}
 
 #ifdef OSD_WINDOWS

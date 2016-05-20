@@ -100,7 +100,7 @@ inline bool tilemap_t::gfx_elements_changed()
 //**************************************************************************
 
 //-------------------------------------------------
-//  scanline_draw_opaque_null - draw to a NULL
+//  scanline_draw_opaque_null - draw to a nullptr
 //  bitmap, setting priority only
 //-------------------------------------------------
 
@@ -117,7 +117,7 @@ inline void tilemap_t::scanline_draw_opaque_null(int count, UINT8 *pri, UINT32 p
 
 
 //-------------------------------------------------
-//  scanline_draw_masked_null - draw to a NULL
+//  scanline_draw_masked_null - draw to a nullptr
 //  bitmap using a mask, setting priority only
 //-------------------------------------------------
 
@@ -1503,11 +1503,11 @@ tilemap_manager::~tilemap_manager()
 	while (found)
 	{
 		found = false;
-		for (tilemap_t *tmap = m_tilemap_list.first(); tmap != nullptr; tmap = tmap->next())
-			if (tmap->device() != nullptr)
+		for (tilemap_t &tmap : m_tilemap_list)
+			if (tmap.device() != nullptr)
 			{
 				found = true;
-				m_tilemap_list.detach(*tmap);
+				m_tilemap_list.detach(tmap);
 				break;
 			}
 	}
@@ -1553,8 +1553,8 @@ tilemap_t &tilemap_manager::create(device_gfx_interface &decoder, tilemap_get_in
 
 void tilemap_manager::set_flip_all(UINT32 attributes)
 {
-	for (tilemap_t *tmap = m_tilemap_list.first(); tmap != nullptr; tmap = tmap->next())
-		tmap->set_flip(attributes);
+	for (tilemap_t &tmap : m_tilemap_list)
+		tmap.set_flip(attributes);
 }
 
 
@@ -1565,8 +1565,8 @@ void tilemap_manager::set_flip_all(UINT32 attributes)
 
 void tilemap_manager::mark_all_dirty()
 {
-	for (tilemap_t *tmap = m_tilemap_list.first(); tmap != nullptr; tmap = tmap->next())
-		tmap->mark_all_dirty();
+	for (tilemap_t &tmap : m_tilemap_list)
+		tmap.mark_all_dirty();
 }
 
 

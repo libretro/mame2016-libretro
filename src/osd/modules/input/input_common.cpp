@@ -33,7 +33,7 @@
 #define KEY_TRANS_ENTRY1(mame, sdlsc, sdlkey, disc, virtual, ascii)     { ITEM_ID_##mame, KEY_ ## disc, virtual, ascii, "ITEM_ID_"#mame, (char*) #mame }
 #elif defined(OSD_SDL)
 // SDL include
-#include <sdlinc.h>
+#include <SDL2/SDL.h>
 #define KEY_TRANS_ENTRY0(mame, sdlsc, sdlkey, disc, virtual, ascii, UI) { ITEM_ID_##mame, SDL_SCANCODE_ ## sdlsc, SDLK_ ## sdlkey, ascii, "ITEM_ID_"#mame, (char *) UI }
 #define KEY_TRANS_ENTRY1(mame, sdlsc, sdlkey, disc, virtual, ascii)     { ITEM_ID_##mame, SDL_SCANCODE_ ## sdlsc, SDLK_ ## sdlkey, ascii, "ITEM_ID_"#mame, (char*) #mame }
 #else
@@ -87,7 +87,7 @@ key_trans_entry keyboard_trans_table::s_default_table[] =
 	KEY_TRANS_ENTRY1(TILDE,        GRAVE,        BACKQUOTE,    GRAVE,          VK_OEM_3,       '`'),
 	KEY_TRANS_ENTRY1(LSHIFT,       LSHIFT,       LSHIFT,       LSHIFT,         VK_LSHIFT,      0),
 	KEY_TRANS_ENTRY1(BACKSLASH,    BACKSLASH,    BACKSLASH,    BACKSLASH,      VK_OEM_5,       '\\'),
-	KEY_TRANS_ENTRY1(BACKSLASH2,   0,            0,            OEM_102,        VK_OEM_102,     '<'),
+	KEY_TRANS_ENTRY1(BACKSLASH2,   NONUSHASH,    UNKNOWN,      OEM_102,        VK_OEM_102,     '<'),
 	KEY_TRANS_ENTRY1(Z,            Z,            z,            Z,              'Z',            'Z'),
 	KEY_TRANS_ENTRY1(X,            X,            x,            X,              'X',            'X'),
 	KEY_TRANS_ENTRY1(C,            C,            c,            C,              'C',            'C'),

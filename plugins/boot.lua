@@ -16,10 +16,10 @@ for file in lfs.dir("plugins") do
 	if (file~="." and file~=".." and lfs.attributes("plugins/" .. file,"mode")=="directory") then
 		local filename = "plugins/" .. file .. "/plugin.json"
 		local meta = json.parse(readAll(filename))
-		if (meta["plugin"]["type"]=="plugin") and (manager:plugins().entries[meta["plugin"]["name"]]~=nil) then
-			local entry = manager:plugins().entries[meta["plugin"]["name"]]	
+		if (meta["plugin"]["type"]=="plugin") and (mame_manager:plugins().entries[meta["plugin"]["name"]]~=nil) then
+			local entry = mame_manager:plugins().entries[meta["plugin"]["name"]]	
 			if (entry:value()==true) then
-				print("Starting plugin " .. meta["plugin"]["name"] .. "...")
+				emu.print_verbose("Starting plugin " .. meta["plugin"]["name"] .. "...")
 				plugin = require(meta["plugin"]["name"])
 				if plugin.set_folder~=nil then plugin.set_folder("plugins/" .. file) end
 				plugin.startplugin();

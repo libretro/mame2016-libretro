@@ -127,7 +127,7 @@ WRITE32_MEMBER(superchs_state::superchs_input_w)
 		{
 			if (ACCESSING_BITS_24_31)   /* $300000 is watchdog */
 			{
-				machine().watchdog_reset();
+				m_watchdog->watchdog_reset();
 			}
 
 			if (ACCESSING_BITS_0_7)
@@ -317,6 +317,8 @@ static MACHINE_CONFIG_START( superchs, superchs_state )
 
 	MCFG_EEPROM_SERIAL_93C46_ADD("eeprom")
 
+	MCFG_WATCHDOG_ADD("watchdog")
+
 	/* video hardware */
 	MCFG_SCREEN_ADD("screen", RASTER)
 	MCFG_SCREEN_REFRESH_RATE(60)
@@ -336,7 +338,6 @@ static MACHINE_CONFIG_START( superchs, superchs_state )
 	MCFG_TC0480SCP_OFFSETS(0x20, 0x08)
 	MCFG_TC0480SCP_OFFSETS_TX(-1, 0)
 	MCFG_TC0480SCP_GFXDECODE("gfxdecode")
-	MCFG_TC0480SCP_PALETTE("palette")
 
 	/* sound hardware */
 	MCFG_DEVICE_ADD("taito_en", TAITO_EN, 0)

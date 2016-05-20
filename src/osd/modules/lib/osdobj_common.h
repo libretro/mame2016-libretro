@@ -14,6 +14,7 @@
 #define MAME_OSD_LIB_OSDOBJ_COMMON_H
 
 #include "osdepend.h"
+#include "watchdog.h"
 #include "modules/osdmodule.h"
 #include "modules/font/font_module.h"
 #include "modules/input/input_module.h"
@@ -21,7 +22,9 @@
 #include "modules/debugger/debug_module.h"
 #include "modules/netdev/netdev_module.h"
 #include "modules/midi/midi_module.h"
-#include "cliopts.h"
+#include "modules/output/output_module.h"
+#include "emuopts.h"
+#include "../frontend/mame/ui/menuitem.h"
 
 //============================================================
 //  Defines
@@ -80,12 +83,13 @@
 #define OSDOPTION_BGFX_DEBUG            "bgfx_debug"
 #define OSDOPTION_BGFX_SCREEN_CHAINS    "bgfx_screen_chains"
 #define OSDOPTION_BGFX_SHADOW_MASK      "bgfx_shadow_mask"
+#define OSDOPTION_BGFX_AVI_NAME         "bgfx_avi_name"
 
 //============================================================
 //  TYPE DEFINITIONS
 //============================================================
 
-class osd_options : public cli_options
+class osd_options : public emu_options
 {
 public:
 	// construction/destruction
@@ -150,9 +154,10 @@ public:
 	// BGFX specific options
 	const char *bgfx_path() const { return value(OSDOPTION_BGFX_PATH); }
 	const char *bgfx_backend() const { return value(OSDOPTION_BGFX_BACKEND); }
-	const bool bgfx_debug() const { return bool_value(OSDOPTION_BGFX_DEBUG); }
+	bool bgfx_debug() const { return bool_value(OSDOPTION_BGFX_DEBUG); }
 	const char *bgfx_screen_chains() const { return value(OSDOPTION_BGFX_SCREEN_CHAINS); }
 	const char *bgfx_shadow_mask() const { return value(OSDOPTION_BGFX_SHADOW_MASK); }
+	const char *bgfx_avi_name() const { return value(OSDOPTION_BGFX_AVI_NAME); }
 
 private:
 	static const options_entry s_option_entries[];
@@ -188,7 +193,8 @@ public:
 	virtual void customize_input_type_list(simple_list<input_type_entry> &typelist) override;
 
 	// video overridables
-	virtual slider_state *get_slider_list() override;
+	virtual void add_audio_to_recording(const INT16 *buffer, int samples_this_frame) override;
+	virtual std::vector<ui_menu_item> get_slider_list() override;
 
 	// command option overrides
 	virtual bool execute_command(const char *command) override;
@@ -202,7 +208,7 @@ public:
 	//        this INTERFACE but part of the osd IMPLEMENTATION
 
 	// getters
-	running_machine &machine() { assert(m_machine != nullptr); return *m_machine; }
+	running_machine &machine() const { assert(m_machine != nullptr); return *m_machine; }
 
 	virtual void debugger_update();
 
@@ -213,25 +219,24 @@ public:
 	virtual bool window_init();
 
 	virtual void input_resume();
-	virtual bool output_init();
 
 	virtual void exit_subsystems();
 	virtual void video_exit();
 	virtual void window_exit();
 	virtual void input_exit();
-	virtual void output_exit();
 
 	virtual void osd_exit();
 
 	virtual void video_options_add(const char *name, void *type);
 
-	osd_options &options() { return m_options; }
+	virtual osd_options &options() { return m_options; }
 
 	// osd_output interface ...
 	virtual void output_callback(osd_output_channel channel, const char *msg, va_list args)  override;
 	bool verbose() const { return m_print_verbose; }
 	void set_verbose(bool print_verbose) { m_print_verbose = print_verbose; }
 
+	void notify(const char *outname, INT32 value) const { m_output->notify(outname, value); }
 protected:
 	virtual bool input_init();
 	virtual void input_pause();
@@ -271,13 +276,17 @@ private:
 	}
 
 protected:
-	sound_module* m_sound;
-	debug_module* m_debugger;
-	midi_module* m_midi;
-	input_module* m_keyboard_input;
-	input_module* m_mouse_input;
-	input_module* m_lightgun_input;
-	input_module* m_joystick_input;
+	sound_module*  m_sound;
+	debug_module*  m_debugger;
+	midi_module*   m_midi;
+	input_module*  m_keyboard_input;
+	input_module*  m_mouse_input;
+	input_module*  m_lightgun_input;
+	input_module*  m_joystick_input;
+	output_module* m_output;
+	std::unique_ptr<osd_watchdog> m_watchdog;
+	std::vector<ui_menu_item> m_sliders;
+
 private:
 	std::vector<const char *> m_video_names;
 };

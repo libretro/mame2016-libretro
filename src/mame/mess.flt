@@ -24,6 +24,7 @@ alphatro.cpp
 altair.cpp
 alto2.cpp
 altos5.cpp
+altos486.cpp
 amico2k.cpp
 amiga.cpp
 ampro.cpp
@@ -241,6 +242,7 @@ hunter2.cpp
 hx20.cpp
 hyperscan.cpp
 i7000.cpp
+ibm3153.cpp
 ibm6580.cpp
 ibmpc.cpp
 ibmpcjr.cpp
@@ -352,6 +354,7 @@ mt735.cpp
 mtx.cpp
 multi16.cpp
 multi8.cpp
+mvme350.cpp
 mx2178.cpp
 myb3k.cpp
 mycom.cpp
@@ -368,10 +371,11 @@ nakajies.cpp
 nanos.cpp
 nascom1.cpp
 nc.cpp
+neogeo.cpp
+neogeocd.cpp
 nes.cpp
 newbrain.cpp
 next.cpp
-ng_aes.cpp
 ngen.cpp
 ngp.cpp
 nokia_3310.cpp
@@ -431,6 +435,7 @@ peoplepc.cpp
 pes.cpp
 pet.cpp
 phc25.cpp
+phantom.cpp
 phunsy.cpp
 pimps.cpp
 pipbug.cpp

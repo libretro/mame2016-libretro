@@ -84,6 +84,12 @@
 			scope = "config",
 		},
 
+		debugabsolutedir =
+		{
+			kind = "string",
+			scope = "config",
+		},
+
 		debugenvs  =
 		{
 			kind = "list",
@@ -110,6 +116,12 @@
 		},
 
 		excludes =
+		{
+			kind  = "filelist",
+			scope = "config",
+		},
+
+		nopch =
 		{
 			kind  = "filelist",
 			scope = "config",
@@ -143,14 +155,18 @@
 					EnableMinimalRebuild = 1,
 					EnableSSE = 1,
 					EnableSSE2 = 1,
+					EnableAVX = 1,
+					EnableAVX2 = 1,
 					ExtraWarnings = 1,
 					FatalWarnings = 1,
 					FloatFast = 1,
 					FloatStrict = 1,
 					Managed = 1,
+					MinimumWarnings = 1,
 					MFC = 1,
 					NativeWChar = 1,
 					No64BitChecks = 1,
+					NoBufferSecurityCheck = 1,
 					NoEditAndContinue = 1,
 					NoExceptions = 1,
 					NoFramePointer = 1,
@@ -161,6 +177,8 @@
 					NoNativeWChar = 1,
 					NoPCH = 1,
 					NoRTTI = 1,
+					NoWinMD = 1,    -- explicitly disables Windows Metadata
+					NoWinRT = 1,    -- explicitly disables Windows Runtime Extension
 					FastCall = 1,
 					StdCall = 1,
 					SingleOutputDir = 1,
@@ -217,7 +235,7 @@
 			kind  = "string",
 			scope = "project",
 		},
-		
+
 		windowstargetplatformminversion =
 		{
 			kind = "string",
@@ -1145,4 +1163,14 @@
 
 	function newoption(opt)
 		premake.option.add(opt)
+	end
+
+
+--
+-- Enable file level configuration
+-- this makes project generation slower for large projects
+--
+
+	function enablefilelevelconfig()
+		premake._filelevelconfig = true
 	end

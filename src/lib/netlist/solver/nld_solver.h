@@ -10,6 +10,7 @@
 
 #include "nl_setup.h"
 #include "nl_base.h"
+#include "plib/pstream.h"
 
 //#define ATTR_ALIGNED(N) __attribute__((aligned(N)))
 #define ATTR_ALIGNED(N) ATTR_ALIGN
@@ -53,15 +54,17 @@ class matrix_solver_t;
 class NETLIB_NAME(solver) : public device_t
 {
 public:
-	NETLIB_NAME(solver)()
-	: device_t()    { }
+	NETLIB_NAME(solver)(netlist_t &anetlist, const pstring &name)
+	: device_t(anetlist, name)    { }
 
 	virtual ~NETLIB_NAME(solver)();
 
-	ATTR_COLD void post_start();
-	ATTR_COLD void stop() override;
+	void post_start();
+	void stop() override;
 
 	inline nl_double gmin() { return m_gmin.Value(); }
+
+	void create_solver_code(postream &strm);
 
 protected:
 	void update() override;

@@ -17,6 +17,7 @@
 #ifndef __MACHINE_H__
 #define __MACHINE_H__
 
+#include "strformat.h"
 #include "vecstream.h"
 
 #include <time.h>
@@ -81,7 +82,6 @@ const int DEBUG_FLAG_OSD_ENABLED    = 0x00001000;       // The OSD debugger is e
 //**************************************************************************
 
 // forward declarations
-class cheat_manager;
 class render_manager;
 class sound_manager;
 class video_manager;
@@ -98,10 +98,7 @@ class image_manager;
 class rom_load_manager;
 class debugger_manager;
 class osd_interface;
-class datfile_manager;
 enum class config_type;
-class inifile_manager;
-class favorite_manager;
 struct debugcpu_private;
 
 
@@ -169,10 +166,6 @@ public:
 	memory_manager &memory() { return m_memory; }
 	ioport_manager &ioport() { return m_ioport; }
 	parameters_manager &parameters() { return m_parameters; }
-	cheat_manager &cheat() const { assert(m_cheat != nullptr); return *m_cheat; }
-	datfile_manager &datfile() const { assert(m_datfile != nullptr); return *m_datfile; }
-	inifile_manager &inifile() const { assert(m_inifile != nullptr); return *m_inifile; }
-	favorite_manager &favorite() const { assert(m_favorite != nullptr); return *m_favorite; }
 	render_manager &render() const { assert(m_render != nullptr); return *m_render; }
 	input_manager &input() const { assert(m_input != nullptr); return *m_input; }
 	sound_manager &sound() const { assert(m_sound != nullptr); return *m_sound; }
@@ -210,7 +203,7 @@ public:
 	template<class _DeviceClass> inline _DeviceClass *device(const char *tag) { return downcast<_DeviceClass *>(device(tag)); }
 
 	// immediate operations
-	int run(bool firstrun);
+	int run(bool quiet);
 	void pause();
 	void resume();
 	void toggle_pause();
@@ -234,11 +227,6 @@ public:
 	void base_datetime(system_time &systime);
 	void current_datetime(system_time &systime);
 
-	// watchdog control
-	void watchdog_reset();
-	void watchdog_enable(bool enable = true);
-	INT32 get_vblank_watchdog_counter() const { return m_watchdog_counter; }
-
 	// misc
 	void popmessage() const { popmessage(static_cast<char const *>(nullptr)); }
 	template <typename Format, typename... Params> void popmessage(Format &&fmt, Params &&... args) const;
@@ -252,7 +240,7 @@ public:
 
 private:
 	// video-related information
-	screen_device *         primary_screen;     // the primary screen device, or NULL if screenless
+	screen_device *         primary_screen;     // the primary screen device, or nullptr if screenless
 
 public:
 	// debugger-related information
@@ -270,11 +258,11 @@ private:
 	std::string get_statename(const char *statename_opt) const;
 	void handle_saveload();
 	void soft_reset(void *ptr = nullptr, INT32 param = 0);
-	void watchdog_fired(void *ptr = nullptr, INT32 param = 0);
-	void watchdog_vblank(screen_device &screen, bool vblank_state);
 	std::string nvram_filename(device_t &device) const;
 	void nvram_load();
 	void nvram_save();
+	void popup_clear() const;
+	void popup_message(util::format_argument_pack<std::ostream> const &args) const;
 
 	// internal callbacks
 	static void logfile_callback(const running_machine &machine, const char *buffer);
@@ -286,19 +274,16 @@ private:
 	void presave_all_devices();
 	void postload_all_devices();
 
-	TIMER_CALLBACK_MEMBER(autoboot_callback);
-
 	// internal state
 	const machine_config &  m_config;               // reference to the constructed machine_config
 	const game_driver &     m_system;               // reference to the definition of the game machine
 	machine_manager &       m_manager;              // reference to machine manager system
 	// managers
-	std::unique_ptr<cheat_manager> m_cheat;            // internal data from cheat.cpp
 	std::unique_ptr<render_manager> m_render;          // internal data from render.cpp
 	std::unique_ptr<input_manager> m_input;            // internal data from input.cpp
 	std::unique_ptr<sound_manager> m_sound;            // internal data from sound.cpp
 	std::unique_ptr<video_manager> m_video;            // internal data from video.cpp
-	std::unique_ptr<ui_manager> m_ui;                  // internal data from ui.cpp
+	ui_manager *m_ui;                                  // internal data from ui.cpp
 	std::unique_ptr<ui_input_manager> m_ui_input;      // internal data from uiinput.cpp
 	std::unique_ptr<tilemap_manager> m_tilemap;        // internal data from tilemap.cpp
 	std::unique_ptr<debug_view_manager> m_debug_view;  // internal data from debugvw.cpp
@@ -317,11 +302,6 @@ private:
 	bool                    m_hard_reset_pending;   // is a hard reset pending?
 	bool                    m_exit_pending;         // is an exit pending?
 	emu_timer *             m_soft_reset_timer;     // timer used to schedule a soft reset
-
-	// watchdog state
-	bool                    m_watchdog_enabled;     // is the watchdog enabled?
-	INT32                   m_watchdog_counter;     // counter for watchdog tracking
-	emu_timer *             m_watchdog_timer;       // timer for watchdog tracking
 
 	// misc state
 	UINT32                  m_rand_seed;            // current random number seed
@@ -373,14 +353,59 @@ private:
 	ioport_manager          m_ioport;               // I/O port manager
 	parameters_manager      m_parameters;           // parameters manager
 	device_scheduler        m_scheduler;            // scheduler object
-	emu_timer               *m_autoboot_timer;      // autoboot timer
-
-	std::unique_ptr<datfile_manager>   m_datfile;      // internal data from datfile.c
-	std::unique_ptr<inifile_manager>   m_inifile;      // internal data from inifile.c for INIs
-	std::unique_ptr<favorite_manager>  m_favorite;     // internal data from inifile.c for favorites
 
 	// string formatting buffer
 	mutable util::ovectorstream m_string_buffer;
 };
+
+
+
+//**************************************************************************
+//  MEMBER TEMPLATES
+//**************************************************************************
+
+/*-------------------------------------------------
+    popmessage - pop up a user-visible message
+-------------------------------------------------*/
+
+template <typename Format, typename... Params>
+inline void running_machine::popmessage(Format &&fmt, Params &&... args) const
+{
+	// if the format is nullptr, it is a signal to clear the popmessage
+	// otherwise, generate the buffer and call the UI to display the message
+	if (is_null<Format>::value(fmt))
+		popup_clear();
+	else
+		popup_message(util::make_format_argument_pack(std::forward<Format>(fmt), std::forward<Params>(args)...));
+}
+
+
+/*-------------------------------------------------
+    logerror - log to the debugger and any other
+    OSD-defined output streams
+-------------------------------------------------*/
+
+template <typename Format, typename... Params>
+inline void running_machine::logerror(Format &&fmt, Params &&... args) const
+{
+	// process only if there is a target
+	if (!m_logerror_list.empty())
+	{
+		g_profiler.start(PROFILER_LOGERROR);
+
+		// dump to the buffer
+		m_string_buffer.clear();
+		m_string_buffer.seekp(0);
+		util::stream_format(m_string_buffer, std::forward<Format>(fmt), std::forward<Params>(args)...);
+		m_string_buffer.put('\0');
+
+		// log to all callbacks
+		char const *const str(&m_string_buffer.vec()[0]);
+		for (auto &cb : m_logerror_list)
+			(cb->m_func)(*this, str);
+
+		g_profiler.stop();
+	}
+}
 
 #endif  /* __MACHINE_H__ */

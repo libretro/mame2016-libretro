@@ -242,7 +242,7 @@ void truthtable_desc_t::setup(const pstring_vector_t &truthtable, UINT32 disable
 }
 
 #define ENTRYX(_n,_m,_h)    case (_n * 1000 + _m * 10 + _h): \
-	{ typedef netlist_factory_truthtable_t<_n,_m,_h> xtype; \
+	{ using xtype = netlist_factory_truthtable_t<_n,_m,_h>; \
 		return palloc(xtype(name,classname,def_param)); } break
 
 #define ENTRYY(_n,_m)   ENTRYX(_n,_m,0); ENTRYX(_n,_m,1)
@@ -270,7 +270,7 @@ netlist_base_factory_truthtable_t *nl_tt_factory_create(const unsigned ni, const
 			pstring msg = pfmt("unable to create truthtable<{1},{2},{3}>")(ni)(no)(has_state);
 			nl_assert_always(false, msg);
 	}
-	return NULL;
+	return nullptr;
 }
 
 NETLIB_NAMESPACE_DEVICES_END()

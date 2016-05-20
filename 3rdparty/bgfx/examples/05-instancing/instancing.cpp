@@ -118,7 +118,7 @@ class ExampleInstancing : public entry::AppI
 		if (!entry::processEvents(m_width, m_height, m_debug, m_reset) )
 		{
 			// Set view 0 default viewport.
-			bgfx::setViewRect(0, 0, 0, m_width, m_height);
+			bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height) );
 
 			// This dummy draw call is here to make sure that view 0 is cleared
 			// if no other draw calls are submitted to view 0.
@@ -160,11 +160,7 @@ class ExampleInstancing : public entry::AppI
 				{
 					float view[16];
 					bx::mtxQuatTranslationHMD(view, hmd->eye[0].rotation, eye);
-
-					float proj[16];
-					bx::mtxProj(proj, hmd->eye[0].fov, 0.1f, 100.0f);
-
-					bgfx::setViewTransform(0, view, proj);
+					bgfx::setViewTransform(0, view, hmd->eye[0].projection, BGFX_VIEW_STEREO, hmd->eye[1].projection);
 
 					// Set view 0 default viewport.
 					//
@@ -182,7 +178,7 @@ class ExampleInstancing : public entry::AppI
 					bgfx::setViewTransform(0, view, proj);
 
 					// Set view 0 default viewport.
-					bgfx::setViewRect(0, 0, 0, m_width, m_height);
+					bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height) );
 				}
 
 				const uint16_t instanceStride = 80;

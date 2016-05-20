@@ -28,9 +28,12 @@
 ***************************************************************************/
 
 #include "emu.h"
-#include "ui/ui.h"
+#include "ui/uimain.h"
 #include "cpu/z80/z80.h"
 #include "includes/spectrum.h"
+#include "includes/spec128.h"
+#include "includes/timex.h"
+#include "includes/specpls3.h"
 #include "sound/ay8910.h"
 #include "machine/spec_snqk.h"
 

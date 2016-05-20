@@ -13,6 +13,7 @@
 #ifndef __SDL_GL_CONTEXT__
 #define __SDL_GL_CONTEXT__
 
+#include <SDL2/SDL.h>
 #include "modules/opengl/osd_opengl.h"
 
 class sdl_gl_context : public osd_gl_context
@@ -44,7 +45,7 @@ public:
 	virtual const char *LastErrorMsg() override
 	{
 		if (m_error[0] == 0)
-			return NULL;
+			return nullptr;
 		else
 			return m_error;
 	}

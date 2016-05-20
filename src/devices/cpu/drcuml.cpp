@@ -22,9 +22,6 @@
     * Support for FPU exceptions
 
     * New instructions?
-        - FCOPYI, ICOPYF
-            copy raw between float and integer registers
-
         - VALID opcode_desc,handle,param
             checksum/compare code referenced by opcode_desc; if not
             matching, generate exception with handle,param
@@ -35,6 +32,7 @@
 ***************************************************************************/
 
 #include "emu.h"
+#include "emuopts.h"
 #include "drcuml.h"
 #include "drcbec.h"
 #include "drcbex86.h"
@@ -232,7 +230,7 @@ void drcuml_state::symbol_add(void *base, UINT32 length, const char *name)
 
 //-------------------------------------------------
 //  symbol_find - look up a symbol from the
-//  internal symbol table or return NULL if not
+//  internal symbol table or return nullptr if not
 //  found
 //-------------------------------------------------
 
@@ -254,7 +252,7 @@ const char *drcuml_state::symbol_find(void *base, UINT32 *offset)
 			return cursym->m_name.c_str();
 		}
 
-	// not found; return NULL
+	// not found; return nullptr
 	return nullptr;
 }
 
@@ -504,7 +502,7 @@ const char *drcuml_block::get_comment_text(const instruction &inst, std::string 
 		return comment.c_str();
 	}
 
-	// everything else is NULL
+	// everything else is nullptr
 	return nullptr;
 }
 

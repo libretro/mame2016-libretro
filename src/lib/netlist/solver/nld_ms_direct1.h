@@ -17,8 +17,8 @@ class matrix_solver_direct1_t: public matrix_solver_direct_t<1,1>
 {
 public:
 
-	matrix_solver_direct1_t(const solver_parameters_t *params)
-		: matrix_solver_direct_t<1, 1>(params, 1)
+	matrix_solver_direct1_t(netlist_t &anetlist, const pstring &name, const solver_parameters_t *params)
+		: matrix_solver_direct_t<1, 1>(anetlist, name, params, 1)
 		{}
 	virtual int vsolve_non_dynamic(const bool newton_raphson) override;
 
@@ -30,13 +30,13 @@ public:
 
 inline int matrix_solver_direct1_t::vsolve_non_dynamic(ATTR_UNUSED const bool newton_raphson)
 {
-	this->build_LE_A();
-	this->build_LE_RHS();
+	build_LE_A<matrix_solver_direct1_t>();
+	build_LE_RHS<matrix_solver_direct1_t>();
 	//NL_VERBOSE_OUT(("{1} {2}\n", new_val, m_RHS[0] / m_A[0][0]);
 
 	nl_double new_val[1] = { RHS(0) / A(0,0) };
 
-	if (is_dynamic())
+	if (has_dynamic_devices())
 	{
 		nl_double err = this->delta(new_val);
 		store(new_val);

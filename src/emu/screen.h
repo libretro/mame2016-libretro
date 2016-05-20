@@ -30,7 +30,8 @@ enum screen_type_enum
 	SCREEN_TYPE_INVALID = 0,
 	SCREEN_TYPE_RASTER,
 	SCREEN_TYPE_VECTOR,
-	SCREEN_TYPE_LCD
+	SCREEN_TYPE_LCD,
+	SCREEN_TYPE_SVG
 };
 
 // texture formats
@@ -155,6 +156,9 @@ typedef device_delegate<void (screen_device &, bool)> screen_vblank_delegate;
 
 // ======================> screen_device
 
+class screen_device_svg_renderer;
+class render_container;
+
 class screen_device : public device_t
 {
 	friend class render_manager;
@@ -194,6 +198,7 @@ public:
 	static void static_set_palette(device_t &device, const char *tag);
 	static void static_set_video_attributes(device_t &device, UINT32 flags);
 	static void static_set_color(device_t &device, rgb_t color);
+	static void static_set_svg_region(device_t &device, const char *region);
 
 	// information getters
 	render_container &container() const { assert(m_container != nullptr); return *m_container; }
@@ -279,10 +284,11 @@ private:
 	screen_vblank_delegate m_screen_vblank;         // screen vblank callback
 	optional_device<palette_device> m_palette;      // our palette
 	UINT32              m_video_attributes;         // flags describing the video system
+	const char *        m_svg_region;               // the region in which the svg data is in
 
 	// internal state
 	render_container *  m_container;                // pointer to our container
-
+	std::unique_ptr<screen_device_svg_renderer> m_svg; // the svg renderer
 	// dimensions
 	int                 m_width;                    // current width (HTOTAL)
 	int                 m_height;                   // current height (VTOTAL)
@@ -378,6 +384,11 @@ typedef device_type_iterator<&device_creator<screen_device>, screen_device> scre
 #define MCFG_SCREEN_TYPE(_type) \
 	screen_device::static_set_type(*device, SCREEN_TYPE_##_type);
 
+#define MCFG_SCREEN_SVG_ADD(_tag, _region) \
+	MCFG_DEVICE_ADD(_tag, SCREEN, 0) \
+	MCFG_SCREEN_TYPE(SVG) \
+	screen_device::static_set_svg_region(*device, _region);
+
 /*!
  @brief Configures screen parameters for the given screen.
 
@@ -434,15 +445,15 @@ typedef device_type_iterator<&device_creator<screen_device>, screen_device> scre
 #define MCFG_SCREEN_DEFAULT_POSITION(_xscale, _xoffs, _yscale, _yoffs)  \
 	screen_device::static_set_default_position(*device, _xscale, _xoffs, _yscale, _yoffs);
 #define MCFG_SCREEN_UPDATE_DRIVER(_class, _method) \
-	screen_device::static_set_screen_update(*device, screen_update_delegate_smart(&_class::_method, #_class "::" #_method, NULL));
+	screen_device::static_set_screen_update(*device, screen_update_delegate_smart(&_class::_method, #_class "::" #_method, nullptr));
 #define MCFG_SCREEN_UPDATE_DEVICE(_device, _class, _method) \
 	screen_device::static_set_screen_update(*device, screen_update_delegate_smart(&_class::_method, #_class "::" #_method, _device));
 #define MCFG_SCREEN_VBLANK_NONE() \
 	screen_device::static_set_screen_vblank(*device, screen_vblank_delegate());
 #define MCFG_SCREEN_VBLANK_DRIVER(_class, _method) \
-	screen_device::static_set_screen_vblank(*device, screen_vblank_delegate(&_class::_method, #_class "::" #_method, NULL, (_class *)0));
+	screen_device::static_set_screen_vblank(*device, screen_vblank_delegate(&_class::_method, #_class "::" #_method, nullptr, (_class *)nullptr));
 #define MCFG_SCREEN_VBLANK_DEVICE(_device, _class, _method) \
-	screen_device::static_set_screen_vblank(*device, screen_vblank_delegate(&_class::_method, #_class "::" #_method, _device, (_class *)0));
+	screen_device::static_set_screen_vblank(*device, screen_vblank_delegate(&_class::_method, #_class "::" #_method, _device, (_class *)nullptr));
 #define MCFG_SCREEN_PALETTE(_palette_tag) \
 	screen_device::static_set_palette(*device, "^" _palette_tag);
 #define MCFG_SCREEN_NO_PALETTE \

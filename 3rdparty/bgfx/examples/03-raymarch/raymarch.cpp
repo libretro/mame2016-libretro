@@ -37,7 +37,7 @@ inline void mtxProj(float* _result, float _fovy, float _aspect, float _near, flo
 	bx::mtxProj(_result, _fovy, _aspect, _near, _far, s_oglNdc);
 }
 
-void renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height)
+void renderScreenSpaceQuad(uint8_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height)
 {
 	bgfx::TransientVertexBuffer tvb;
 	bgfx::TransientIndexBuffer tib;
@@ -107,7 +107,7 @@ class ExampleRaymarch : public entry::AppI
 	void init(int _argc, char** _argv) BX_OVERRIDE
 	{
 		Args args(_argc, _argv);
-		
+
 		m_width  = 1280;
 		m_height = 720;
 		m_debug  = BGFX_DEBUG_TEXT;
@@ -127,18 +127,8 @@ class ExampleRaymarch : public entry::AppI
 				, 0
 				);
 
-		// Setup root path for binary shaders. Shader binaries are different
-		// for each renderer.
-		switch (bgfx::getRendererType() )
-		{
-		default:
-			break;
-
-		case bgfx::RendererType::OpenGL:
-		case bgfx::RendererType::OpenGLES:
-			s_oglNdc = true;
-			break;
-		}
+		const bgfx::Caps* caps = bgfx::getCaps();
+		s_oglNdc = caps->homogeneousDepth;
 
 		// Create vertex stream declaration.
 		PosColorTexCoord0Vertex::init();
@@ -171,10 +161,10 @@ class ExampleRaymarch : public entry::AppI
 		if (!entry::processEvents(m_width, m_height, m_debug, m_reset) )
 		{
 			// Set view 0 default viewport.
-			bgfx::setViewRect(0, 0, 0, m_width, m_height);
+			bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height) );
 
 			// Set view 1 default viewport.
-			bgfx::setViewRect(1, 0, 0, m_width, m_height);
+			bgfx::setViewRect(1, 0, 0, uint16_t(m_width), uint16_t(m_height) );
 
 			// This dummy draw call is here to make sure that view 0 is cleared
 			// if no other draw calls are submitted to viewZ 0.

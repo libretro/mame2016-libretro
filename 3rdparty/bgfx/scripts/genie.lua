@@ -65,8 +65,9 @@ solution "bgfx"
 	language "C++"
 	startproject "example-00-helloworld"
 
-BGFX_DIR = path.getabsolute("..")
-BX_DIR   = os.getenv("BX_DIR")
+MODULE_DIR = path.getabsolute("../")
+BGFX_DIR   = path.getabsolute("..")
+BX_DIR     = os.getenv("BX_DIR")
 
 local BGFX_BUILD_DIR = path.join(BGFX_DIR, ".build")
 local BGFX_THIRD_PARTY_DIR = path.join(BGFX_DIR, "3rdparty")
@@ -173,47 +174,14 @@ function exampleProject(_name)
 	end
 
 	if _OPTIONS["with-ovr"] then
-		links   {
-			"winmm",
-			"ws2_32",
-		}
+		configuration { "x32" }
+			libdirs { path.join("$(OVR_DIR)/LibOVR/Lib/Windows/Win32/Release", _ACTION) }
 
-		-- Check for LibOVR 5.0+
-		if os.isdir(path.join(os.getenv("OVR_DIR"), "LibOVR/Lib/Windows/Win32/Debug/VS2012")) then
+		configuration { "x64" }
+			libdirs { path.join("$(OVR_DIR)/LibOVR/Lib/Windows/x64/Release", _ACTION) }
 
-			configuration { "x32", "Debug" }
-				libdirs { path.join("$(OVR_DIR)/LibOVR/Lib/Windows/Win32/Debug", _ACTION) }
-
-			configuration { "x32", "Release" }
-				libdirs { path.join("$(OVR_DIR)/LibOVR/Lib/Windows/Win32/Release", _ACTION) }
-
-			configuration { "x64", "Debug" }
-				libdirs { path.join("$(OVR_DIR)/LibOVR/Lib/Windows/x64/Debug", _ACTION) }
-
-			configuration { "x64", "Release" }
-				libdirs { path.join("$(OVR_DIR)/LibOVR/Lib/Windows/x64/Release", _ACTION) }
-
-			configuration { "x32 or x64" }
-				links { "libovr" }
-		else
-			configuration { "x32" }
-				libdirs { path.join("$(OVR_DIR)/LibOVR/Lib/Win32", _ACTION) }
-
-			configuration { "x64" }
-				libdirs { path.join("$(OVR_DIR)/LibOVR/Lib/x64", _ACTION) }
-
-			configuration { "x32", "Debug" }
-				links { "libovrd" }
-
-			configuration { "x32", "Release" }
-				links { "libovr" }
-
-			configuration { "x64", "Debug" }
-				links { "libovr64d" }
-
-			configuration { "x64", "Release" }
-				links { "libovr64" }
-		end
+		configuration { "x32 or x64" }
+			links { "libovr" }
 
 		configuration {}
 	end
@@ -422,6 +390,7 @@ exampleProject("24-nbody")
 exampleProject("26-occlusion")
 exampleProject("27-terrain")
 exampleProject("28-wireframe")
+exampleProject("29-debugdraw")
 
 -- C99 source doesn't compile under WinRT settings
 if not premake.vstudio.iswinrt() then
@@ -437,5 +406,6 @@ if _OPTIONS["with-tools"] then
 	group "tools"
 	dofile "shaderc.lua"
 	dofile "texturec.lua"
+	dofile "texturev.lua"
 	dofile "geometryc.lua"
 end

@@ -107,6 +107,7 @@ Address bus A0-A11 is Y0-Y11
 #include "cpu/m6502/m6502.h"
 #include "cpu/m6502/m65c02.h"
 #include "cpu/z80/z80.h"
+#include "cpu/mcs48/mcs48.h"
 #include "formats/ap_dsk35.h"
 #include "machine/sonydriv.h"
 #include "machine/appldriv.h"
@@ -1977,7 +1978,6 @@ READ8_MEMBER(apple2e_state::c800_int_r)
 	{
 		m_cnxx_slot = CNXX_UNCLAIMED;
 		update_slotrom_banks();
-		return 0xff;
 	}
 
 	return m_rom_ptr[0x800 + offset];
@@ -1994,7 +1994,6 @@ READ8_MEMBER(apple2e_state::c800_b2_int_r)
 	{
 		m_cnxx_slot = CNXX_UNCLAIMED;
 		update_slotrom_banks();
-		return 0xff;
 	}
 
 	return m_rom_ptr[0x4800 + offset];
@@ -2435,6 +2434,11 @@ static ADDRESS_MAP_START( lcbank_map, AS_PROGRAM, 8, apple2e_state )
 	AM_RANGE(0x0000, 0x2fff) AM_ROM AM_REGION("maincpu", 0x1000) AM_WRITE(lc_w)
 	AM_RANGE(0x3000, 0x5fff) AM_READWRITE(lc_r, lc_w)
 	AM_RANGE(0x6000, 0x8fff) AM_ROM AM_REGION("maincpu", 0x5000) AM_WRITE(lc_w)
+ADDRESS_MAP_END
+
+static ADDRESS_MAP_START( spectred_keyb_map, AS_PROGRAM, 8, apple2e_state )
+		AM_RANGE(0x0000, 0x07ff) AM_ROM
+		AM_RANGE(0x0800, 0x0fff) AM_RAM
 ADDRESS_MAP_END
 
 /***************************************************************************
@@ -3365,6 +3369,14 @@ static MACHINE_CONFIG_DERIVED( apple2ee, apple2e )
 	MCFG_CPU_PROGRAM_MAP(apple2e_map)
 MACHINE_CONFIG_END
 
+static MACHINE_CONFIG_DERIVED( spectred, apple2e )
+	MCFG_CPU_ADD("keyb_mcu", I8035, XTAL_4MHz) /* guessed frequency */
+	MCFG_CPU_PROGRAM_MAP(spectred_keyb_map)
+
+		//TODO: implement the actual interfacing to this 8035 MCU and
+		//      and then remove the keyb CPU inherited from apple2e
+MACHINE_CONFIG_END
+
 static MACHINE_CONFIG_DERIVED( tk3000, apple2e )
 	MCFG_CPU_REPLACE("maincpu", M65C02, 1021800)        /* close to actual CPU frequency of 1.020484 MHz */
 	MCFG_CPU_PROGRAM_MAP(apple2e_map)
@@ -3414,7 +3426,7 @@ static MACHINE_CONFIG_DERIVED( apple2c, apple2ee )
 	MCFG_RS232_CTS_HANDLER(DEVWRITELINE(IIC_ACIA2_TAG, mos6551_device, write_cts))
 
 	// TODO: populate the IIc's other virtual slots with ONBOARD_ADD
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_DISKIING, NULL)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_DISKIING, NOOP)
 
 	MCFG_A2EAUXSLOT_SLOT_REMOVE("aux")
 	MCFG_DEVICE_REMOVE(A2_AUXSLOT_TAG)
@@ -3450,7 +3462,7 @@ MACHINE_CONFIG_END
 static MACHINE_CONFIG_DERIVED( apple2c_iwm, apple2c )
 
 	MCFG_A2BUS_SLOT_REMOVE("sl6")
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_IWM_FDC, NULL)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_IWM_FDC, NOOP)
 MACHINE_CONFIG_END
 
 static MACHINE_CONFIG_DERIVED( apple2c_mem, apple2c )
@@ -3458,7 +3470,7 @@ static MACHINE_CONFIG_DERIVED( apple2c_mem, apple2c )
 	MCFG_CPU_PROGRAM_MAP(apple2c_memexp_map)
 
 	MCFG_A2BUS_SLOT_REMOVE("sl6")
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_IWM_FDC, NULL)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_IWM_FDC, NOOP)
 
 	MCFG_RAM_MODIFY(RAM_TAG)
 	MCFG_RAM_DEFAULT_SIZE("128K")
@@ -3491,12 +3503,12 @@ static MACHINE_CONFIG_DERIVED( laser128, apple2c )
 
 	MCFG_A2BUS_SLOT_REMOVE("sl6")
 
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl1", A2BUS_LASER128, NULL)
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl2", A2BUS_LASER128, NULL)
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl3", A2BUS_LASER128, NULL)
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl4", A2BUS_LASER128, NULL)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl1", A2BUS_LASER128, NOOP)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl2", A2BUS_LASER128, NOOP)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl3", A2BUS_LASER128, NOOP)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl4", A2BUS_LASER128, NOOP)
 	MCFG_A2BUS_SLOT_ADD("a2bus", "sl5", apple2_cards, nullptr)
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_LASER128, NULL)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_LASER128, NOOP)
 	MCFG_A2BUS_SLOT_ADD("a2bus", "sl7", apple2_cards, nullptr)
 
 	MCFG_RAM_MODIFY(RAM_TAG)
@@ -3513,13 +3525,13 @@ static MACHINE_CONFIG_DERIVED( laser128ex2, apple2c )
 
 	MCFG_A2BUS_SLOT_REMOVE("sl6")
 
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl1", A2BUS_LASER128, NULL)
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl2", A2BUS_LASER128, NULL)
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl3", A2BUS_LASER128, NULL)
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl4", A2BUS_LASER128, NULL)
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl5", A2BUS_LASER128, NULL)
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_LASER128, NULL)
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl7", A2BUS_LASER128, NULL)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl1", A2BUS_LASER128, NOOP)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl2", A2BUS_LASER128, NOOP)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl3", A2BUS_LASER128, NOOP)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl4", A2BUS_LASER128, NOOP)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl5", A2BUS_LASER128, NOOP)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_LASER128, NOOP)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl7", A2BUS_LASER128, NOOP)
 
 	MCFG_RAM_MODIFY(RAM_TAG)
 	MCFG_RAM_DEFAULT_SIZE("128K")
@@ -3630,6 +3642,22 @@ ROM_START(apple2c)
 
 	ROM_REGION( 0x800, "keyboard", ROMREGION_ERASE00 )
 	ROM_LOAD( "342-0132-c.e12", 0x000, 0x800, CRC(e47045f4) SHA1(12a2e718f5f4acd69b6c33a45a4a940b1440a481) ) // 1983 US-Dvorak
+ROM_END
+
+
+ROM_START(spectred)
+		ROM_REGION(0x8000,"gfx1",0)
+		ROM_LOAD ( "spm-c_ed_06-08-85.u6", 0x0000, 0x8000, CRC(a1b9ffe4) SHA1(3cb281f19f91372e24685792b7bff778944f99ed) )
+
+		ROM_REGION(0x8000,"maincpu",0)
+		ROM_LOAD ( "spm-c_ed_50-09-86.u50.H", 0x0000, 0x4000, CRC(1fccaf24) SHA1(1de1438ee8789f83cbc97f75c0485d1fd0f58a38))
+		ROM_LOAD ( "spm-c_ed_51-09-86.u51.H", 0x4000, 0x4000, CRC(fae8d36c) SHA1(69bed61513482ccb578b89c2fb8e7ba2258e82a5))
+
+		ROM_REGION( 0x800, "keyboard", ROMREGION_ERASE00 )
+		ROM_LOAD( "342-0132-c.e12", 0x000, 0x800, BAD_DUMP CRC(e47045f4) SHA1(12a2e718f5f4acd69b6c33a45a4a940b1440a481) ) // copied from apple2e
+
+		ROM_REGION(0x1000, "keyb_mcu", 0)
+	ROM_LOAD( "167_8980.u5", 0x0000, 0x1000, CRC(a501f197) SHA1(136c2b562999a6e340fe0e9a3776cea8c2e3647e) )
 ROM_END
 
 // unlike the very unique TK2000, the TK3000 is a mostly stock enhanced IIe clone
@@ -3755,6 +3783,7 @@ COMP( 1985, apple2ee, apple2e,  0,        apple2ee,    apple2e, driver_device,  
 COMP( 1985, apple2eeuk,apple2e, 0,        apple2ee,    apple2euk, driver_device,0,        "Apple Computer",    "Apple //e (enhanced, UK)", MACHINE_SUPPORTS_SAVE )
 COMP( 1987, apple2ep, apple2e,  0,        apple2ep,    apple2ep, driver_device, 0,        "Apple Computer",    "Apple //e (Platinum)", MACHINE_SUPPORTS_SAVE )
 COMP( 1984, apple2c,  0,        apple2,   apple2c,     apple2c, driver_device,  0,        "Apple Computer",    "Apple //c" , MACHINE_SUPPORTS_SAVE )
+COMP( 1985?,spectred, apple2e,  0,        spectred,    apple2e, driver_device,  0,        "Scopus/Spectrum",   "Spectrum ED" , MACHINE_SUPPORTS_SAVE )
 COMP( 1986, tk3000,   apple2c,  0,        tk3000,      apple2e, driver_device,  0,        "Microdigital",      "TK3000//e" , MACHINE_SUPPORTS_SAVE )
 COMP( 1989, prav8c,   apple2e,  0,        apple2e,     apple2e, driver_device,  0,        "Pravetz",           "Pravetz 8C", MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE )
 COMP( 1987, laser128, apple2c,  0,        laser128,    apple2e, driver_device,  0,        "Video Technology",  "Laser 128 (version 4.2)", MACHINE_SUPPORTS_SAVE )

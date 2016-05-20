@@ -54,8 +54,8 @@ class ExampleLod : public entry::AppI
 
 		m_program = loadProgram("vs_tree", "fs_tree");
 
-		m_textureLeafs = loadTexture("leafs1.dds");
-		m_textureBark  = loadTexture("bark1.dds");
+		m_textureLeafs = loadTexture("textures/leafs1.dds");
+		m_textureBark  = loadTexture("textures/bark1.dds");
 
 		const bgfx::Memory* stippleTex = bgfx::alloc(8*4);
 		memset(stippleTex->data, 0, stippleTex->size);
@@ -174,11 +174,7 @@ class ExampleLod : public entry::AppI
 			{
 				float view[16];
 				bx::mtxQuatTranslationHMD(view, hmd->eye[0].rotation, eye);
-
-				float proj[16];
-				bx::mtxProj(proj, hmd->eye[0].fov, 0.1f, 100.0f);
-
-				bgfx::setViewTransform(0, view, proj);
+				bgfx::setViewTransform(0, view, hmd->eye[0].projection, BGFX_VIEW_STEREO, hmd->eye[1].projection);
 
 				// Set view 0 default viewport.
 				//

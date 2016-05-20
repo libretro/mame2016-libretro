@@ -18,8 +18,6 @@
 #ifndef __MCONFIG_H__
 #define __MCONFIG_H__
 
-#include "emuopts.h"
-
 //**************************************************************************
 //  CONSTANTS
 //**************************************************************************
@@ -35,6 +33,15 @@
 struct gfx_decode_entry;
 class driver_device;
 class screen_device;
+
+struct internal_layout
+{
+	size_t decompressed_size;
+	size_t compressed_size;
+	UINT8 compression_type;
+	const UINT8* data;
+};
+
 
 // ======================> machine_config
 
@@ -61,12 +68,9 @@ public:
 	// public state
 	attotime                m_minimum_quantum;          // minimum scheduling quantum
 	std::string             m_perfect_cpu_quantum;      // tag of CPU to use for "perfect" scheduling
-	INT32                   m_watchdog_vblank_count;    // number of VBLANKs until the watchdog kills us
-	attotime                m_watchdog_time;            // length of time until the watchdog kills us
-	bool                    m_force_no_drc;             // whether or not to force DRC off
 
 	// other parameters
-	const char *            m_default_layout;           // default layout for this machine
+	const internal_layout *            m_default_layout;           // default layout for this machine
 
 	// helpers during configuration; not for general use
 	device_t *device_add(device_t *owner, const char *tag, device_type type, UINT32 clock);
@@ -75,6 +79,10 @@ public:
 	device_t *device_find(device_t *owner, const char *tag);
 
 private:
+	// internal helpers
+	void remove_references(ATTR_UNUSED device_t &device);
+	device_t &config_new_device(device_t &device);
+
 	// internal state
 	const game_driver &     m_gamedrv;
 	emu_options &           m_options;
@@ -104,9 +112,9 @@ private:
 #define MACHINE_CONFIG_START(_name, _class) \
 ATTR_COLD device_t *MACHINE_CONFIG_NAME(_name)(machine_config &config, device_t *owner, device_t *device) \
 { \
-	devcb_base *devcb = NULL; \
+	devcb_base *devcb = nullptr; \
 	(void)devcb; \
-	if (owner == NULL) owner = config.device_add(NULL, "root", &driver_device_creator<_class>, 0);
+	if (owner == nullptr) owner = config.device_add(nullptr, "root", &driver_device_creator<_class>, 0);
 
 /**
  @def MACHINE_CONFIG_FRAGMENT(_name)
@@ -117,9 +125,9 @@ ATTR_COLD device_t *MACHINE_CONFIG_NAME(_name)(machine_config &config, device_t 
 #define MACHINE_CONFIG_FRAGMENT(_name) \
 ATTR_COLD device_t *MACHINE_CONFIG_NAME(_name)(machine_config &config, device_t *owner, device_t *device) \
 { \
-	devcb_base *devcb = NULL; \
+	devcb_base *devcb = nullptr; \
 	(void)devcb; \
-	assert(owner != NULL);
+	assert(owner != nullptr);
 
 /**
  @def MACHINE_CONFIG_DERIVED(_name, _base)
@@ -131,10 +139,10 @@ ATTR_COLD device_t *MACHINE_CONFIG_NAME(_name)(machine_config &config, device_t 
 #define MACHINE_CONFIG_DERIVED(_name, _base) \
 ATTR_COLD device_t *MACHINE_CONFIG_NAME(_name)(machine_config &config, device_t *owner, device_t *device) \
 { \
-	devcb_base *devcb = NULL; \
+	devcb_base *devcb = nullptr; \
 	(void)devcb; \
 	owner = MACHINE_CONFIG_NAME(_base)(config, owner, device); \
-	assert(owner != NULL);
+	assert(owner != nullptr);
 
 /**
 @def MACHINE_CONFIG_DERIVED_CLASS(_name, _base, _class)
@@ -147,9 +155,9 @@ Begins a machine_config that is derived from another machine_config that can spe
 #define MACHINE_CONFIG_DERIVED_CLASS(_name, _base, _class) \
 ATTR_COLD device_t *MACHINE_CONFIG_NAME(_name)(machine_config &config, device_t *owner, device_t *device) \
 { \
-	devcb_base *devcb = NULL; \
+	devcb_base *devcb = nullptr; \
 	(void)devcb; \
-	if (owner == NULL) owner = config.device_add(NULL, "root", &driver_device_creator<_class>, 0); \
+	if (owner == nullptr) owner = config.device_add(nullptr, "root", &driver_device_creator<_class>, 0); \
 	owner = MACHINE_CONFIG_NAME(_base)(config, owner, device);
 
 /**
@@ -189,19 +197,9 @@ References an external machine config.
 #define MCFG_QUANTUM_PERFECT_CPU(_cputag) \
 	config.m_perfect_cpu_quantum = owner->subtag(_cputag);
 
-// recompilation parameters
-#define MCFG_FORCE_NO_DRC() \
-	config.m_force_no_drc = true;
-
-// watchdog configuration
-#define MCFG_WATCHDOG_VBLANK_INIT(_count) \
-	config.m_watchdog_vblank_count = _count;
-#define MCFG_WATCHDOG_TIME_INIT(_time) \
-	config.m_watchdog_time = _time;
-
 // core video parameters
 #define MCFG_DEFAULT_LAYOUT(_layout) \
-	config.m_default_layout = &(_layout)[0];
+	config.m_default_layout = &(_layout);
 
 // add/remove devices
 #define MCFG_DEVICE_ADD(_tag, _type, _clock) \

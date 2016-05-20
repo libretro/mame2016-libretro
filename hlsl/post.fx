@@ -99,12 +99,12 @@ VS_OUTPUT vs_main(VS_INPUT Input)
 	Output.TexCoord = Input.TexCoord;
 	Output.TexCoord += PrepareBloom
 		? 0.0f / TargetDims  // use half texel offset (DX9) to do the blur for first bloom layer
-		: 0.5f / TargetDims; // fix half texel offset correction (DX9)
+		: 0.5f / TargetDims; // fix half texel offset (DX9)
 
 	Output.ScreenCoord = Input.Position.xy / ScreenDims;
 
 	Output.SourceCoord = Input.TexCoord;
-	Output.SourceCoord += 0.5f / TargetDims;
+	Output.SourceCoord += 0.5f / TargetDims; // fix half texel offset (DX9)
 
 	Output.Color = Input.Color;
 
@@ -141,24 +141,23 @@ uniform float2 ShadowUV = float2(0.25f, 0.25f);
 uniform float3 Power = float3(1.0f, 1.0f, 1.0f);
 uniform float3 Floor = float3(0.0f, 0.0f, 0.0f);
 
-float2 GetAdjustedCoords(float2 coord, float2 centerOffset)
+float2 GetAdjustedCoords(float2 coord)
 {
 	// center coordinates
-	coord -= centerOffset;
+	coord -= 0.5f;
 
 	// apply screen scale
-	coord /= ScreenScale;
+	coord *= ScreenScale;
 
 	// un-center coordinates
-	coord += centerOffset;
+	coord += 0.5f;
 
 	// apply screen offset
-	coord += (centerOffset * 2.0) * ScreenOffset;
+	coord += ScreenOffset;
 
 	return coord;
 }
 
-// vector screen has the same quad texture coordinates for every screen orientation, raster screen differs
 float2 GetShadowCoord(float2 QuadCoord, float2 SourceCoord)
 {
 	float2 QuadTexel = 1.0f / QuadDims;
@@ -175,32 +174,29 @@ float2 GetShadowCoord(float2 QuadCoord, float2 SourceCoord)
 	float2 shadowUV = ShadowUV;
 	float2 shadowCount = ShadowCount;
 
-	// swap x/y vector and raster in screen mode (not source mode)
+	// swap x/y in screen mode (not source mode)
 	canvasCoord = ShadowTileMode == 0 && SwapXY
 		? canvasCoord.yx
 		: canvasCoord.xy;
 
-	// swap x/y vector and raster in screen mode (not source mode)
+	// swap x/y in screen mode (not source mode)
 	shadowCount = ShadowTileMode == 0 && SwapXY
 		? shadowCount.yx
 		: shadowCount.xy;
 
 	float2 shadowTile = canvasTexelDims * shadowCount;
 
-	// swap x/y vector in screen mode (not raster and not source mode)
-	shadowTile = VectorScreen && ShadowTileMode == 0 && SwapXY
-		? shadowTile.yx
-		: shadowTile.xy;
-
 	float2 shadowFrac = frac(canvasCoord / shadowTile);
 
-	// swap x/y raster in screen mode (not vector and not source mode)
-	shadowFrac = !VectorScreen && ShadowTileMode == 0 && SwapXY
+	// swap x/y in screen mode (not source mode)
+	shadowFrac = ShadowTileMode == 0 && SwapXY
 		? shadowFrac.yx
 		: shadowFrac.xy;
 
 	float2 shadowCoord = (shadowFrac * shadowUV);
-	shadowCoord += 0.5f / shadowDims; // half texel offset
+	shadowCoord += ShadowTileMode == 0
+		? 0.5f / shadowDims // fix half texel offset (DX9)
+		: 0.0f;
 
 	return shadowCoord;
 }
@@ -208,19 +204,15 @@ float2 GetShadowCoord(float2 QuadCoord, float2 SourceCoord)
 float4 ps_main(PS_INPUT Input) : COLOR
 {
 	float2 ScreenCoord = Input.ScreenCoord;
-	float2 TexCoord = GetAdjustedCoords(Input.TexCoord, 0.5f);
-	float2 SourceCoord = GetAdjustedCoords(Input.SourceCoord, 0.5f);
+	float2 TexCoord = GetAdjustedCoords(Input.TexCoord);
+	float2 SourceCoord = GetAdjustedCoords(Input.SourceCoord);
 
 	// Color
 	float4 BaseColor = tex2D(DiffuseSampler, TexCoord);
 	BaseColor.a = 1.0f;
 
-	// keep border
-	if (!PrepareBloom)
-	{
-		// clip border
-		clip(TexCoord < 0.0f || TexCoord > 1.0f ? -1 : 1);
-	}
+	// clip border
+	clip(TexCoord < 0.0f || TexCoord > 1.0f ? -1 : 1);
 
 	// Mask Simulation (may not affect bloom)
 	if (!PrepareBloom && ShadowAlpha > 0.0f)

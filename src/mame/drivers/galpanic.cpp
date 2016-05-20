@@ -68,6 +68,7 @@ Stephh's additional notes :
 #include "emu.h"
 #include "cpu/m68000/m68000.h"
 #include "includes/kaneko16.h"
+#include "machine/watchdog.h"
 #include "sound/okim6295.h"
 #include "video/kan_pand.h"
 #include "machine/kaneko_hit.h"
@@ -230,6 +231,8 @@ static MACHINE_CONFIG_START( galpanic, galpanic_state )
 	MCFG_CPU_PROGRAM_MAP(galpanic_map)
 	MCFG_TIMER_DRIVER_ADD_SCANLINE("scantimer", galpanic_state, scanline, "screen", 0, 1)
 
+	MCFG_WATCHDOG_ADD("watchdog")
+
 	/* video hardware */
 	MCFG_SCREEN_ADD("screen", RASTER)
 	MCFG_SCREEN_REFRESH_RATE(60)
@@ -248,7 +251,6 @@ static MACHINE_CONFIG_START( galpanic, galpanic_state )
 	MCFG_DEVICE_ADD("pandora", KANEKO_PANDORA, 0)
 	MCFG_KANEKO_PANDORA_OFFSETS(0, -16)
 	MCFG_KANEKO_PANDORA_GFXDECODE("gfxdecode")
-	MCFG_KANEKO_PANDORA_PALETTE("palette")
 
 	MCFG_DEVICE_ADD("calc1_mcu", KANEKO_HIT, 0)
 	kaneko_hit_device::set_type(*device, 0);
@@ -267,6 +269,7 @@ static MACHINE_CONFIG_DERIVED( galpanica, galpanic )
 	/* basic machine hardware */
 
 	/* arm watchdog */
+	MCFG_WATCHDOG_MODIFY("watchdog")
 	MCFG_WATCHDOG_TIME_INIT(attotime::from_seconds(3))  /* a guess, and certainly wrong */
 MACHINE_CONFIG_END
 

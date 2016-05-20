@@ -15,13 +15,13 @@
 
 #include "statereader.h"
 
-class target_manager;
-class osd_options;
+class bgfx_target;
+class chain_manager;
 
 class target_reader : public state_reader
 {
 public:
-	static bool read_from_value(const Value& value, std::string prefix, target_manager& targets, osd_options& options, uint32_t screen_index);
+	static bgfx_target* read_from_value(const Value& value, std::string prefix, chain_manager& chains, uint32_t screen_index);
 
 private:
 	static bool validate_parameters(const Value& value, std::string prefix);

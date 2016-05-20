@@ -9,6 +9,8 @@
 
 #include "statereader.h"
 
+#include <math.h>
+
 uint64_t state_reader::get_enum_from_value(const Value& value, std::string name, const uint64_t default_value, const string_to_enum* enums, const int count)
 {
 	if (value.HasMember(name.c_str()))
@@ -91,6 +93,15 @@ int state_reader::get_int(const Value& value, const std::string name, const int 
 	if (value.HasMember(name.c_str()))
 	{
 		return int(floor(value[name.c_str()].GetDouble() + 0.5));
+	}
+	return default_value;
+}
+
+float state_reader::get_float(const Value& value, const std::string name, const float default_value)
+{
+	if (value.HasMember(name.c_str()))
+	{
+		return (float)value[name.c_str()].GetDouble();
 	}
 	return default_value;
 }

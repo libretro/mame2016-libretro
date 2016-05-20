@@ -658,6 +658,7 @@ TODO:
 #include "cpu/z80/z80.h"
 #include "cpu/s2650/s2650.h"
 #include "machine/i8255.h"
+#include "machine/watchdog.h"
 #include "sound/sn76496.h"
 #include "sound/dac.h"
 #include "sound/discrete.h"
@@ -1571,7 +1572,7 @@ static ADDRESS_MAP_START( galaxian_map_base, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0x7006, 0x7006) AM_MIRROR(0x07f8) AM_WRITE(galaxian_flip_screen_x_w)
 	AM_RANGE(0x7007, 0x7007) AM_MIRROR(0x07f8) AM_WRITE(galaxian_flip_screen_y_w)
 	//AM_RANGE(0x7800, 0x7800) AM_MIRROR(0x07ff) AM_DEVWRITE("cust", galaxian_sound_device, pitch_w)
-	AM_RANGE(0x7800, 0x7800) AM_MIRROR(0x07ff) AM_READ(watchdog_reset_r)
+	AM_RANGE(0x7800, 0x7800) AM_MIRROR(0x07ff) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 ADDRESS_MAP_END
 
 static ADDRESS_MAP_START( galaxian_map, AS_PROGRAM, 8, galaxian_state )
@@ -1605,7 +1606,7 @@ static ADDRESS_MAP_START( mooncrst_map_base, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0xb006, 0xb006) AM_MIRROR(0x07f8) AM_WRITE(galaxian_flip_screen_x_w)
 	AM_RANGE(0xb007, 0xb007) AM_MIRROR(0x07f8) AM_WRITE(galaxian_flip_screen_y_w)
 //  AM_RANGE(0xb800, 0xb800) AM_MIRROR(0x07ff) AM_DEVWRITE("cust", galaxian_sound_device, pitch_w)
-	AM_RANGE(0xb800, 0xb800) AM_MIRROR(0x07ff) AM_READ(watchdog_reset_r)
+	AM_RANGE(0xb800, 0xb800) AM_MIRROR(0x07ff) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 ADDRESS_MAP_END
 
 static ADDRESS_MAP_START( moonqsr_decrypted_opcodes_map, AS_DECRYPTED_OPCODES, 8, galaxian_state )
@@ -1632,7 +1633,7 @@ static ADDRESS_MAP_START( fantastc_map, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0xa800, 0xa800) AM_MIRROR(0x07ff) AM_READ_PORT("IN1")
 	AM_RANGE(0xb000, 0xb000) AM_MIRROR(0x07ff) AM_READ_PORT("IN2")
 	AM_RANGE(0xb000, 0xb000) AM_MIRROR(0x07f8) AM_WRITE(irq_enable_w)
-	AM_RANGE(0xb800, 0xb800) AM_MIRROR(0x07ff) AM_READ(watchdog_reset_r)
+	AM_RANGE(0xb800, 0xb800) AM_MIRROR(0x07ff) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 	AM_RANGE(0xfffe, 0xfffe) AM_NOP // ?
 ADDRESS_MAP_END
 
@@ -1651,7 +1652,7 @@ static ADDRESS_MAP_START( timefgtr_map, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0xb000, 0xb000) AM_MIRROR(0x07ff) AM_READ_PORT("IN2")
 	AM_RANGE(0xb000, 0xb000) AM_MIRROR(0x07f8) AM_WRITE(irq_enable_w)
 	AM_RANGE(0xb004, 0xb004) AM_MIRROR(0x07f8) AM_WRITE(galaxian_stars_enable_w)
-	AM_RANGE(0xb800, 0xb800) AM_MIRROR(0x07ff) AM_READ(watchdog_reset_r)
+	AM_RANGE(0xb800, 0xb800) AM_MIRROR(0x07ff) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 //  AM_RANGE(0xb800, 0xb800) AM_WRITENOP // ?
 //  AM_RANGE(0xfff8, 0xffff) AM_WRITENOP // sound related?
 ADDRESS_MAP_END
@@ -1676,7 +1677,7 @@ static ADDRESS_MAP_START( dambustr_map, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0xf004, 0xf004) AM_MIRROR(0x07f8) AM_WRITE(galaxian_stars_enable_w)
 	AM_RANGE(0xf006, 0xf006) AM_MIRROR(0x07f8) AM_WRITE(galaxian_flip_screen_x_w)
 	AM_RANGE(0xf007, 0xf007) AM_MIRROR(0x07f8) AM_WRITE(galaxian_flip_screen_y_w)
-	AM_RANGE(0xf800, 0xf800) AM_MIRROR(0x07ff) AM_READ(watchdog_reset_r)
+	AM_RANGE(0xf800, 0xf800) AM_MIRROR(0x07ff) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 	AM_RANGE(0xf800, 0xf800) AM_MIRROR(0x07ff) AM_DEVWRITE("cust", galaxian_sound_device, pitch_w)
 ADDRESS_MAP_END
 #endif
@@ -1696,7 +1697,7 @@ static ADDRESS_MAP_START( theend_map, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0x6805, 0x6805) AM_MIRROR(0x07f8) //POUT2
 	AM_RANGE(0x6806, 0x6806) AM_MIRROR(0x07f8) AM_WRITE(galaxian_flip_screen_x_w)
 	AM_RANGE(0x6807, 0x6807) AM_MIRROR(0x07f8) AM_WRITE(galaxian_flip_screen_y_w)
-	AM_RANGE(0x7000, 0x7000) AM_MIRROR(0x07ff) AM_READ(watchdog_reset_r)
+	AM_RANGE(0x7000, 0x7000) AM_MIRROR(0x07ff) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 	AM_RANGE(0x8000, 0xffff) AM_READWRITE(theend_ppi8255_r, theend_ppi8255_w)
 ADDRESS_MAP_END
 
@@ -1717,7 +1718,7 @@ static ADDRESS_MAP_START( scobra_map, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0xa805, 0xa805) AM_MIRROR(0x47f8) /* POUT2 */
 	AM_RANGE(0xa806, 0xa806) AM_MIRROR(0x47f8) AM_WRITE(galaxian_flip_screen_x_w)
 	AM_RANGE(0xa807, 0xa807) AM_MIRROR(0x47f8) AM_WRITE(galaxian_flip_screen_y_w)
-	AM_RANGE(0xb000, 0xb000) AM_MIRROR(0x47ff) AM_READ(watchdog_reset_r)
+	AM_RANGE(0xb000, 0xb000) AM_MIRROR(0x47ff) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 ADDRESS_MAP_END
 
 
@@ -1734,7 +1735,7 @@ static ADDRESS_MAP_START( anteateruk_map, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0x1006, 0x1006) AM_MIRROR(0x01f8) AM_WRITE(galaxian_flip_screen_x_w)
 	AM_RANGE(0x1007, 0x1007) AM_MIRROR(0x01f8) AM_WRITE(galaxian_flip_screen_y_w)
 	AM_RANGE(0x1200, 0x12ff) AM_MIRROR(0x0100) AM_RAM_WRITE(galaxian_objram_w) AM_SHARE("spriteram")
-	AM_RANGE(0x1400, 0x1400) AM_MIRROR(0x03ff) AM_READ(watchdog_reset_r)
+	AM_RANGE(0x1400, 0x1400) AM_MIRROR(0x03ff) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 	AM_RANGE(0x4000, 0xbfff) AM_ROM
 	AM_RANGE(0xc000, 0xc003) AM_MIRROR(0x3efc) AM_DEVREADWRITE("ppi8255_1", i8255_device, read, write)
 	AM_RANGE(0xc100, 0xc103) AM_MIRROR(0x3efc) AM_DEVREADWRITE("ppi8255_0", i8255_device, read, write)
@@ -1769,7 +1770,7 @@ static ADDRESS_MAP_START( spactrai_map, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0x6800, 0x6800) AM_READ_PORT("IN1")
 
 	AM_RANGE(0x7000, 0x7000) AM_READ_PORT("IN2")
-	AM_RANGE(0x7800, 0x7800) AM_READ(watchdog_reset_r)
+	AM_RANGE(0x7800, 0x7800) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 
 	AM_RANGE(0xfe00, 0xfeff) AM_RAM AM_RAM_WRITE(galaxian_objram_w) AM_SHARE("spriteram")
 
@@ -1791,7 +1792,7 @@ static ADDRESS_MAP_START( anteaterg_map, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0x2607, 0x2607) AM_MIRROR(0x01f8) AM_WRITE(galaxian_flip_screen_y_w)
 	AM_RANGE(0x4000, 0xbfff) AM_ROM
 	AM_RANGE(0x7c00, 0x7fff) AM_RAM_WRITE(galaxian_videoram_w) AM_SHARE("videoram") /* mirror! */
-	AM_RANGE(0xf400, 0xf400) AM_MIRROR(0x01ff) AM_READ(watchdog_reset_r)
+	AM_RANGE(0xf400, 0xf400) AM_MIRROR(0x01ff) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 	AM_RANGE(0xf600, 0xf603) AM_MIRROR(0x01fc) AM_DEVREADWRITE("ppi8255_0", i8255_device, read, write)
 ADDRESS_MAP_END
 
@@ -1812,7 +1813,7 @@ static ADDRESS_MAP_START( anteatergg_map, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0x7004, 0x7004) AM_MIRROR(0x07f8) AM_WRITE(galaxian_stars_enable_w)
 	AM_RANGE(0x7006, 0x7006) AM_MIRROR(0x07f8) AM_WRITE(galaxian_flip_screen_x_w)
 	AM_RANGE(0x7007, 0x7007) AM_MIRROR(0x07f8) AM_WRITE(galaxian_flip_screen_y_w)
-	AM_RANGE(0x7800, 0x7800) AM_READ(watchdog_reset_r)
+	AM_RANGE(0x7800, 0x7800) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 	AM_IMPORT_FROM(galaxian_map_discrete)
 ADDRESS_MAP_END
 
@@ -1821,7 +1822,7 @@ static ADDRESS_MAP_START( frogger_map, AS_PROGRAM, 8, galaxian_state )
 	ADDRESS_MAP_UNMAP_HIGH
 	AM_RANGE(0x0000, 0x3fff) AM_ROM
 	AM_RANGE(0x8000, 0x87ff) AM_RAM
-	AM_RANGE(0x8800, 0x8800) AM_MIRROR(0x07ff) AM_READ(watchdog_reset_r)
+	AM_RANGE(0x8800, 0x8800) AM_MIRROR(0x07ff) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 	AM_RANGE(0xa800, 0xabff) AM_MIRROR(0x0400) AM_RAM_WRITE(galaxian_videoram_w) AM_SHARE("videoram")
 	AM_RANGE(0xb000, 0xb0ff) AM_MIRROR(0x0700) AM_RAM_WRITE(galaxian_objram_w) AM_SHARE("spriteram")
 	AM_RANGE(0xb808, 0xb808) AM_MIRROR(0x07e3) AM_WRITE(irq_enable_w)
@@ -1848,7 +1849,7 @@ static ADDRESS_MAP_START( turtles_map, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0xa028, 0xa028) AM_MIRROR(0x47c7) AM_WRITE(scramble_background_blue_w)
 	AM_RANGE(0xa030, 0xa030) AM_MIRROR(0x47c7) AM_WRITE(coin_count_0_w)
 	AM_RANGE(0xa038, 0xa038) AM_MIRROR(0x47c7) AM_WRITE(coin_count_1_w)
-	AM_RANGE(0xa800, 0xa800) AM_MIRROR(0x47ff) AM_READ(watchdog_reset_r)
+	AM_RANGE(0xa800, 0xa800) AM_MIRROR(0x47ff) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 	AM_RANGE(0xb000, 0xb03f) AM_MIRROR(0x47cf) AM_READWRITE(turtles_ppi8255_0_r, turtles_ppi8255_0_w)
 	AM_RANGE(0xb800, 0xb83f) AM_MIRROR(0x47cf) AM_READWRITE(turtles_ppi8255_1_r, turtles_ppi8255_1_w)
 ADDRESS_MAP_END
@@ -1937,7 +1938,7 @@ static ADDRESS_MAP_START( frogf_map, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0xa806, 0xa806) AM_MIRROR(0x07f1) AM_WRITE(galaxian_flip_screen_y_w)
 	AM_RANGE(0xa808, 0xa808) AM_MIRROR(0x07f1) AM_WRITE(coin_count_1_w)
 	AM_RANGE(0xa80e, 0xa80e) AM_MIRROR(0x07f1) AM_WRITE(coin_count_0_w)
-	AM_RANGE(0xb800, 0xb800) AM_MIRROR(0x07ff) AM_READ(watchdog_reset_r)
+	AM_RANGE(0xb800, 0xb800) AM_MIRROR(0x07ff) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 	AM_RANGE(0xc000, 0xffff) AM_READWRITE(frogf_ppi8255_r, frogf_ppi8255_w)
 ADDRESS_MAP_END
 
@@ -1959,7 +1960,7 @@ static ADDRESS_MAP_START( mshuttle_map, AS_PROGRAM, 8, galaxian_state )
 	AM_RANGE(0xa800, 0xa800) AM_DEVWRITE("cclimber_audio", cclimber_audio_device, sample_rate_w)
 	AM_RANGE(0xb000, 0xb000) AM_READ_PORT("IN2")
 	AM_RANGE(0xb000, 0xb000) AM_DEVWRITE("cclimber_audio", cclimber_audio_device, sample_volume_w)
-	AM_RANGE(0xb800, 0xb800) AM_READ(watchdog_reset_r)
+	AM_RANGE(0xb800, 0xb800) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 ADDRESS_MAP_END
 
 static ADDRESS_MAP_START( mshuttle_decrypted_opcodes_map, AS_DECRYPTED_OPCODES, 8, galaxian_state )
@@ -2006,7 +2007,7 @@ static ADDRESS_MAP_START( froggeram_map, AS_PROGRAM, 8, galaxian_state )
 	ADDRESS_MAP_UNMAP_HIGH
 	AM_RANGE(0x0000, 0x3fff) AM_ROM
 	AM_RANGE(0x8000, 0x87ff) AM_RAM
-	AM_RANGE(0x8800, 0x8800) AM_READ(watchdog_reset_r)
+	AM_RANGE(0x8800, 0x8800) AM_DEVREAD("watchdog", watchdog_timer_device, reset_r)
 	AM_RANGE(0xa800, 0xabff) AM_RAM_WRITE(galaxian_videoram_w) AM_SHARE("videoram")
 	AM_RANGE(0xb000, 0xb0ff) AM_RAM_WRITE(galaxian_objram_w) AM_SHARE("spriteram")
 	AM_RANGE(0xb801, 0xb801) AM_WRITE(irq_enable_w)
@@ -2208,6 +2209,36 @@ static INPUT_PORTS_START( swarm )
 	PORT_DIPNAME( 0x08, 0x00, DEF_STR( Difficulty ) )   /* aliens "flying" simultaneously */
 	PORT_DIPSETTING(    0x00, DEF_STR( Easy ) )             /* less aliens */
 	PORT_DIPSETTING(    0x08, DEF_STR( Hard ) )             /* more aliens */
+INPUT_PORTS_END
+
+static INPUT_PORTS_START( kamikazp )
+	PORT_INCLUDE(galaxian)
+
+	PORT_MODIFY("IN1")
+	PORT_DIPNAME( 0xc0, 0x80, DEF_STR( Bonus_Life ) )  // turning both of these on still seems to enable Free Play but actual coinage controlled by later dips?
+	PORT_DIPSETTING(    0x00, DEF_STR( None ) )
+	PORT_DIPSETTING(    0x40, "4000" )
+	PORT_DIPSETTING(    0x80, "5000" )
+	PORT_DIPSETTING(    0xc0, "7000 (buggy FREE PLAY message)" ) // also still causes the game to show 'FREE PLAY' which is the function of the old dips (doesn't operate in FREE PLAY tho)
+
+	PORT_MODIFY("IN2") // actual coinage appers to have been moved here (need to check code, wouldn't surprise me if some of these had other side-effects too) these are also some of the most ridiculous coinage setttings I've seen!
+	PORT_DIPNAME( 0x0f, 0x08, DEF_STR( Coinage ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( 4C_1C ) )
+	PORT_DIPSETTING(    0x07, "6C / 2C" ) // first 4 coins give 1 credit, next 2 coins give 1 credit
+	PORT_DIPSETTING(    0x0c, DEF_STR( 3C_1C )  )
+	PORT_DIPSETTING(    0x03, "6C / 3C" ) // first 3 coins give 1 credit, 2nd 3 coins give 2 credits
+	PORT_DIPSETTING(    0x0b, "7C / 3C" )
+	PORT_DIPSETTING(    0x0d, DEF_STR( 4C_2C )  ) // first 3 coins give 1 credit, next coin gives 1 credit
+	PORT_DIPSETTING(    0x04, DEF_STR( 2C_1C ) ) // 2
+	PORT_DIPSETTING(    0x09, DEF_STR( 3C_2C ) ) // first 2 coins give 1 credit, next coin gives 1 credit
+	PORT_DIPSETTING(    0x05, DEF_STR( 4C_3C ) ) // first 2 coins give 1 credit, 2nd 2 coins give 2 credits
+	PORT_DIPSETTING(    0x08, DEF_STR( 1C_1C )   )
+	PORT_DIPSETTING(    0x06, "1C / 1C (duplicate 1)" )
+	PORT_DIPSETTING(    0x0a, "1C / 1C (duplicate 2)" )
+	PORT_DIPSETTING(    0x0e, "1C / 1C (duplicate 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( 1C_2C ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( 2C_3C ) ) // .66
+	PORT_DIPSETTING(    0x0f, DEF_STR( Free_Play ) ) // always shows 9 credits
 INPUT_PORTS_END
 
 
@@ -3189,7 +3220,7 @@ static INPUT_PORTS_START( gmgalax )
 	PORT_BIT( 0xf0, IP_ACTIVE_HIGH, IPT_UNUSED )
 
 	PORT_START("GAMESEL")      /* fake - game select */
-	PORT_DIPNAME( 0x01, 0x00, "Game Select") PORT_CODE(KEYCODE_F1) PORT_TOGGLE PORT_CHANGED_MEMBER(DEVICE_SELF, galaxian_state, gmgalax_game_changed, NULL)
+	PORT_DIPNAME( 0x01, 0x00, "Game Select") PORT_CODE(KEYCODE_F1) PORT_TOGGLE PORT_CHANGED_MEMBER(DEVICE_SELF, galaxian_state, gmgalax_game_changed, nullptr)
 	PORT_DIPSETTING( 0x00, "Ghost Muncher" )
 	PORT_DIPSETTING( 0x01, "Galaxian" )
 INPUT_PORTS_END
@@ -3939,14 +3970,14 @@ static INPUT_PORTS_START( kingball )
 	PORT_INCLUDE(galaxian)
 
 	PORT_MODIFY("IN0")
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_SPECIAL ) PORT_CUSTOM_MEMBER(DEVICE_SELF, galaxian_state, kingball_muxbit_r, NULL)
+	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_SPECIAL ) PORT_CUSTOM_MEMBER(DEVICE_SELF, galaxian_state, kingball_muxbit_r, nullptr)
 	/* Relating to above port:Hack? - possibly multiplexed via writes to $b003 */
 	//PORT_DIPNAME( 0x40, 0x40, "Speech" )
 	//PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	//PORT_DIPSETTING(    0x40, DEF_STR( On ) )
 
 	PORT_MODIFY("IN1")
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_SPECIAL ) PORT_CUSTOM_MEMBER(DEVICE_SELF, galaxian_state, kingball_noise_r, NULL)   /* NOISE line */
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_SPECIAL ) PORT_CUSTOM_MEMBER(DEVICE_SELF, galaxian_state, kingball_noise_r, nullptr)   /* NOISE line */
 	PORT_DIPNAME( 0xc0, 0x40, DEF_STR( Coinage ) )
 	PORT_DIPSETTING(    0xc0, DEF_STR( 2C_1C ) )
 	PORT_DIPSETTING(    0x40, DEF_STR( 1C_1C ) )
@@ -4830,7 +4861,7 @@ CUSTOM_INPUT_MEMBER(galaxian_state::moonwar_dial_r)
 /* verified from Z80 code */
 static INPUT_PORTS_START( moonwar )
 	PORT_START("IN0")
-	PORT_BIT( 0x1f, IP_ACTIVE_HIGH, IPT_SPECIAL ) PORT_CUSTOM_MEMBER(DEVICE_SELF, galaxian_state, moonwar_dial_r, NULL)
+	PORT_BIT( 0x1f, IP_ACTIVE_HIGH, IPT_SPECIAL ) PORT_CUSTOM_MEMBER(DEVICE_SELF, galaxian_state, moonwar_dial_r, nullptr)
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_COCKTAIL // cocktail: p2 shield
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_COIN2 )
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 )
@@ -5427,7 +5458,8 @@ static MACHINE_CONFIG_START( galaxian_base, galaxian_state )
 	MCFG_CPU_PROGRAM_MAP(galaxian_map)
 	MCFG_CPU_VBLANK_INT_DRIVER("screen", galaxian_state,  interrupt_gen)
 
-	MCFG_WATCHDOG_VBLANK_INIT(8)
+	MCFG_WATCHDOG_ADD("watchdog")
+	MCFG_WATCHDOG_VBLANK_INIT("screen", 8)
 
 	/* video hardware */
 	MCFG_GFXDECODE_ADD("gfxdecode", "palette", galaxian)
@@ -5642,7 +5674,7 @@ MACHINE_CONFIG_END
 
 static MACHINE_CONFIG_DERIVED( jumpbug, galaxian_base )
 
-	MCFG_WATCHDOG_VBLANK_INIT(0)
+	MCFG_DEVICE_REMOVE("watchdog")
 
 	/* basic machine hardware */
 	MCFG_CPU_MODIFY("maincpu")
@@ -5856,7 +5888,7 @@ MACHINE_CONFIG_END
 static MACHINE_CONFIG_DERIVED( sfx, galaxian_base )
 	MCFG_FRAGMENT_ADD(konami_sound_2x_ay8910)
 
-	MCFG_WATCHDOG_VBLANK_INIT(0)
+	MCFG_DEVICE_REMOVE("watchdog")
 
 	/* alternate memory map */
 	MCFG_CPU_MODIFY("maincpu")
@@ -6351,7 +6383,7 @@ DRIVER_INIT_MEMBER(galaxian_state,gmgalax)
 	membank("bank1")->configure_entries(0, 2, memregion("maincpu")->base() + 0x10000, 0x4000);
 
 	/* callback when the game select is toggled */
-	gmgalax_game_changed(*machine().ioport().first_port()->first_field(), nullptr, 0, 0);
+	gmgalax_game_changed(*machine().ioport().ports().first()->fields().first(), nullptr, 0, 0);
 	save_item(NAME(m_gmgalax_selected_game));
 }
 
@@ -6898,7 +6930,8 @@ DRIVER_INIT_MEMBER(galaxian_state,explorer)
 	common_init(&galaxian_state::scramble_draw_bullet, &galaxian_state::scramble_draw_background, nullptr, nullptr);
 
 	/* watchdog works for writes as well? (or is it just disabled?) */
-	space.install_write_handler(0x7000, 0x7000, 0, 0x7ff, write8_delegate(FUNC(galaxian_state::watchdog_reset_w),this));
+	watchdog_timer_device *wdog = subdevice<watchdog_timer_device>("watchdog");
+	space.install_write_handler(0x7000, 0x7000, 0, 0x7ff, write8_delegate(FUNC(watchdog_timer_device::reset_w), wdog));
 
 	/* I/O appears to be direct, not via PPIs */
 	space.unmap_readwrite(0x8000, 0xffff);
@@ -6931,8 +6964,9 @@ DRIVER_INIT_MEMBER(galaxian_state,atlantis)
 	common_init(&galaxian_state::scramble_draw_bullet, &galaxian_state::scramble_draw_background, nullptr, nullptr);
 
 	/* watchdog is at $7800? (or is it just disabled?) */
+	watchdog_timer_device *wdog = subdevice<watchdog_timer_device>("watchdog");
 	space.unmap_read(0x7000, 0x7000, 0, 0x7ff);
-	space.install_read_handler(0x7800, 0x7800, 0, 0x7ff, read8_delegate(FUNC(galaxian_state::watchdog_reset_r),this));
+	space.install_read_handler(0x7800, 0x7800, 0, 0x7ff, read8_delegate(FUNC(watchdog_timer_device::reset_r), wdog));
 }
 
 
@@ -7044,7 +7078,7 @@ DRIVER_INIT_MEMBER(galaxian_state,amidar)
 {
 	/* no existing amidar sets run on Amidar hardware as described by Amidar schematics! */
 	/* video extensions */
-	common_init(&galaxian_state::scramble_draw_bullet, &galaxian_state::amidar_draw_background, NULL, NULL);
+	common_init(&galaxian_state::scramble_draw_bullet, &galaxian_state::amidar_draw_background, nullptr, nullptr);
 }
 #endif
 
@@ -7314,6 +7348,23 @@ ROM_START( moonaln )
 
 	ROM_REGION( 0x0020, "proms", 0 )
 	ROM_LOAD( "6l.bpr",       0x0000, 0x0020, CRC(c3ac9467) SHA1(f382ad5a34d282056c78a5ec00c30ec43772bae2) )
+ROM_END
+
+ROM_START( kamikazp )
+	ROM_REGION( 0x4000, "maincpu", 0 )
+	ROM_LOAD( "KK1PMC.bin",     0x0000, 0x0800, CRC(4a29bbe4) SHA1(731e77d76420ab946fb3963681770c81f79c705d) )
+	ROM_LOAD( "KK2PMC.bin",     0x0800, 0x0800, CRC(65c57131) SHA1(6884421b1ee74e6913ceb519b29979cf764ee3f7) )
+	ROM_LOAD( "KK3PMC.bin",     0x1000, 0x0800, CRC(24cf6da0) SHA1(1d6c6d3e8af4f3da449b363eb710c3a42f1dfb64) )
+	ROM_LOAD( "KK4PMC.bin",     0x1800, 0x0800, CRC(5e5ebca8) SHA1(f4f1c4f180a46fed67bb05d9b61c98a556645e7a) )
+	ROM_LOAD( "KK5PMC.bin",     0x2000, 0x0800, CRC(6d325b14) SHA1(2f67db374976cfa1dee3d6136a4b0404db7870f6) )
+	ROM_LOAD( "KK6PMC.bin",     0x2800, 0x0800, CRC(05883c29) SHA1(22a4e6ce5e35d4ddea4d1b583a36b4a64a899159) )
+
+	ROM_REGION( 0x1000, "gfx1", 0 )
+	ROM_LOAD( "KK8PMC.bin",   0x0000, 0x0800, CRC(96b268b1) SHA1(3ad1fa972f8f841e26acd7e3363f42df898d01c6) )
+	ROM_LOAD( "KK7PMC.bin",   0x0800, 0x0800, CRC(58673a07) SHA1(4e51f803718f39436e43d3bceda836215a98cc37) )
+
+	ROM_REGION( 0x0020, "proms", 0 )
+	ROM_LOAD( "prom.6l",      0x0000, 0x0020, CRC(6a0c7d87) SHA1(140335d85c67c75b65689d4e76d29863c209cf32) )
 ROM_END
 
 ROM_START( superg )
@@ -11331,6 +11382,8 @@ GAME( 1980, galaxrfgg,   galaxian, galaxian,   galaxrf,    galaxian_state, galax
 // these have the extra 'linescroll effect' title screens, like Moon Alien 2 but made out of a random tile, they lack an energy bar.
 GAME( 1979, moonaln,     galaxian, galaxian,   superg,     galaxian_state, galaxian,   ROT90,  "Namco / Nichibutsu (Karateco license?)", "Moon Alien", MACHINE_SUPPORTS_SAVE ) // or bootleg?
 GAME( 1979, galapx,      galaxian, galaxian,   superg,     galaxian_state, galaxian,   ROT90,  "hack", "Galaxian Part X (moonaln hack)", MACHINE_SUPPORTS_SAVE )
+// like above but does have the energy bar, also GFX changed to planes.
+GAME( 1979, kamikazp,    galaxian, galaxian,   kamikazp,   galaxian_state, galaxian,   ROT90,  "bootleg (Potomac Games)", "Kamikaze (Potomac Games)", MACHINE_SUPPORTS_SAVE )
 // this has the tiles to display the energy bar, but use the flag gfx for the 'linescroll effect' title screen, also doesn't work due to bad rom.
 GAME( 1980, supergx,     galaxian, galaxian,   superg,     galaxian_state, galaxian,   ROT90,  "Namco / Nichibutsu", "Super GX", MACHINE_NOT_WORKING | MACHINE_WRONG_COLORS | MACHINE_SUPPORTS_SAVE )
 // these have the energy bar, and the tiles needed to display a less corrupt 'linescroll effect' title, but don't display one

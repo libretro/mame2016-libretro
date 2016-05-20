@@ -6,7 +6,7 @@
 //
 //============================================================
 
-#include "emu.h"
+#include "emucore.h"
 
 #include "target.h"
 
@@ -57,6 +57,7 @@ bgfx_target::bgfx_target(void *handle, uint16_t width, uint16_t height)
 	, m_double_buffer(false)
 	, m_style(TARGET_STYLE_CUSTOM)
 	, m_filter(false)
+	, m_scale(0)
 	, m_screen(-1)
 	, m_current_page(0)
 	, m_initialized(true)

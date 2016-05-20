@@ -215,10 +215,10 @@ public:
 
 	// Getters
 	running_machine &         machine() const { return m_machine; }
-	const char *              name() { return m_name.c_str(); }
-	input_device *            device() { return m_device; }
+	const char *              name() const { return m_name.c_str(); }
+	input_device *            device() const { return m_device; }
 	input_module &            module() const { return m_module; }
-	input_device_class        deviceclass() { return m_deviceclass; }
+	input_device_class        deviceclass() const { return m_deviceclass; }
 
 	// Poll and reset methods
 	virtual void poll() {};
@@ -289,20 +289,20 @@ public:
 
 	void poll_devices()
 	{
-		for (auto iter = m_list.begin(); iter != m_list.end(); iter++)
+		for (auto iter = m_list.begin(); iter != m_list.end(); ++iter)
 			iter->get()->poll();
 	}
 
 	void reset_devices()
 	{
-		for (auto iter = m_list.begin(); iter != m_list.end(); iter++)
+		for (auto iter = m_list.begin(); iter != m_list.end(); ++iter)
 			iter->get()->reset();
 	}
 
 	void free_device(device_info * devinfo)
 	{
 		// remove us from the list
-		for (auto iter = m_list.begin(); iter != m_list.end(); iter++)
+		for (auto iter = m_list.begin(); iter != m_list.end(); ++iter)
 		{
 			if (iter->get() == devinfo)
 			{
@@ -316,7 +316,7 @@ public:
 	{
 		// remove us from the list
 		int i = 0;
-		for (auto iter = m_list.begin(); iter != m_list.end(); iter++)
+		for (auto iter = m_list.begin(); iter != m_list.end(); ++iter)
 		{
 			if (iter->get() == devinfo)
 			{
@@ -336,7 +336,7 @@ public:
 			m_list.pop_back();
 	}
 
-	int size()
+	int size() const
 	{
 		return m_list.size();
 	}
@@ -352,19 +352,35 @@ public:
 		// allocate the device object
 		auto devinfo = std::make_unique<TActual>(machine, name, module);
 
-		// Add the device to the machine
-		devinfo->m_device = machine.input().device_class(devinfo->deviceclass()).add_device(devinfo->name(), devinfo.get());
+		return add_device_internal(machine, name, module, std::move(devinfo));
+	}
 
-		// append us to the list
-		m_list.push_back(std::move(devinfo));
+	template <typename TActual, typename TArg>
+	TActual* create_device1(running_machine &machine, const char *name, input_module &module, TArg arg1)
+	{
+		// allocate the device object
+		auto devinfo = std::make_unique<TActual>(machine, name, module, arg1);
 
-		return (TActual*)m_list.back().get();
+		return add_device_internal(machine, name, module, std::move(devinfo));
 	}
 
 	template <class TActual>
 	TActual* at(int index)
 	{
-		return (TActual*)m_list.at(index).get();
+		return static_cast<TActual*>(m_list.at(index).get());
+	}
+
+private:
+	template <typename TActual>
+	TActual* add_device_internal(running_machine &machine, const char *name, input_module &module, std::unique_ptr<TActual> allocated)
+	{
+		// Add the device to the machine
+		allocated->m_device = machine.input().device_class(allocated->deviceclass()).add_device(allocated->name(), allocated.get());
+
+		// append us to the list
+		m_list.push_back(std::move(allocated));
+
+		return static_cast<TActual*>(m_list.back().get());
 	}
 };
 
@@ -403,7 +419,7 @@ public:
 	keyboard_trans_table(std::unique_ptr<key_trans_entry[]> table, unsigned int size);
 
 	// getters/setters
-	UINT32 size() { return m_table_size; }
+	UINT32 size() const { return m_table_size; }
 
 	// public methods
 	input_item_id lookup_mame_code(const char * scode) const;
@@ -420,7 +436,7 @@ public:
 		return s_instance;
 	}
 
-	key_trans_entry & operator [](int i) { return m_table[i]; }
+	key_trans_entry & operator [](int i) const { return m_table[i]; }
 };
 
 //============================================================
@@ -463,12 +479,12 @@ protected:
 
 public:
 
-	const osd_options *   options() { return m_options; }
+	const osd_options *   options() const { return m_options; }
 	input_device_list *   devicelist() { return &m_devicelist; }
-	bool                  input_enabled() { return m_input_enabled; }
-	bool                  input_paused() { return m_input_paused; }
-	bool                  mouse_enabled() { return m_mouse_enabled; }
-	bool                  lightgun_enabled() { return m_lightgun_enabled; }
+	bool                  input_enabled() const { return m_input_enabled; }
+	bool                  input_paused() const { return m_input_paused; }
+	bool                  mouse_enabled() const { return m_mouse_enabled; }
+	bool                  lightgun_enabled() const { return m_lightgun_enabled; }
 
 	int init(const osd_options &options) override;
 

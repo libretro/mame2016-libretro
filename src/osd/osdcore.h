@@ -336,7 +336,7 @@ struct osd_directory_entry
 
         upon success, this function should return an osd_directory pointer
         which contains opaque data necessary to traverse the directory; on
-        failure, this function should return NULL
+        failure, this function should return nullptr
 -----------------------------------------------------------------------------*/
 osd_directory *osd_opendir(const char *dirname);
 
@@ -352,7 +352,7 @@ osd_directory *osd_opendir(const char *dirname);
     Return value:
 
         a constant pointer to an osd_directory_entry representing the current item
-        in the directory, or NULL, indicating that no more entries are
+        in the directory, or nullptr, indicating that no more entries are
         present
 -----------------------------------------------------------------------------*/
 const osd_directory_entry *osd_readdir(osd_directory *dir);
@@ -780,11 +780,6 @@ void osd_free_executable(void *ptr, size_t size);
 -----------------------------------------------------------------------------*/
 void osd_break_into_debugger(const char *message);
 
-
-/*-----------------------------------------------------------------------------
-  MESS specific code below
------------------------------------------------------------------------------*/
-
 /*-----------------------------------------------------------------------------
     osd_get_clipboard_text: retrieves text from the clipboard
 
@@ -912,7 +907,7 @@ public:
 	static void pop(osd_output *delegate);
 protected:
 
-	void chain_output(osd_output_channel channel, const char *msg, va_list args)
+	void chain_output(osd_output_channel channel, const char *msg, va_list args) const
 	{
 		if (m_chain != nullptr)
 			m_chain->output_callback(channel, msg, args);
