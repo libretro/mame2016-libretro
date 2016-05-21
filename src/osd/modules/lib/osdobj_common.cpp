@@ -271,8 +271,9 @@ void osd_common_t::register_options()
 
 	REGISTER_MODULE(m_mod_man, OUTPUT_NONE);
 	REGISTER_MODULE(m_mod_man, OUTPUT_CONSOLE);
+#ifndef OSD_RETRO
 	REGISTER_MODULE(m_mod_man, OUTPUT_NETWORK);
-
+#endif
 
 	// after initialization we know which modules are supported
 

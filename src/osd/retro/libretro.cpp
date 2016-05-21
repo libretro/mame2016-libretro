@@ -5,9 +5,10 @@
 #include "osdepend.h"
 
 #include "emu.h"
-#include "clifront.h"
+//#include "clifront.h"
 #include "render.h"
-#include "ui/ui.h"
+#include "ui/uimain.h"
+//#include "ui/ui.h"
 #include "uiinput.h"
 #include "drivenum.h"
 
@@ -15,6 +16,8 @@
 #include "libretro_shared.h"
 
 /* forward decls / externs / prototypes */
+
+extern const char bare_build_version[];
 
 int retro_pause = 0;
 

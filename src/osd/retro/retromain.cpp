@@ -5,14 +5,14 @@
 #include "osdepend.h"
 #include "emu.h"
 #include "render.h"
-#include "ui/ui.h"
+#include "ui/uimain.h"
 #include "uiinput.h"
 #include "drivenum.h"
 
 #include "libretro.h"
 #include "retroosd.h"
 
-#include "clifront.h"
+//#include "clifront.h"
 #include "modules/lib/osdobj_common.h"
 #include "modules/lib/osdlib.h"
 #include "modules/osdmodule.h"
@@ -123,7 +123,7 @@ int opt_type[NB_OPTPATH]={ // 0 for save_dir | 1 for system_dir
 #ifdef HAVE_GL
 static int init3d=1;
 #else
-#include "rendersw.inc"
+#include "rendersw.hxx"
 #endif
 
 //============================================================
@@ -1437,7 +1437,7 @@ int mmain(int argc, const char *argv)
 {
    unsigned i;
    osd_options options;
-   cli_options MRoptions;
+   //cli_options MRoptions;
    int result = 0;
 
    strcpy(gameName,argv);
@@ -1472,9 +1472,10 @@ int mmain(int argc, const char *argv)
 
    retro_osd_interface osd(options);
    osd.register_options();
-   cli_frontend frontend(options, osd);
 
-   result = frontend.execute(PARAMCOUNT, ( char **)xargv_cmd);
+  // cli_frontend frontend(options, osd);
+   result =  emulator_info::start_frontend(options, osd,PARAMCOUNT, ( char **)xargv_cmd);
+
 
    xargv_cmd[PARAMCOUNT - 2] = NULL;
 

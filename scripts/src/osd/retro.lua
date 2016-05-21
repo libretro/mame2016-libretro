@@ -71,7 +71,7 @@ project ("osd_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/modules/netdev/taptun.cpp",
 		MAME_DIR .. "src/osd/modules/netdev/pcap.cpp",
 		MAME_DIR .. "src/osd/modules/netdev/none.cpp",
-		MAME_DIR .. "src/osd/modules/debugger/debugint.cpp",
+		MAME_DIR .. "src/osd/modules/debugger/debug_module.h",
 		MAME_DIR .. "src/osd/modules/debugger/none.cpp",
 		MAME_DIR .. "src/osd/modules/lib/osdobj_common.cpp",
 		MAME_DIR .. "src/osd/modules/input/input_module.h",
@@ -167,28 +167,33 @@ project ("ocore_" .. _OPTIONS["osd"])
 
 	files {
 		MAME_DIR .. "src/osd/osdcore.cpp",
+		MAME_DIR .. "src/osd/watchdog.cpp",
+		MAME_DIR .. "src/osd/watchdog.h",
 		MAME_DIR .. "src/osd/modules/font/font_none.cpp",
 		MAME_DIR .. "src/osd/modules/lib/osdlib_retro.c",
 		MAME_DIR .. "src/osd/modules/midi/none.cpp",
 		MAME_DIR .. "src/osd/modules/osdmodule.cpp",
-		MAME_DIR .. "src/osd/modules/sync/osdsync.cpp",
+		MAME_DIR .. "src/osd/osdsync.cpp",
 		MAME_DIR .. "src/osd/retro/retrodir.c",
 		MAME_DIR .. "src/osd/retro/retrofile.cpp",
 		MAME_DIR .. "src/osd/retro/retroos.c",
 		MAME_DIR .. "src/osd/modules/file/posixfile.cpp",
 		MAME_DIR .. "src/osd/modules/file/posixptty.cpp",
 		MAME_DIR .. "src/osd/modules/file/posixsocket.cpp",
+		MAME_DIR .. "src/osd/modules/output/output_module.h",
+		MAME_DIR .. "src/osd/modules/output/none.cpp",
+		MAME_DIR .. "src/osd/modules/output/console.cpp",
 	}
 
-	if _OPTIONS["NOASM"]=="1" then
-		files {
-			MAME_DIR .. "src/osd/modules/sync/work_mini.cpp",
-		}
-	else
-		files {
-			MAME_DIR .. "src/osd/modules/sync/work_osd.cpp",
-		}
-	end
+--	if _OPTIONS["NOASM"]=="1" then
+--		files {
+--			MAME_DIR .. "src/osd/modules/sync/work_mini.cpp",
+--		}
+--	else
+--		files {
+--			MAME_DIR .. "src/osd/modules/sync/work_osd.cpp",
+--		}
+--	end
 
 project ("libco")
 	uuid (os.uuid("libco"))

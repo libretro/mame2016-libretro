@@ -317,7 +317,7 @@ end
 		ext_includedir("flac"),
 	}
 
-<<<<<<< HEAD
+
 	if _OPTIONS["with-bundled-zlib"] then
 		includedirs {
 			MAME_DIR .. "3rdparty/zlib",
@@ -352,14 +352,12 @@ end
 	end
 -- RETRO HACK
 
-=======
 	
 if (STANDALONE==true) then
 	standalone();
 end
-		
+
 if (STANDALONE~=true) then
->>>>>>> upstream/master
 	if _OPTIONS["targetos"]=="macosx" and (not override_resources) then
 		linkoptions {
 			"-sectcreate __TEXT __info_plist " .. _MAKE.esc(GEN_DIR) .. "resource/" .. _subtarget .. "-Info.plist"
@@ -468,3 +466,4 @@ end
 	end	
 	
 end
+
