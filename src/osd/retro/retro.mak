@@ -63,7 +63,6 @@ OSDSRC = $(SRC)/osd
 OSDOBJ = $(OBJ)/osd
 
 OBJDIRS += $(MINIOBJ) \
-	$(OSDOBJ)/modules/sync \
 	$(OSDOBJ)/modules/lib \
 	$(OSDOBJ)/modules/midi \
 	$(OSDOBJ)/modules/font \
@@ -85,18 +84,11 @@ OSDCOREOBJS := \
 	$(MINIOBJ)/retroos.o \
 	$(OSDOBJ)/modules/font/font_none.o \
 	$(OSDOBJ)/modules/lib/osdlib_retro.o \
-	$(OSDOBJ)/modules/sync/sync_retro.o \
 	$(OSDOBJ)/modules/midi/none.o \
 	$(OSDOBJ)/modules/osdmodule.o \
 	$(OSDOBJ)/modules/netdev/none.o
 
 INCPATH += -I$(SRC)/osd/retro/libretro-common/include
-
-ifdef NOASM
-OSDCOREOBJS += $(OSDOBJ)/modules/sync/work_mini.o
-else
-OSDCOREOBJS += $(OSDOBJ)/modules/sync/work_osd.o
-endif
 
 #-------------------------------------------------
 # OSD mini library
