@@ -1117,10 +1117,12 @@ function toolchain(_buildDir, _subDir)
 		if LIBRETRO_OS~=nil then
 			-- most things are "linux" (ish).
 			local targetos = "linux"
-			if LIBRETRO_OS=="osx" or LIBRETRO_OS=="ios" then
+			if LIBRETRO_OS=="osx" then
 				targetos = "macosx"
 			elseif LIBRETRO_OS:sub(1, 4)=="armv" then
 				targetos = "win32"
+         elseif LIBRETRO_OS=="ios" then
+				targetos = "ios"
 			end
 			_OPTIONS["TARGETOS"] = targetos
 		end
