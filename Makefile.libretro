@@ -112,6 +112,7 @@ else ifeq ($(platform), osx)
 	PYTHON_EXECUTABLE = python
 else ifneq (,$(findstring ios,$(platform)))
 #	PTR64 = 0
+        LIBRETRO_CPU=arm
 	PYTHON_EXECUTABLE = python
 	# FIXME: Pass these to GENie and test...
 #	CROSS_BUILD = 1

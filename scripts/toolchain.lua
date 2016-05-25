@@ -1121,7 +1121,7 @@ function toolchain(_buildDir, _subDir)
 				targetos = "macosx"
 			elseif LIBRETRO_OS:sub(1, 4)=="armv" then
 				targetos = "win32"
-         elseif LIBRETRO_OS=="ios" then
+                        elseif LIBRETRO_OS=="ios" then
 				targetos = "ios"
 			end
 			_OPTIONS["TARGETOS"] = targetos
