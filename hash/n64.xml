@@ -292,7 +292,7 @@ Info on N64 chip labels (from The Cart Scan Repository)
 		</part>
 	</software>
 
-	<software name="commconq">
+	<software name="cnc">
 		<description>Command &amp; Conquer (Euro)</description>
 		<year>1999</year>
 		<publisher>Nintendo</publisher>
@@ -310,7 +310,7 @@ Info on N64 chip labels (from The Cart Scan Repository)
 		</part>
 	</software>
 
-	<software name="commconqu" cloneof="commconq">
+	<software name="cncu" cloneof="cnc">
 		<description>Command &amp; Conquer (USA)</description>
 		<year>1999</year>
 		<publisher>Nintendo</publisher>
@@ -3051,7 +3051,7 @@ Info on N64 chip labels (from The Cart Scan Repository)
 		</part>
 	</software>
 
-	<software name="commconqg" cloneof="commconq">
+	<software name="cncg" cloneof="cnc">
 		<description>Command &amp; Conquer (Ger)</description>
 		<year>1999</year>
 		<publisher>Nintendo</publisher>
@@ -3657,7 +3657,7 @@ patched out (+ a fix for internal checksum)
 			</dataarea>
 		</part>
 	</software>
-	
+
 	<software name="dukenk64p" cloneof="dukenk64">
 		<description>Duke Nukem 64 (Euro, Prototype)</description>
 		<year>1997</year>
@@ -6491,7 +6491,7 @@ patched out (+ a fix for internal checksum)
 			</dataarea>
 		</part>
 	</software>
-	
+
 	<software name="megamanp" cloneof="megaman">
 		<description>Mega Man 64 (USA, Prototype)</description>
 		<year>2000</year>
