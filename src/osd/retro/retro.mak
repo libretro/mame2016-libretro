@@ -81,7 +81,6 @@ endif
 OSDCOREOBJS := \
 	$(MINIOBJ)/retrodir.o \
 	$(MINIOBJ)/retrofile.o \
-	$(MINIOBJ)/retroos.o \
 	$(OSDOBJ)/modules/font/font_none.o \
 	$(OSDOBJ)/modules/lib/osdlib_retro.o \
 	$(OSDOBJ)/modules/midi/none.o \
