@@ -79,7 +79,7 @@ project ("osd_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/modules/input/input_common.h",
 		MAME_DIR .. "src/osd/modules/input/input_none.cpp",
 		MAME_DIR .. "src/osd/modules/sound/none.cpp",
-		MAME_DIR .. "src/osd/modules/sound/retro_sound.c",
+		MAME_DIR .. "src/osd/modules/sound/retro_sound.cpp",
 		MAME_DIR .. "src/osd/retro/retromain.cpp",
 
 		-- The public API in libretro.c is "unused" and tends to get
@@ -170,13 +170,12 @@ project ("ocore_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/watchdog.cpp",
 		MAME_DIR .. "src/osd/watchdog.h",
 		MAME_DIR .. "src/osd/modules/font/font_none.cpp",
-		MAME_DIR .. "src/osd/modules/lib/osdlib_retro.c",
+		MAME_DIR .. "src/osd/modules/lib/osdlib_retro.cpp",
 		MAME_DIR .. "src/osd/modules/midi/none.cpp",
 		MAME_DIR .. "src/osd/modules/osdmodule.cpp",
 		MAME_DIR .. "src/osd/osdsync.cpp",
 		MAME_DIR .. "src/osd/retro/retrodir.c",
 		MAME_DIR .. "src/osd/retro/retrofile.cpp",
-		MAME_DIR .. "src/osd/retro/retroos.c",
 		MAME_DIR .. "src/osd/modules/file/posixfile.cpp",
 		MAME_DIR .. "src/osd/modules/file/posixptty.cpp",
 		MAME_DIR .. "src/osd/modules/file/posixsocket.cpp",
