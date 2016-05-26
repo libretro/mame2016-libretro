@@ -21,7 +21,8 @@
 #include <dirent.h>
 
 #include "osdcore.h"
-#include "retroos.h"
+
+#define SDLMAME_UNIX
 
 #if defined(SDLMAME_WIN32) || defined(SDLMAME_OS2)
 #define PATHSEPCH '\\'
@@ -111,6 +112,10 @@ static UINT64 osd_get_file_size(const char *file)
 		return 0;
 	return st.st_size;
 }
+
+/* forward decls */
+const char *osd_getenv(const char *name);
+int osd_setenv(const char *name, const char *value, int overwrite);
 
 //============================================================
 //  osd_opendir

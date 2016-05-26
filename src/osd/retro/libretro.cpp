@@ -5,10 +5,8 @@
 #include "osdepend.h"
 
 #include "emu.h"
-//#include "clifront.h"
 #include "render.h"
 #include "ui/uimain.h"
-//#include "ui/ui.h"
 #include "uiinput.h"
 #include "drivenum.h"
 
