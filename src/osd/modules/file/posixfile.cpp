@@ -48,6 +48,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifdef __LIBRETRO__
+#ifdef __MINGW32__
+#include "minwindef.h"
+#endif
+#endif
+
 
 
 namespace {
@@ -91,7 +97,7 @@ public:
 		result = ::pread(m_fd, buffer, size_t(count), off_t(std::make_unsigned_t<off_t>(offset)));
 #elif defined(WIN32) || defined(SDLMAME_NO64BITIO)
 		if (lseek(m_fd, off_t(std::make_unsigned_t<off_t>(offset)), SEEK_SET) < 0)
-			return errno_to_file_error(errno)
+			return errno_to_file_error(errno);
 		result = ::read(m_fd, buffer, size_t(count));
 #else
 		result = ::pread64(m_fd, buffer, size_t(count), off64_t(offset));

@@ -163,6 +163,8 @@ project ("ocore_" .. _OPTIONS["osd"])
 
 	files {
 		MAME_DIR .. "src/osd/osdcore.cpp",
+      MAME_DIR .. "src/osd/strconv.cpp",
+      MAME_DIR .. "src/osd/strconv.h",
 		MAME_DIR .. "src/osd/watchdog.cpp",
 		MAME_DIR .. "src/osd/watchdog.h",
 		MAME_DIR .. "src/osd/modules/font/font_none.cpp",
@@ -172,13 +174,35 @@ project ("ocore_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/osdsync.cpp",
 		MAME_DIR .. "src/osd/retro/retrodir.cpp",
 		MAME_DIR .. "src/osd/modules/file/retrofile.cpp",
-		MAME_DIR .. "src/osd/modules/file/posixfile.cpp",
-		MAME_DIR .. "src/osd/modules/file/posixptty.cpp",
-		MAME_DIR .. "src/osd/modules/file/posixsocket.cpp",
 		MAME_DIR .. "src/osd/modules/output/output_module.h",
 		MAME_DIR .. "src/osd/modules/output/none.cpp",
 		MAME_DIR .. "src/osd/modules/output/console.cpp",
 	}
+
+   if BASE_TARGETOS=="unix" then
+		files {
+			MAME_DIR .. "src/osd/modules/file/posixfile.cpp",
+			MAME_DIR .. "src/osd/modules/file/posixfile.h",
+			MAME_DIR .. "src/osd/modules/file/posixptty.cpp",
+			MAME_DIR .. "src/osd/modules/file/posixsocket.cpp",
+		}
+
+	elseif BASE_TARGETOS=="win32" then
+		includedirs {
+			MAME_DIR .. "src/osd/windows",
+		}
+		files {
+			MAME_DIR .. "src/osd/modules/file/winfile.cpp",
+			MAME_DIR .. "src/osd/modules/file/winfile.h",
+			MAME_DIR .. "src/osd/modules/file/winptty.cpp",
+			MAME_DIR .. "src/osd/modules/file/winsocket.cpp",
+			MAME_DIR .. "src/osd/windows/winutil.cpp", -- FIXME put the necessary functions somewhere more appropriate
+		}
+	else
+		files {
+			MAME_DIR .. "src/osd/modules/file/stdfile.cpp",
+		}
+	end
 
 project ("libco")
 	uuid (os.uuid("libco"))

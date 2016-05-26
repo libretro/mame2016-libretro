@@ -38,6 +38,7 @@ if _OPTIONS["MODERN_WIN_API"]=="1" then
 else
 	defines {
 		"_WIN32_WINNT=0x0501",
+      "SDLMAME_WIN32",
 	}
 end
 
