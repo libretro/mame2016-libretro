@@ -112,7 +112,7 @@ public:
 		result = ::pwrite(m_fd, buffer, size_t(count), off_t(std::make_unsigned_t<off_t>(offset)));
 #elif defined(WIN32) || defined(SDLMAME_NO64BITIO)
 		if (lseek(m_fd, off_t(std::make_unsigned_t<off_t>(offset)), SEEK_SET) < 0)
-			return errno_to_file_error(errno)
+			return errno_to_file_error(errno);
 		result = ::write(m_fd, buffer, size_t(count));
 #else
 		result = ::pwrite64(m_fd, buffer, size_t(count), off64_t(offset));
