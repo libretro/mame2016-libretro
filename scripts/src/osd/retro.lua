@@ -175,7 +175,7 @@ project ("ocore_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/osd/modules/osdmodule.cpp",
 		MAME_DIR .. "src/osd/osdsync.cpp",
 		MAME_DIR .. "src/osd/retro/retrodir.cpp",
-		MAME_DIR .. "src/osd/retro/retrofile.cpp",
+		MAME_DIR .. "src/osd/modules/file/retrofile.cpp",
 		MAME_DIR .. "src/osd/modules/file/posixfile.cpp",
 		MAME_DIR .. "src/osd/modules/file/posixptty.cpp",
 		MAME_DIR .. "src/osd/modules/file/posixsocket.cpp",

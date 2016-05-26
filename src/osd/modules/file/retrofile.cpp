@@ -6,7 +6,6 @@
 
 // MAME headers
 #include "osdcore.h"
-#include "retroos.h"
 
 //============================================================
 //  osd_uchar_from_osdchar
@@ -18,17 +17,6 @@ int osd_uchar_from_osdchar(UINT32 /* unicode_char */ *uchar, const char *osdchar
 	*uchar = (UINT8)*osdchar;
 	return 1;
 }
-
-/*
-//============================================================
-//  osd_openpty
-//============================================================
-
-osd_file::error osd_file::openpty(ptr &file, std::string &name)
-{
-	return error::FAILURE;
-}
-*/
 
 //============================================================
 //  osd_subst_env
