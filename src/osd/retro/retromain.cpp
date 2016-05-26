@@ -1612,11 +1612,6 @@ void retro_osd_interface::update(bool skip_redraw)
 
          FirstTimeUpdate++;
 
-#if 0
-         if (log_cb)
-            log_cb(RETRO_LOG_INFO, "game screen w=%i h=%i  rowPixels=%i\n", minwidth, minheight, minwidth);
-#endif
-
          fb_width  = minwidth;
          fb_height = minheight;
          fb_pitch  = minwidth;

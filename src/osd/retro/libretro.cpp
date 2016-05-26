@@ -29,10 +29,6 @@ int fb_height  = 240;
 int fb_pitch   = 1600;
 float retro_aspect = 0;
 float retro_fps = 60.0;
-#if 0
-static int max_width  = 0;
-static int max_height = 0;
-#endif
 int SHIFTON           = -1;
 int NEWGAME_FROM_OSD  = 0;
 char RPATH[512];
