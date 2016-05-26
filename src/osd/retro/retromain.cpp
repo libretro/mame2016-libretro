@@ -543,10 +543,10 @@ static void Input_Binding(running_machine &machine)
    Buttons_mapping[5]=RETROPAD_R;
 
    if (
-         (core_stricmp(machine.system().name, "tekken") == 0) ||
-         (core_stricmp(machine.system().parent, "tekken") == 0) ||
-         (core_stricmp(machine.system().name, "tekken2") == 0) ||
-         (core_stricmp(machine.system().parent, "tekken2") == 0)
+         !core_stricmp(machine.system().name, "tekken")    ||
+         !core_stricmp(machine.system().parent, "tekken")  ||
+         !core_stricmp(machine.system().name, "tekken2")   ||
+         !core_stricmp(machine.system().parent, "tekken2")
       )
    {
       /* Tekken 1/2 */
@@ -560,10 +560,10 @@ static void Input_Binding(running_machine &machine)
 
    }
    else if (
-              (core_stricmp(machine.system().name, "souledge") == 0) ||
-              (core_stricmp(machine.system().parent, "souledge") == 0) ||
-              (core_stricmp(machine.system().name, "soulclbr") == 0) ||
-              (core_stricmp(machine.system().parent, "soulclbr") == 0)
+              !core_stricmp(machine.system().name, "souledge")    ||
+              !core_stricmp(machine.system().parent, "souledge")  ||
+              !core_stricmp(machine.system().name, "soulclbr")    ||
+              !core_stricmp(machine.system().parent, "soulclbr")
            )
    {
       /* Soul Edge/Soul Calibur */
@@ -577,7 +577,7 @@ static void Input_Binding(running_machine &machine)
 
    }
    else if (
-              (core_stricmp(machine.system().name, "doapp") == 0)
+              !core_stricmp(machine.system().name, "doapp")
            )
    {
       /* Dead or Alive++ */
@@ -591,8 +591,8 @@ static void Input_Binding(running_machine &machine)
 
    }
    else if (
-              (core_stricmp(machine.system().name, "vf") == 0) ||
-              (core_stricmp(machine.system().parent, "vf") == 0)
+              !core_stricmp(machine.system().name, "vf") ||
+              !core_stricmp(machine.system().parent, "vf")
            )
    {
       /* Virtua Fighter */
@@ -606,8 +606,8 @@ static void Input_Binding(running_machine &machine)
 
    }
    else if (
-              (core_stricmp(machine.system().name, "ehrgeiz") == 0) ||
-              (core_stricmp(machine.system().parent, "ehrgeiz") == 0)
+              !core_stricmp(machine.system().name, "ehrgeiz") ||
+              !core_stricmp(machine.system().parent, "ehrgeiz")
            )
    {
       /* Ehrgeiz */
@@ -621,8 +621,8 @@ static void Input_Binding(running_machine &machine)
 
    }
    else if (
-              (core_stricmp(machine.system().name, "ts2") == 0) ||
-              (core_stricmp(machine.system().parent, "ts2") == 0)
+              !core_stricmp(machine.system().name, "ts2") ||
+              !core_stricmp(machine.system().parent, "ts2")
            )
    {
       /* Toshinden 2 */
@@ -775,8 +775,8 @@ static void Input_Binding(running_machine &machine)
       Buttons_mapping[5]=RETROPAD_R;
    }
    else if (
-              (core_stricmp(machine.system().name, "kinst") == 0) ||
-              (core_stricmp(machine.system().parent, "kinst") == 0)
+              !core_stricmp(machine.system().name, "kinst") ||
+              !core_stricmp(machine.system().parent, "kinst")
            )
    {
       /* Killer Instinct 1 */
@@ -790,8 +790,8 @@ static void Input_Binding(running_machine &machine)
 
    }
    else if (
-              (core_stricmp(machine.system().name, "kinst2") == 0) ||
-              (core_stricmp(machine.system().parent, "kinst2") == 0)
+              !core_stricmp(machine.system().name, "kinst2") ||
+              !core_stricmp(machine.system().parent, "kinst2")
            )
    {
       /* Killer Instinct 2 */
@@ -805,10 +805,10 @@ static void Input_Binding(running_machine &machine)
 
    }
    else if (
-              (core_stricmp(machine.system().name, "tektagt") == 0) ||
-              (core_stricmp(machine.system().parent, "tektagt") == 0) ||
-              (core_stricmp(machine.system().name, "tekken3") == 0) ||
-              (core_stricmp(machine.system().parent, "tekken3") == 0)
+              !core_stricmp(machine.system().name, "tektagt")   ||
+              !core_stricmp(machine.system().parent, "tektagt") ||
+              !core_stricmp(machine.system().name, "tekken3")   ||
+              !core_stricmp(machine.system().parent, "tekken3")
            )
    {
       /* Tekken 3/Tekken Tag Tournament */
@@ -822,16 +822,16 @@ static void Input_Binding(running_machine &machine)
 
    }
    else if (
-              (core_stricmp(machine.system().name, "mk") == 0) ||
-              (core_stricmp(machine.system().parent, "mk") == 0) ||
-              (core_stricmp(machine.system().name, "mk2") == 0) ||
-              (core_stricmp(machine.system().parent, "mk2") == 0) ||
-              (core_stricmp(machine.system().name, "mk3") == 0) ||
-              (core_stricmp(machine.system().parent, "mk3") == 0) ||
-              (core_stricmp(machine.system().name, "umk3") == 0) ||
-              (core_stricmp(machine.system().parent, "umk3") == 0) ||
-              (core_stricmp(machine.system().name, "wwfmania") == 0) ||
-              (core_stricmp(machine.system().parent, "wwfmania") == 0)
+              !core_stricmp(machine.system().name, "mk")       ||
+              !core_stricmp(machine.system().parent, "mk")     ||
+              !core_stricmp(machine.system().name, "mk2")      ||
+              !core_stricmp(machine.system().parent, "mk2")    ||
+              !core_stricmp(machine.system().name, "mk3")      ||
+              !core_stricmp(machine.system().parent, "mk3")    ||
+              !core_stricmp(machine.system().name, "umk3")     ||
+              !core_stricmp(machine.system().parent, "umk3")   ||
+              !core_stricmp(machine.system().name, "wwfmania") ||
+              !core_stricmp(machine.system().parent, "wwfmania")
            )
    {
       /* Mortal Kombat 1/2/3/Ultimate/WWF: Wrestlemania */
