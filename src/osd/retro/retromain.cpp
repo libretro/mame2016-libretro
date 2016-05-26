@@ -1427,12 +1427,6 @@ static int execute_game_cmd(char* path)
 extern "C"
 #endif
 
-#if 0
-int main(int argc, char **argv)
-{
-}
-#endif
-
 int mmain(int argc, const char *argv)
 {
    unsigned i;
@@ -1503,6 +1497,10 @@ retro_osd_interface::~retro_osd_interface()
 {
 }
 
+//============================================================
+//  osd_exit
+//============================================================
+
 void retro_osd_interface::osd_exit()
 {
    if (log_cb)
@@ -1518,6 +1516,10 @@ void retro_osd_interface::osd_exit()
    machine().render().target_free(our_target);
    osd_common_t::osd_exit();
 }
+
+//============================================================
+//  init
+//============================================================
 
 void retro_osd_interface::init(running_machine &machine)
 {
