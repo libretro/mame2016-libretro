@@ -1,20 +1,6 @@
 #define SDLMAME_UNIX
 
 /*-----------------------------------------------------------------------------
-    osd_num_processors: return the number of processors
-
-    Parameters:
-
-        None.
-
-    Return value:
-
-        Number of processors
------------------------------------------------------------------------------*/
-
-int osd_get_num_processors(void);
-
-/*-----------------------------------------------------------------------------
     osd_getenv: return pointer to environment variable
 
     Parameters:
