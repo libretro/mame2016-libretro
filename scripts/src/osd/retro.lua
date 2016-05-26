@@ -8,10 +8,6 @@ function includeosd()
 	}
 end
 
-forcedincludes {
-	MAME_DIR .. "src/osd/retro/retroprefix.h"
-}
-
 newoption {
 	trigger = "NO_USE_MIDI",
 	description = "Disable MIDI I/O",
