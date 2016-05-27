@@ -20,6 +20,10 @@ static inline double log2(double x) { return log(x) * M_LOG2E; }
 #define _WIN32_WINNT 0x0501 // Windows XP
 #endif
 
+#if defined(_WIN32)
+#define SDLMAME_WIN32 1
+#endif
+
 #ifdef _MSC_VER
 #include <malloc.h>
 #if _MSC_VER < 1900 // < VS2015
