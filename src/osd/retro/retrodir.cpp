@@ -1,3 +1,7 @@
+#ifdef SDLMAME_WIN32
+#include "../windows/windir.cpp"
+#else
+
 #ifndef _LARGEFILE64_SOURCE
 #define _LARGEFILE64_SOURCE
 #endif
@@ -221,3 +225,80 @@ void osd_closedir(osd_directory *dir)
    osd_free(dir->path);
    osd_free(dir);
 }
+
+//============================================================
+//  osd_subst_env
+//============================================================
+
+void osd_subst_env(std::string &dst, std::string const &src)
+{
+	std::string result, var;
+	auto start = src.begin();
+
+	// a leading tilde expands as $HOME
+	if ((src.end() != start) && ('~' == *start))
+	{
+		char const *const home = std::getenv("HOME");
+		if (home)
+		{
+			++start;
+			if ((src.end() == start) || (PATHSEPCH == *start))
+				result.append(home);
+			else
+				result.push_back('~');
+		}
+	}
+
+	while (src.end() != start)
+	{
+		// find $ marking start of environment variable or end of string
+		auto it = start;
+		while ((src.end() != it) && ('$' != *it)) ++it;
+		if (start != it) result.append(start, it);
+		start = it;
+
+		if (src.end() != start)
+		{
+			start = ++it;
+			if ((src.end() != start) && ('{' == *start))
+			{
+				start = ++it;
+				for (++it; (src.end() != it) && ('}' != *it); ++it) { }
+				if (src.end() == it)
+				{
+					result.append("${").append(start, it);
+					start = it;
+				}
+				else
+				{
+					var.assign(start, it);
+					start = ++it;
+					const char *const exp = std::getenv(var.c_str());
+					if (exp)
+						result.append(exp);
+					else
+						fprintf(stderr, "Warning: osd_subst_env variable %s not found.\n", var.c_str());
+				}
+			}
+			else if ((src.end() != start) && (('_' == *start) || std::isalnum(*start)))
+			{
+				for (++it; (src.end() != it) && (('_' == *it) || std::isalnum(*it)); ++it) { }
+				var.assign(start, it);
+				start = it;
+				const char *const exp = std::getenv(var.c_str());
+				if (exp)
+					result.append(exp);
+				else
+					fprintf(stderr, "Warning: osd_subst_env variable %s not found.\n", var.c_str());
+			}
+			else
+			{
+				result.push_back('$');
+			}
+		}
+	}
+
+	dst = std::move(result);
+}
+
+#endif
