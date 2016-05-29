@@ -13947,6 +13947,7 @@ hexion                          // GX122 (c) 1992
 hexionb                         // bootleg
 
 @source:hh_cop400.cpp
+bship82                         // Milton Bradley
 ctstein                         // Castle Toy
 einvaderc                       // Entex
 funjacks                        // Mattel
@@ -34855,6 +34856,9 @@ tek4052a                        //
 @source:tek410x.cpp
 tek4107a                        //
 tek4109a                        //
+
+@source:tek440x.cpp
+tek4404                         // (c) 1984 Tektronix
 
 @source:tekxp33x.cpp
 tekxp330                        //
