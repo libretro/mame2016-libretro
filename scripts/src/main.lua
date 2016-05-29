@@ -38,8 +38,17 @@ end
 			"EGL",
 			"GLESv1_CM",
 			"GLESv2",
-			"SDL2",
+--			"SDL2",
 		}
+
+if _OPTIONS["osd"] == "retro" then
+-- RETRO HACK no sdl for libretro android
+else
+               links {
+                        "SDL2",
+                }
+end
+
 	configuration { "pnacl" }
 		kind "ConsoleApp"
 		targetextension ".pexe"
@@ -200,6 +209,10 @@ if _OPTIONS["IGNORE_GIT"]~="1" then
 end
 	
 	if _OPTIONS["targetos"]=="android" then
+
+if _OPTIONS["osd"] == "retro" then
+-- RETRO HACK no sdl for libretro android
+else
 		includedirs {
 			MAME_DIR .. "3rdparty/SDL2/include",
 		}
@@ -207,6 +220,7 @@ end
 		files {
 			MAME_DIR .. "3rdparty/SDL2/src/main/android/SDL_android_main.c",
 		}
+end
 		targetsuffix ""
 		if _OPTIONS["SEPARATE_BIN"]~="1" then
 			if _OPTIONS["PLATFORM"]=="arm" then

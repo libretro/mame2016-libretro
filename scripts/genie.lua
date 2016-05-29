@@ -498,10 +498,13 @@ if string.sub(_ACTION,1,4) == "vs20" and _OPTIONS["osd"]=="sdl" then
 	end
 end
 -- Build SDL2 for Android
+if _OPTIONS["osd"] == "retro" then
+-- RETRO HACK no sdl for libretro android
+else
 if _OPTIONS["targetos"] == "android" then
 	_OPTIONS["with-bundled-sdl2"] = "1"
 end
-
+end
 configuration {}
 
 msgcompile ("Compiling $(subst ../,,$<)...")
