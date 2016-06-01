@@ -28,7 +28,11 @@ end
 
 	configuration { "android*" }
 		targetprefix "lib"
-		targetname "main"
+		if _OPTIONS["osd"] == "retro" then
+			targetname "mame"
+		else
+			targetname "main"
+		end
 		targetextension ".so"
 		linkoptions {
 			"-shared",
