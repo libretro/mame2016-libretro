@@ -242,6 +242,11 @@ end
 				targetdir(MAME_DIR .. "android-project/app/src/main/libs/x86_64")
 			end
 		end
+	
+		if _OPTIONS["osd"] == "retro" then
+			targetsuffix "_libretro_android"
+			targetdir(MAME_DIR)
+		end
 	else
 		if _OPTIONS["SEPARATE_BIN"]~="1" then
 			targetdir(MAME_DIR)
