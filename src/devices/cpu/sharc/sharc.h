@@ -117,7 +117,7 @@ struct SHARC_DMA_OP
 
 #define OP_USERFLAG_COUNTER_LOOP			0x00000001
 #define OP_USERFLAG_COND_LOOP				0x00000002
-#define OP_USERFLAG_COND_FIELD				0x0000003c
+#define OP_USERFLAG_COND_FIELD				0x000003fc
 #define OP_USERFLAG_COND_FIELD_SHIFT		2
 #define OP_USERFLAG_ASTAT_DELAY_COPY_AZ		0x00001000
 #define OP_USERFLAG_ASTAT_DELAY_COPY_AN		0x00002000
@@ -167,6 +167,8 @@ public:
 	void sharc_cfunc_unimplemented_compute();
 	void sharc_cfunc_unimplemented_shiftimm();
 	void sharc_cfunc_write_snoop();
+
+	void enable_recompiler();
 
 	enum ASTAT_FLAGS
 	{
@@ -452,6 +454,8 @@ private:
 
 	UINT16 m_internal_ram[2 * 0x10000]; // 2x 128KB
 
+	bool m_enable_drc;
+
 	inline void CHANGE_PC(UINT32 newpc);
 	inline void CHANGE_PC_DELAYED(UINT32 newpc);
 	void sharc_iop_delayed_w(UINT32 reg, UINT32 data, int cycles);
@@ -616,7 +620,7 @@ private:
 	void static_generate_mode1_ops();
 	void load_fast_iregs(drcuml_block *block);
 	void save_fast_iregs(drcuml_block *block);
-	void generate_sequence_instruction(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
+	void generate_sequence_instruction(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc, bool last_delayslot);
 	void generate_update_cycles(drcuml_block *block, compiler_state *compiler, uml::parameter param, int allow_exception);
 	int generate_opcode(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);
 	void generate_unimplemented_compute(drcuml_block *block, compiler_state *compiler, const opcode_desc *desc);

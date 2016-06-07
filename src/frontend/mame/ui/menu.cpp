@@ -266,14 +266,14 @@ void menu::reset(reset_options options)
 	}
 	else if (m_parent->is_special_main_menu())
 	{
-		if (strcmp(machine().options().ui(), "simple") == 0)
+		if (machine().options().ui() == emu_options::UI_SIMPLE)
 			item_append(_("Exit"), nullptr, 0, nullptr);
 		else
 			item_append(_("Exit"), nullptr, FLAG_UI | FLAG_LEFT_ARROW | FLAG_RIGHT_ARROW, nullptr);
 	}
 	else
 	{
-		if (strcmp(machine().options().ui(), "simple") != 0 && menu::stack_has_special_main_menu())
+		if (machine().options().ui() != emu_options::UI_SIMPLE && menu::stack_has_special_main_menu())
 			item_append(_("Return to Previous Menu"), nullptr, FLAG_UI | FLAG_LEFT_ARROW | FLAG_RIGHT_ARROW, nullptr);
 		else
 			item_append(_("Return to Previous Menu"), nullptr, 0, nullptr);
@@ -1270,7 +1270,7 @@ void menu::do_handle()
 //  and calls the menu handler
 //-------------------------------------------------
 
-UINT32 menu::ui_handler(mame_ui_manager &mui, render_container *container, UINT32 state)
+UINT32 menu::ui_handler(render_container *container, mame_ui_manager &mui)
 {
 	// if we have no menus stacked up, start with the main menu
 	if (!menu_stack)

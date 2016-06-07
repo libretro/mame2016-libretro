@@ -348,13 +348,12 @@ bool debug_comment_save(running_machine &machine)
 	return comments_saved;
 }
 
-
 //-------------------------------------------------
 //  debug_comment_load - load all comments for
 //  the given machine
 //-------------------------------------------------
 
-bool debug_comment_load(running_machine &machine)
+bool debug_comment_load(running_machine &machine,bool is_inline)
 {
 	// open the file
 	emu_file file(machine.options().comment_directory(), OPEN_FLAG_READ);
@@ -391,10 +390,16 @@ bool debug_comment_load(running_machine &machine)
 		// iterate over devices
 		for (xml_data_node *cpunode = xml_get_sibling(systemnode->child, "cpu"); cpunode; cpunode = xml_get_sibling(cpunode->next, "cpu"))
 		{
-			device_t *device = machine.device(xml_get_attribute_string(cpunode, "tag", ""));
+			const char *cputag_name = xml_get_attribute_string(cpunode, "tag", "");
+			device_t *device = machine.device(cputag_name);
 			if (device != nullptr)
-				if (!device->debug()->comment_import(*cpunode))
+			{
+				if(is_inline == false)
+					debug_console_printf(machine,"@%s\n",cputag_name);
+				
+				if (!device->debug()->comment_import(*cpunode,is_inline))
 					throw emu_exception();
+			}
 		}
 	}
 	catch (emu_exception &)
@@ -1470,66 +1475,66 @@ static void expression_write_memory_region(running_machine &machine, const char 
 
 static expression_error::error_code expression_validate(void *param, const char *name, expression_space space)
 {
-	running_machine &machine = *(running_machine *)param;
+	running_machine &machine = *reinterpret_cast<running_machine *>(param);
 	device_t *device = nullptr;
 
 	switch (space)
 	{
-		case EXPSPACE_PROGRAM_LOGICAL:
-		case EXPSPACE_DATA_LOGICAL:
-		case EXPSPACE_IO_LOGICAL:
-		case EXPSPACE_SPACE3_LOGICAL:
-			if (name != nullptr)
-			{
-				device = expression_get_device(machine, name);
-				if (device == nullptr)
-					return expression_error::INVALID_MEMORY_NAME;
-			}
-			if (device == nullptr)
-				device = debug_cpu_get_visible_cpu(machine);
-			if (!device->memory().has_space(AS_PROGRAM + (space - EXPSPACE_PROGRAM_LOGICAL)))
-				return expression_error::NO_SUCH_MEMORY_SPACE;
-			break;
-
-		case EXPSPACE_PROGRAM_PHYSICAL:
-		case EXPSPACE_DATA_PHYSICAL:
-		case EXPSPACE_IO_PHYSICAL:
-		case EXPSPACE_SPACE3_PHYSICAL:
-			if (name != nullptr)
-			{
-				device = expression_get_device(machine, name);
-				if (device == nullptr)
-					return expression_error::INVALID_MEMORY_NAME;
-			}
-			if (device == nullptr)
-				device = debug_cpu_get_visible_cpu(machine);
-			if (!device->memory().has_space(AS_PROGRAM + (space - EXPSPACE_PROGRAM_PHYSICAL)))
-				return expression_error::NO_SUCH_MEMORY_SPACE;
-			break;
-
-		case EXPSPACE_OPCODE:
-		case EXPSPACE_RAMWRITE:
-			if (name != nullptr)
-			{
-				device = expression_get_device(machine, name);
-				if (device == nullptr)
-					return expression_error::INVALID_MEMORY_NAME;
-			}
-			if (device == nullptr)
-				device = debug_cpu_get_visible_cpu(machine);
-			if (!device->memory().has_space(AS_PROGRAM))
-				return expression_error::NO_SUCH_MEMORY_SPACE;
-			break;
-
-		case EXPSPACE_REGION:
-			if (name == nullptr)
-				return expression_error::MISSING_MEMORY_NAME;
-			if (machine.root_device().memregion(name)->base() == nullptr)
+	case EXPSPACE_PROGRAM_LOGICAL:
+	case EXPSPACE_DATA_LOGICAL:
+	case EXPSPACE_IO_LOGICAL:
+	case EXPSPACE_SPACE3_LOGICAL:
+		if (name)
+		{
+			device = expression_get_device(machine, name);
+			if (!device)
 				return expression_error::INVALID_MEMORY_NAME;
-			break;
-
-		default:
+		}
+		if (!device)
+			device = debug_cpu_get_visible_cpu(machine);
+		if (!device->memory().has_space(AS_PROGRAM + (space - EXPSPACE_PROGRAM_LOGICAL)))
 			return expression_error::NO_SUCH_MEMORY_SPACE;
+		break;
+
+	case EXPSPACE_PROGRAM_PHYSICAL:
+	case EXPSPACE_DATA_PHYSICAL:
+	case EXPSPACE_IO_PHYSICAL:
+	case EXPSPACE_SPACE3_PHYSICAL:
+		if (name)
+		{
+			device = expression_get_device(machine, name);
+			if (!device)
+				return expression_error::INVALID_MEMORY_NAME;
+		}
+		if (!device)
+			device = debug_cpu_get_visible_cpu(machine);
+		if (!device->memory().has_space(AS_PROGRAM + (space - EXPSPACE_PROGRAM_PHYSICAL)))
+			return expression_error::NO_SUCH_MEMORY_SPACE;
+		break;
+
+	case EXPSPACE_OPCODE:
+	case EXPSPACE_RAMWRITE:
+		if (name)
+		{
+			device = expression_get_device(machine, name);
+			if (!device)
+				return expression_error::INVALID_MEMORY_NAME;
+		}
+		if (!device)
+			device = debug_cpu_get_visible_cpu(machine);
+		if (!device->memory().has_space(AS_PROGRAM))
+			return expression_error::NO_SUCH_MEMORY_SPACE;
+		break;
+
+	case EXPSPACE_REGION:
+		if (!name)
+			return expression_error::MISSING_MEMORY_NAME;
+		if (!machine.root_device().memregion(name) || !machine.root_device().memregion(name)->base())
+			return expression_error::INVALID_MEMORY_NAME;
+		break;
+
+	default:
+		return expression_error::NO_SUCH_MEMORY_SPACE;
 	}
 	return expression_error::NONE;
 }
@@ -1904,7 +1909,7 @@ void device_debug::instruction_hook(offs_t curpc)
 		// load comments if we haven't yet
 		if (!global->comments_loaded)
 		{
-			debug_comment_load(m_device.machine());
+			debug_comment_load(m_device.machine(),true);
 			global->comments_loaded = true;
 		}
 
@@ -2692,8 +2697,8 @@ bool device_debug::comment_export(xml_data_node &curnode)
 //  given XML data node
 //-------------------------------------------------
 
-bool device_debug::comment_import(xml_data_node &cpunode)
-{
+bool device_debug::comment_import(xml_data_node &cpunode,bool is_inline)
+{	
 	// iterate through nodes
 	for (xml_data_node *datanode = xml_get_sibling(cpunode.child, "comment"); datanode; datanode = xml_get_sibling(datanode->next, "comment"))
 	{
@@ -2705,7 +2710,10 @@ bool device_debug::comment_import(xml_data_node &cpunode)
 		sscanf(xml_get_attribute_string(datanode, "crc", nullptr), "%08X", &crc);
 
 		// add the new comment
-		m_comment_set.insert(dasm_comment(address, crc, datanode->value, color));
+		if(is_inline == true)
+			m_comment_set.insert(dasm_comment(address, crc, datanode->value, color));
+		else
+			debug_console_printf(m_device.machine()," %08X - %s\n",address,datanode->value);
 	}
 	return true;
 }

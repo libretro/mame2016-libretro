@@ -526,6 +526,7 @@ static void initInput(running_machine &machine)
    }
 }
 
+
 static void Input_Binding(running_machine &machine)
 {
    fprintf(stderr, "SOURCE FILE: %s\n", machine.system().source_file);
@@ -636,62 +637,62 @@ static void Input_Binding(running_machine &machine)
 
    }
    else if (
-              (core_stricmp(machine.system().name, "dstlk") == 0) ||
-              (core_stricmp(machine.system().parent, "dstlk") == 0) ||
-              (core_stricmp(machine.system().name, "hsf2") == 0) ||
-              (core_stricmp(machine.system().parent, "hsf2") == 0) ||
-              (core_stricmp(machine.system().name, "msh") == 0) ||
-              (core_stricmp(machine.system().parent, "msh") == 0) ||
-              (core_stricmp(machine.system().name, "mshvsf") == 0) ||
-              (core_stricmp(machine.system().parent, "mshvsf") == 0) ||
-              (core_stricmp(machine.system().name, "mvsc") == 0) ||
-              (core_stricmp(machine.system().parent, "mvsc") == 0) ||
-              (core_stricmp(machine.system().name, "nwarr") == 0) ||
-              (core_stricmp(machine.system().parent, "nwarr") == 0) ||
-              (core_stricmp(machine.system().name, "rvschool") == 0) ||
-              (core_stricmp(machine.system().parent, "rvschool") == 0) ||
-              (core_stricmp(machine.system().name, "sf2") == 0) ||
-              (core_stricmp(machine.system().parent, "sf2") == 0) ||
-              (core_stricmp(machine.system().name, "sf2ce") == 0) ||
-              (core_stricmp(machine.system().parent, "sf2ce") == 0) ||
-              (core_stricmp(machine.system().name, "sf2hf") == 0) ||
-              (core_stricmp(machine.system().parent, "sf2hf") == 0) ||
-              (core_stricmp(machine.system().name, "sfa") == 0) ||
-              (core_stricmp(machine.system().parent, "sfa") == 0) ||
-              (core_stricmp(machine.system().name, "sfa2") == 0) ||
-              (core_stricmp(machine.system().parent, "sfa2") == 0) ||
-              (core_stricmp(machine.system().name, "sfa3") == 0) ||
-              (core_stricmp(machine.system().parent, "sfa3") == 0) ||
-              (core_stricmp(machine.system().name, "sfex") == 0) ||
-              (core_stricmp(machine.system().parent, "sfex") == 0) ||
-              (core_stricmp(machine.system().name, "sfex2") == 0) ||
-              (core_stricmp(machine.system().parent, "sfex2") == 0) ||
-              (core_stricmp(machine.system().name, "sfex2p") == 0) ||
-              (core_stricmp(machine.system().parent, "sfex2p") == 0) ||
-              (core_stricmp(machine.system().name, "sfexp") == 0) ||
-              (core_stricmp(machine.system().parent, "sfexp") == 0) ||
-              (core_stricmp(machine.system().name, "sfiii") == 0) ||
-              (core_stricmp(machine.system().parent, "sfiii") == 0) ||
-              (core_stricmp(machine.system().name, "sfiii2") == 0) ||
-              (core_stricmp(machine.system().parent, "sfiii2") == 0) ||
-              (core_stricmp(machine.system().name, "sfiii3") == 0) ||
-              (core_stricmp(machine.system().parent, "sfiii3") == 0) ||
-              (core_stricmp(machine.system().name, "sftm") == 0) ||
-              (core_stricmp(machine.system().parent, "sftm") == 0) ||
-              (core_stricmp(machine.system().name, "ssf2") == 0) ||
-              (core_stricmp(machine.system().parent, "ssf2") == 0) ||
-              (core_stricmp(machine.system().name, "ssf2t") == 0) ||
-              (core_stricmp(machine.system().parent, "ssf2t") == 0) ||
-              (core_stricmp(machine.system().name, "starglad") == 0) ||
-              (core_stricmp(machine.system().parent, "starglad") == 0) ||
-              (core_stricmp(machine.system().name, "vsav") == 0) ||
-              (core_stricmp(machine.system().parent, "vsav") == 0) ||
-              (core_stricmp(machine.system().name, "vsav2") == 0) ||
-              (core_stricmp(machine.system().parent, "vsav2") == 0) ||
-              (core_stricmp(machine.system().name, "xmcota") == 0) ||
-              (core_stricmp(machine.system().parent, "xmcota") == 0) ||
-              (core_stricmp(machine.system().name, "xmvsf") == 0) ||
-              (core_stricmp(machine.system().parent, "xmvsf") == 0)
+              (!core_stricmp(machine.system().name, "dstlk")) ||
+              (!core_stricmp(machine.system().parent, "dstlk")) ||
+              !core_stricmp(machine.system().name, "hsf2") ||
+              !core_stricmp(machine.system().parent, "hsf2") ||
+              !core_stricmp(machine.system().name, "msh") ||
+              !core_stricmp(machine.system().parent, "msh") ||
+              !core_stricmp(machine.system().name, "mshvsf") ||
+              !core_stricmp(machine.system().parent, "mshvsf") ||
+              !core_stricmp(machine.system().name, "mvsc") ||
+              !core_stricmp(machine.system().parent, "mvsc") ||
+              !core_stricmp(machine.system().name, "nwarr") ||
+              !core_stricmp(machine.system().parent, "nwarr") ||
+              !core_stricmp(machine.system().name, "rvschool") ||
+              !core_stricmp(machine.system().parent, "rvschool") ||
+              !core_stricmp(machine.system().name, "sf2") ||
+              !core_stricmp(machine.system().parent, "sf2") ||
+              !core_stricmp(machine.system().name, "sf2ce") ||
+              !core_stricmp(machine.system().parent, "sf2ce") ||
+              !core_stricmp(machine.system().name, "sf2hf") ||
+              !core_stricmp(machine.system().parent, "sf2hf") ||
+              !core_stricmp(machine.system().name, "sfa") ||
+              !core_stricmp(machine.system().parent, "sfa") ||
+              !core_stricmp(machine.system().name, "sfa2") ||
+              !core_stricmp(machine.system().parent, "sfa2") ||
+              !core_stricmp(machine.system().name, "sfa3") ||
+              !core_stricmp(machine.system().parent, "sfa3") ||
+              !core_stricmp(machine.system().name, "sfex") ||
+              !core_stricmp(machine.system().parent, "sfex") ||
+              !core_stricmp(machine.system().name, "sfex2") ||
+              !core_stricmp(machine.system().parent, "sfex2") ||
+              !core_stricmp(machine.system().name, "sfex2p") ||
+              !core_stricmp(machine.system().parent, "sfex2p") ||
+              !core_stricmp(machine.system().name, "sfexp") ||
+              !core_stricmp(machine.system().parent, "sfexp") ||
+              !core_stricmp(machine.system().name, "sfiii") ||
+              !core_stricmp(machine.system().parent, "sfiii") ||
+              !core_stricmp(machine.system().name, "sfiii2") ||
+              !core_stricmp(machine.system().parent, "sfiii2") ||
+              !core_stricmp(machine.system().name, "sfiii3") ||
+              !core_stricmp(machine.system().parent, "sfiii3") ||
+              !core_stricmp(machine.system().name, "sftm") ||
+              !core_stricmp(machine.system().parent, "sftm") ||
+              !core_stricmp(machine.system().name, "ssf2") ||
+              !core_stricmp(machine.system().parent, "ssf2") ||
+              !core_stricmp(machine.system().name, "ssf2t") ||
+              !core_stricmp(machine.system().parent, "ssf2t") ||
+              !core_stricmp(machine.system().name, "starglad") ||
+              !core_stricmp(machine.system().parent, "starglad") ||
+              !core_stricmp(machine.system().name, "vsav") ||
+              !core_stricmp(machine.system().parent, "vsav") ||
+              !core_stricmp(machine.system().name, "vsav2") ||
+              !core_stricmp(machine.system().parent, "vsav2") ||
+              !core_stricmp(machine.system().name, "xmcota") ||
+              !core_stricmp(machine.system().parent, "xmcota") ||
+              !core_stricmp(machine.system().name, "xmvsf") ||
+              !core_stricmp(machine.system().parent, "xmvsf")
            )
    {
       /* Capcom CPS-1 and CPS-2 6-button fighting games */
@@ -705,64 +706,64 @@ static void Input_Binding(running_machine &machine)
 
    }
    else if (
-              (core_stricmp(machine.system().parent, "aof") == 0) ||
-              (core_stricmp(machine.system().parent, "aof2") == 0) ||
-              (core_stricmp(machine.system().parent, "aof3") == 0) ||
-              (core_stricmp(machine.system().parent, "breakers") == 0) ||
-              (core_stricmp(machine.system().parent, "breakrev") == 0) ||
-              (core_stricmp(machine.system().parent, "doubledr") == 0) ||
-              (core_stricmp(machine.system().parent, "fatfury1") == 0) ||
-              (core_stricmp(machine.system().parent, "fatfury2") == 0) ||
-              (core_stricmp(machine.system().parent, "fatfury3") == 0) ||
-              (core_stricmp(machine.system().parent, "fatfursp") == 0) ||
-              (core_stricmp(machine.system().parent, "fightfev") == 0) ||
-              (core_stricmp(machine.system().parent, "galaxyfg") == 0) ||
-              (core_stricmp(machine.system().parent, "garou") == 0) ||
-              (core_stricmp(machine.system().parent, "gowcaizr") == 0) ||
-              (core_stricmp(machine.system().parent, "neogeo") == 0) ||
-              (core_stricmp(machine.system().parent, "karnovr") == 0) ||
-              (core_stricmp(machine.system().parent, "kizuna") == 0) ||
-              (core_stricmp(machine.system().parent, "kabukikl") == 0) ||
-              (core_stricmp(machine.system().parent, "matrim") == 0) ||
-              (core_stricmp(machine.system().parent, "mslug") == 0) ||
-              (core_stricmp(machine.system().parent, "mslug2") == 0) ||
-              (core_stricmp(machine.system().parent, "mslugx") == 0) ||
-              (core_stricmp(machine.system().parent, "mslug3") == 0) ||
-              (core_stricmp(machine.system().parent, "mslug4") == 0) ||
-              (core_stricmp(machine.system().parent, "mslug5") == 0) ||
-              (core_stricmp(machine.system().parent, "kof94") == 0) ||
-              (core_stricmp(machine.system().parent, "kof95") == 0) ||
-              (core_stricmp(machine.system().parent, "kof96") == 0) ||
-              (core_stricmp(machine.system().parent, "kof97") == 0) ||
-              (core_stricmp(machine.system().parent, "kof98") == 0) ||
-              (core_stricmp(machine.system().parent, "kof99") == 0) ||
-              (core_stricmp(machine.system().parent, "kof2000") == 0) ||
-              (core_stricmp(machine.system().parent, "kof2001") == 0) ||
-              (core_stricmp(machine.system().parent, "kof2002") == 0) ||
-              (core_stricmp(machine.system().parent, "kof2003") == 0) ||
-              (core_stricmp(machine.system().parent, "lresort") == 0) ||
-              (core_stricmp(machine.system().parent, "lastblad") == 0) ||
-              (core_stricmp(machine.system().parent, "lastbld2") == 0) ||
-              (core_stricmp(machine.system().parent, "ninjamas") == 0) ||
-              (core_stricmp(machine.system().parent, "rotd") == 0) ||
-              (core_stricmp(machine.system().parent, "rbff1") == 0) ||
-              (core_stricmp(machine.system().parent, "rbff2") == 0) ||
-              (core_stricmp(machine.system().parent, "rbffspec") == 0) ||
-              (core_stricmp(machine.system().parent, "savagere") == 0) ||
-              (core_stricmp(machine.system().parent, "sengoku3") == 0) ||
-              (core_stricmp(machine.system().parent, "samsho") == 0) ||
-              (core_stricmp(machine.system().parent, "samsho2") == 0) ||
-              (core_stricmp(machine.system().parent, "samsho3") == 0) ||
-              (core_stricmp(machine.system().parent, "samsho4") == 0) ||
-              (core_stricmp(machine.system().parent, "samsho5") == 0) ||
-              (core_stricmp(machine.system().parent, "samsh5sp") == 0) ||
-              (core_stricmp(machine.system().parent, "svc") == 0) ||
-              (core_stricmp(machine.system().parent, "viewpoin") == 0) ||
-              (core_stricmp(machine.system().parent, "wakuwak7") == 0) ||
-              (core_stricmp(machine.system().parent, "wh1") == 0) ||
-              (core_stricmp(machine.system().parent, "wh2") == 0) ||
-              (core_stricmp(machine.system().parent, "wh2j") == 0) ||
-              (core_stricmp(machine.system().parent, "whp") == 0)
+              !core_stricmp(machine.system().parent, "aof") ||
+              !core_stricmp(machine.system().parent, "aof2") ||
+              !core_stricmp(machine.system().parent, "aof3") ||
+              !core_stricmp(machine.system().parent, "breakers") ||
+              !core_stricmp(machine.system().parent, "breakrev") ||
+              !core_stricmp(machine.system().parent, "doubledr") ||
+              !core_stricmp(machine.system().parent, "fatfury1") ||
+              !core_stricmp(machine.system().parent, "fatfury2") ||
+              !core_stricmp(machine.system().parent, "fatfury3") ||
+              !core_stricmp(machine.system().parent, "fatfursp") ||
+              !core_stricmp(machine.system().parent, "fightfev") ||
+              !core_stricmp(machine.system().parent, "galaxyfg") ||
+              !core_stricmp(machine.system().parent, "garou") ||
+              !core_stricmp(machine.system().parent, "gowcaizr") ||
+              !core_stricmp(machine.system().parent, "neogeo") ||
+              !core_stricmp(machine.system().parent, "karnovr") ||
+              !core_stricmp(machine.system().parent, "kizuna") ||
+              !core_stricmp(machine.system().parent, "kabukikl") ||
+              !core_stricmp(machine.system().parent, "matrim") ||
+              !core_stricmp(machine.system().parent, "mslug") ||
+              !core_stricmp(machine.system().parent, "mslug2") ||
+              !core_stricmp(machine.system().parent, "mslugx") ||
+              !core_stricmp(machine.system().parent, "mslug3") ||
+              !core_stricmp(machine.system().parent, "mslug4") ||
+              !core_stricmp(machine.system().parent, "mslug5") ||
+              !core_stricmp(machine.system().parent, "kof94") ||
+              !core_stricmp(machine.system().parent, "kof95") ||
+              !core_stricmp(machine.system().parent, "kof96") ||
+              !core_stricmp(machine.system().parent, "kof97") ||
+              !core_stricmp(machine.system().parent, "kof98") ||
+              !core_stricmp(machine.system().parent, "kof99") ||
+              !core_stricmp(machine.system().parent, "kof2000") ||
+              !core_stricmp(machine.system().parent, "kof2001") ||
+              !core_stricmp(machine.system().parent, "kof2002") ||
+              !core_stricmp(machine.system().parent, "kof2003") ||
+              !core_stricmp(machine.system().parent, "lresort") ||
+              !core_stricmp(machine.system().parent, "lastblad") ||
+              !core_stricmp(machine.system().parent, "lastbld2") ||
+              !core_stricmp(machine.system().parent, "ninjamas") ||
+              !core_stricmp(machine.system().parent, "rotd") ||
+              !core_stricmp(machine.system().parent, "rbff1") ||
+              !core_stricmp(machine.system().parent, "rbff2") ||
+              !core_stricmp(machine.system().parent, "rbffspec") ||
+              !core_stricmp(machine.system().parent, "savagere") ||
+              !core_stricmp(machine.system().parent, "sengoku3") ||
+              !core_stricmp(machine.system().parent, "samsho") ||
+              !core_stricmp(machine.system().parent, "samsho2") ||
+              !core_stricmp(machine.system().parent, "samsho3") ||
+              !core_stricmp(machine.system().parent, "samsho4") ||
+              !core_stricmp(machine.system().parent, "samsho5") ||
+              !core_stricmp(machine.system().parent, "samsh5sp") ||
+              !core_stricmp(machine.system().parent, "svc") ||
+              !core_stricmp(machine.system().parent, "viewpoin") ||
+              !core_stricmp(machine.system().parent, "wakuwak7") ||
+              !core_stricmp(machine.system().parent, "wh1") ||
+              !core_stricmp(machine.system().parent, "wh2") ||
+              !core_stricmp(machine.system().parent, "wh2j") ||
+              !core_stricmp(machine.system().parent, "whp")
            )
    {
       /* Neo Geo */
@@ -1244,7 +1245,7 @@ static int execute_game(char* path)
       }
       else
       {
-         if (strcmp(mediaType, "-rom") == 0)
+         if (!strcmp(mediaType, "-rom"))
             Add_Option(MgameName);
          else
          {
@@ -1339,7 +1340,7 @@ static int execute_game_cmd(char* path)
    unsigned i;
    int driverIndex;
    int gameRot=0;
-   bool CreateConf = (strcmp(ARGUV[0],"-cc") == 0 || strcmp(ARGUV[0],"-createconfig") == 0) ? 1 : 0;
+   bool CreateConf = (!strcmp(ARGUV[0],"-cc") || !strcmp(ARGUV[0],"-createconfig")) ? 1 : 0;
    bool Only1Arg   = (ARGUC == 1) ? 1 : 0;
 
    FirstTimeUpdate = 1;
