@@ -583,6 +583,7 @@ MACHINES["SMARTMEDIA"] = true
 MACHINES["APPLE_DRIVE"] = true
 MACHINES["APPLE_FDC"] = true
 MACHINES["SONY_DRIVE"] = true
+MACHINES["SCNXX562"] = true
 
 --------------------------------------------------
 -- specify available bus cores
@@ -654,6 +655,7 @@ BUSES["PC_JOY"] = true
 BUSES["PC_KBD"] = true
 BUSES["PET"] = true
 BUSES["PLUS4"] = true
+BUSES["POFO"] = true
 BUSES["PSX_CONTROLLER"] = true
 BUSES["QL"] = true
 BUSES["RS232"] = true
@@ -1305,8 +1307,7 @@ files {
 	MAME_DIR .. "src/mame/audio/lynx.cpp",
 	MAME_DIR .. "src/mame/audio/lynx.h",
 	MAME_DIR .. "src/mame/machine/lynx.cpp",
-	MAME_DIR .. "src/mame/drivers/portfoli.cpp",
-	MAME_DIR .. "src/mame/includes/portfoli.h",
+	MAME_DIR .. "src/mame/drivers/pofo.cpp",
 }
 
 createMESSProjects(_target, _subtarget, "att")
@@ -1726,6 +1727,7 @@ files {
 
 createMESSProjects(_target, _subtarget, "force")
 files {
+	MAME_DIR .. "src/mame/drivers/fccpu30.cpp",
 	MAME_DIR .. "src/mame/drivers/force68k.cpp",
 }
 
@@ -2899,7 +2901,7 @@ files {
 createMESSProjects(_target, _subtarget, "usp")
 files {
 	MAME_DIR .. "src/mame/drivers/patinho_feio.cpp",
-	MAME_DIR .. "src/mame/includes/patinho_feio.h",
+	MAME_DIR .. "src/mame/includes/patinhofeio.h",
 }
 
 createMESSProjects(_target, _subtarget, "veb")

@@ -350,15 +350,6 @@ newoption {
 }
 
 newoption {
-	trigger = "IGNORE_GIT",
-	description = "Ignore usage of git command in build process",
-	allowed = {
-		{ "0",  "Do not ignore"   },
-		{ "1",  "Ingore"  },
-	},
-}
-
-newoption {
 	trigger = "SOURCES",
 	description = "List of sources to compile.",
 }
@@ -528,7 +519,7 @@ if (_OPTIONS["SOURCES"] == nil) then
 	dofile (path.join("target", _OPTIONS["target"],_OPTIONS["subtarget"] .. ".lua"))
 end
 
-configuration { "gmake" }
+configuration { "gmake or ninja" }
 	flags {
 		"SingleOutputDir",
 	}
@@ -701,7 +692,7 @@ end
 		"LUA_COMPAT_5_2",
 	}
 
-	if _ACTION == "gmake" then
+	if _ACTION == "gmake" or _ACTION == "ninja" then
 
 	--we compile C-only to C99 standard with GNU extensions
 
@@ -734,7 +725,7 @@ end
 -- this speeds it up a bit by piping between the preprocessor/compiler/assembler
 	if not ("pnacl" == _OPTIONS["gcc"]) then
 		buildoptions {
-			"--pipe",
+			"-pipe",
 		}
 	end
 -- add -g if we need symbols, and ensure we have frame pointers

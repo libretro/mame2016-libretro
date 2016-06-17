@@ -65,7 +65,7 @@ Graphics output is independent from monochrome output.
 Two ports, a high-speed RS-422 half-duplex interface (port A) + lower-speed RS-423 full/half-duplex interface
 with modem control (port B). A 5 Mhz. 8237 DMA controller transfers data into and out of shared memory (not: optional RAM).
 
-Uses SHRAM, SHMA, BDL SH WR L, NONSHARED CYCLE. Implementation requires DMA and arbitration logic (dump of E11/E13 ?).
+Uses SHRAM, SHMA, BDL SH WR L, NONSHARED CYCLE. Implementation requires DMA and arbitration logic (using dump of E11/E13?).
 Can't be added if RD51 hard disk controller present (J4 + J5). For programming info see NEWCOM1.DOC (-> RBETECDOC.ZIP).
 
 
@@ -215,7 +215,9 @@ W17 pulls J1 serial  port pin 1 to GND when set (chassis to logical GND).
 // ---------------------------------------------------------------------------
 // WORKAROUNDS:
 // - tested only in conjunction with 100-B ROM -
-//#define WORKAROUND_RAINBOW_B
+// Part of the self test feeds an mfm bitstream directly into the data separator
+// this isn't currently possible to emulate and may never be so enable this rom patch by default
+#define WORKAROUND_RAINBOW_B
 // ---------------------------------------------------------------------------
 
 // Define standard and maximum RAM sizes (A, then B model):
@@ -780,25 +782,25 @@ void rainbow_state::machine_reset()
 
 	// * Reset RTC to a defined state *
 	#define RTC_RESET 0xFC104 // read $FC104 or mirror $FE104
-	program.install_read_handler(RTC_RESET, RTC_RESET, 0, 0, read8_delegate(FUNC(rainbow_state::rtc_reset), this));
-	program.install_read_handler(RTC_RESET + 0x2000, RTC_RESET + 0x2000, 0, 0, read8_delegate(FUNC(rainbow_state::rtc_reset2), this));
+	program.install_read_handler(RTC_RESET, RTC_RESET, read8_delegate(FUNC(rainbow_state::rtc_reset), this));
+	program.install_read_handler(RTC_RESET + 0x2000, RTC_RESET + 0x2000, read8_delegate(FUNC(rainbow_state::rtc_reset2), this));
 
 	// A magic pattern enables reads or writes (-> RTC_WRITE_DATA_0 / RTC_WRITE_DATA_1)
 	// 64 bits read from two alternating addresses (see DS1315.C)
 	#define RTC_PATTERN_0 0xFC100 // MIRROR: FE100
 	#define RTC_PATTERN_1 0xFC101 // MIRROR: FE101
-	program.install_read_handler(RTC_PATTERN_0, RTC_PATTERN_1, 0, 0, read8_delegate(FUNC(rainbow_state::rtc_enable), this));
-	program.install_read_handler(RTC_PATTERN_0 + 0x2000, RTC_PATTERN_1 + 0x2000, 0, 0, read8_delegate(FUNC(rainbow_state::rtc_enable2), this));
+	program.install_read_handler(RTC_PATTERN_0, RTC_PATTERN_1, read8_delegate(FUNC(rainbow_state::rtc_enable), this));
+	program.install_read_handler(RTC_PATTERN_0 + 0x2000, RTC_PATTERN_1 + 0x2000, read8_delegate(FUNC(rainbow_state::rtc_enable2), this));
 
 	// * Read actual time/date from ClikClok *
 	#define RTC_READ_DATA 0xFC004 // Single byte - delivers one bit (if RTC enabled). MIRROR: FE004
-	program.install_read_handler(RTC_READ_DATA, RTC_READ_DATA, 0, 0, read8_delegate(FUNC(rainbow_state::rtc_r), this));
-	program.install_read_handler(RTC_READ_DATA + 0x2000, RTC_READ_DATA + 0x2000, 0, 0, read8_delegate(FUNC(rainbow_state::rtc_r2), this));
+	program.install_read_handler(RTC_READ_DATA, RTC_READ_DATA, read8_delegate(FUNC(rainbow_state::rtc_r), this));
+	program.install_read_handler(RTC_READ_DATA + 0x2000, RTC_READ_DATA + 0x2000, read8_delegate(FUNC(rainbow_state::rtc_r2), this));
 
 	// * Secretly transmit data to RTC (set time / date) *  Works only if magic pattern enabled RTC. Look ma, no writes!
 	#define RTC_WRITE_DATA_0 0xFE000
 	#define RTC_WRITE_DATA_1 0xFE001
-	program.install_read_handler(RTC_WRITE_DATA_0, RTC_WRITE_DATA_1, 0, 0, read8_delegate(FUNC(rainbow_state::rtc_w), this));
+	program.install_read_handler(RTC_WRITE_DATA_0, RTC_WRITE_DATA_1, read8_delegate(FUNC(rainbow_state::rtc_w), this));
 
 	m_rtc->chip_reset();
 	// *********************************** / DS1315 'PHANTOM CLOCK' IMPLEMENTATION FOR 'DEC-100-B' ***************************************
@@ -2330,6 +2332,10 @@ ROM_LOAD("23-092e4-00.bin", 0xFE000, 0x2000, NO_DUMP)  // ROM (FE000-FFFFF) (E91
 
 ROM_REGION(0x1000, "chargen", 0) // [E98] 2732 (4 K) EPROM
 ROM_LOAD("23-020e3-00.bin", 0x0000, 0x1000, CRC(1685e452) SHA1(bc299ff1cb74afcededf1a7beb9001188fdcf02f))
+
+// Z80 ARBITRATION PROM
+ROM_REGION(0x100, "prom", 0)
+ROM_LOAD("23-090b1.mmi6308-ij.e11", 0x0000, 0x0100, CRC(cac3a7e3) SHA1(2d0468cda36fa287f705364c56dbf62f548d2e4c) ) // MMI 6308-IJ; Silkscreen stamp: "LM8413 // 090B1"; 256x8 Open Collector prom @E11, same prom is @E13 on 100-B
 ROM_END
 
 //----------------------------------------------------------------------------------------
@@ -2360,6 +2366,10 @@ ROM_RELOAD(0xfc000, 0x4000)
 // CHARACTER GENERATOR (E3-03)
 ROM_REGION(0x1000, "chargen", 0)
 ROM_LOAD("23-037e3.bin", 0x0000, 0x1000, CRC(1685e452) SHA1(bc299ff1cb74afcededf1a7beb9001188fdcf02f))
+
+// Z80 ARBITRATION PROM
+ROM_REGION(0x100, "prom", 0)
+ROM_LOAD("23-090b1.mmi6308-ij.e13", 0x0000, 0x0100, CRC(cac3a7e3) SHA1(2d0468cda36fa287f705364c56dbf62f548d2e4c) ) // MMI 6308-IJ; Silkscreen stamp: "LM8413 // 090B1"; 256x8 Open Collector prom @E13, same prom is @E11 on 100-A
 ROM_END
 
 //----------------------------------------------------------------------------------------
