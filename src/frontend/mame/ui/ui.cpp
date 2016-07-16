@@ -269,6 +269,10 @@ void mame_ui_manager::set_handler(ui_callback_type callback_type, const std::fun
 //  various startup screens
 //-------------------------------------------------
 
+#ifdef OSD_RETRO
+	extern bool hide_warnings;
+	extern bool hide_gameinfo;
+#endif
 
 void mame_ui_manager::display_startup_screens(bool first_time)
 {
@@ -288,14 +292,12 @@ void mame_ui_manager::display_startup_screens(bool first_time)
 	show_gameinfo = show_warnings = FALSE;
 	#endif
 
-#if 0
 	#ifdef OSD_RETRO
-	if(hide_nagscreen)
-		show_disclaimer = FALSE;
-	if(hide_warnings)
-		show_warnings = FALSE;
+		if(hide_warnings)
+			show_warnings = FALSE;
+		if(hide_gameinfo)
+			show_gameinfo = FALSE;
 	#endif
-#endif
 
 	// loop over states
 	set_handler(UI_CALLBACK_TYPE_GENERAL, &mame_ui_manager::handler_ingame);
