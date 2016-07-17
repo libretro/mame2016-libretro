@@ -33,10 +33,10 @@ char RPATH[512];
 
 static char option_mouse[50];
 static char option_cheats[50];
+static char option_warnings[50];
 static char option_nag[50];
 static char option_info[50];
 static char option_renderer[50];
-static char option_warnings[50];
 static char option_osd[50];
 static char option_cli[50];
 static char option_bios[50];
@@ -128,8 +128,8 @@ void retro_set_environment(retro_environment_t cb)
 {
    sprintf(option_mouse, "%s_%s", core, "mouse_enable");
    sprintf(option_cheats, "%s_%s", core, "cheats_enable");
+   sprintf(option_info, "%s_%s",core,"hide_gameinfo");
    sprintf(option_nag, "%s_%s",core,"hide_nagscreen");
-   sprintf(option_info, "%s_%s",core,"hide_infoscreen");
    sprintf(option_warnings,"%s_%s",core,"hide_warnings");
    sprintf(option_renderer,"%s_%s",core,"alternate_renderer");
    sprintf(option_osd,"%s_%s",core,"boot_to_osd");
@@ -143,13 +143,9 @@ void retro_set_environment(retro_environment_t cb)
    sprintf(option_auto_save,"%s_%s",core,"auto_save");
    sprintf(option_saves,"%s_%s",core,"saves");
    sprintf(option_throttle,"%s_%s",core,"throttle");
-  sprintf(option_nobuffer,"%s_%s",core,"nobuffer");
+   sprintf(option_nobuffer,"%s_%s",core,"nobuffer");
 
    static const struct retro_variable vars[] = {
-    /* some ifdefs are redundant but I wanted 
-     * to have these options in a logical order
-     * common for MAME/MESS/UME. */
-
     { option_read_config, "Read configuration; disabled|enabled" },
     { option_write_config, "Write configuration; disabled|enabled" },
     { option_saves, "Save state naming; game|system" },
@@ -157,6 +153,9 @@ void retro_set_environment(retro_environment_t cb)
     { option_mouse, "Enable in-game mouse; disabled|enabled" },
     { option_throttle, "Enable throttle; disabled|enabled" },
     { option_cheats, "Enable cheats; disabled|enabled" },
+    { option_nag, "Hide nag screen; disabled|enabled" },
+    { option_info, "Hide gameinfo screen; disabled|enabled" },
+    { option_warnings, "Hide warnings screen; disabled|enabled" },
     { option_renderer, "Alternate render method; disabled|enabled" },
 
     { option_softlist, "Enable softlists; enabled|disabled" },
@@ -167,7 +166,6 @@ void retro_set_environment(retro_environment_t cb)
     { option_osd, "Boot to OSD; disabled|enabled" },
     { option_cli, "Boot from CLI; disabled|enabled" },
     { NULL, NULL },
-
    };
 
    environ_cb = cb;
