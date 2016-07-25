@@ -82,11 +82,10 @@ static int ui_ipt_pushchar=-1;
 int mame_reset = -1;
 
 /* core options */
+bool hide_gameinfo = false;
 bool hide_nagscreen = false;
 bool hide_warnings = false;
 bool nobuffer_enable = false;
-
-bool hide_gameinfo = false;
 bool mouse_enable = false;
 bool cheats_enable = false;
 bool alternate_renderer = false;
@@ -1079,8 +1078,12 @@ static void Set_Default_Option(void)
 
    if(hide_gameinfo)
       Add_Option("-skip_gameinfo");
-   else
-      Add_Option("-noskip_gameinfo");
+
+   if(hide_nagscreen)
+      Add_Option("-skip_nagscreen");
+
+   if(hide_warnings)
+      Add_Option("-skip_warnings");
 
    if(write_config_enable)
       Add_Option("-writeconfig");
