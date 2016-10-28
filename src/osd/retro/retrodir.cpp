@@ -26,6 +26,11 @@
 
 #include "osdcore.h"
 
+#include <cctype>
+#include <cstdlib>
+#include <stdio.h>
+#include <utility>
+
 #define SDLMAME_UNIX
 
 #if defined(SDLMAME_WIN32) || defined(SDLMAME_OS2)
