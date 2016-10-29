@@ -1586,7 +1586,13 @@ void retro_osd_interface::init(running_machine &machine)
 
 	int width,height;
 	our_target->compute_visible_area(1000,1000,1,ROT0,width,height);
-
+	
+	int viewindex;
+	viewindex = our_target->configured_view("pixel", 0, 1);
+	our_target->set_view(viewindex);
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO,"view(%s)\n",our_target->view_name(viewindex));
+	
 	retro_aspect = (float)width/(float)height;
 	retro_fps    = ATTOSECONDS_TO_HZ(machine.first_screen()->refresh_attoseconds());
 
