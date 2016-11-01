@@ -64,9 +64,6 @@ typedef struct joystate_t
 /* rendering target */
 static render_target *our_target = NULL;
 
-static float cur_asp=1.0f; // aspect for current view
-static float pix_asp=1.0f; // pixel aspect cur_asp/(fb_width/fb_height)
-
 /* input device */
 static input_device *retrokbd_device; // KEYBD
 static input_device *mouse_device;    // MOUSE
@@ -1587,23 +1584,15 @@ void retro_osd_interface::init(running_machine &machine)
 	our_target->compute_minimum_size(fb_width, fb_height);
 	fb_pitch = fb_width;
 
-	/* compute current view aspect and default pixel_aspect */
-        render_layer_config temp=our_target->layer_config();
-        cur_asp=our_target->current_view()->effective_aspect(temp);
-        if (log_cb)
-               log_cb(RETRO_LOG_INFO,"current_view_asp %f\n",cur_asp);
-
-        pix_asp=cur_asp/(float)((float)fb_width/(float)fb_height);
-
 	int width,height;
-	our_target->compute_visible_area(1000,1000,1,our_target->orientation(),width,height);
-#if 0	
+	our_target->compute_visible_area(1000,1000,1,ROT0,width,height);
+	
 	int viewindex;
 	viewindex = our_target->configured_view("pixel", 0, 1);
 	our_target->set_view(viewindex);
 	if (log_cb)
 		log_cb(RETRO_LOG_INFO,"view(%s)\n",our_target->view_name(viewindex));
-#endif
+	
 	retro_aspect = (float)width/(float)height;
 	retro_fps    = ATTOSECONDS_TO_HZ(machine.first_screen()->refresh_attoseconds());
 
@@ -1639,9 +1628,6 @@ void retro_osd_interface::update(bool skip_redraw)
    {
       int minwidth, minheight;
 
-      render_layer_config temp=our_target->layer_config();
-      float curasp = our_target->current_view()->effective_aspect(temp);
-
       retro_frame_draw_enable(true);
 
       /* get the minimum width/height for the current layout */
@@ -1653,7 +1639,7 @@ void retro_osd_interface::update(bool skip_redraw)
          minwidth  = 1600;
          minheight = 1200;
       }
-#if 0
+
       if (FirstTimeUpdate == 1)
       {
          int gamRot = 0;
@@ -1671,19 +1657,12 @@ void retro_osd_interface::update(bool skip_redraw)
          gamRot = (ROT180 == orient) ? 2 : gamRot;
          gamRot = (ROT90  == orient) ? 3 : gamRot;
       }
-#endif
-      if (minwidth != fb_width || minheight != fb_height || minwidth != fb_pitch || cur_asp!=curasp)
+
+      if (minwidth != fb_width || minheight != fb_height || minwidth != fb_pitch)
       {
          fb_width  = minwidth;
          fb_height = minheight;
          fb_pitch  = minwidth;
-
-         cur_asp=curasp;
-         pix_asp=cur_asp/(float)((float)fb_width/(float)fb_height);
-
-         if (log_cb)
-                log_cb(RETRO_LOG_INFO,"min size w:%d h:%d ca:%f pa:%f\n",minwidth, minheight,cur_asp,pix_asp);
-
       }
 
       if(alternate_renderer)
@@ -1693,7 +1672,7 @@ void retro_osd_interface::update(bool skip_redraw)
       }
 
       /* make that the size of our target */
-      our_target->set_bounds(fb_width, fb_height,pix_asp);
+      our_target->set_bounds(fb_width, fb_height);
 
       /* get the list of primitives for the target at the current size */
 
