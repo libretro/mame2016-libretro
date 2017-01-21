@@ -1591,6 +1591,8 @@ void retro_osd_interface::init(running_machine &machine)
 	render_layer_config temp=our_target->layer_config();
 	retro_aspect =our_target->current_view()->effective_aspect(temp);
 
+	if(our_target->orientation() & ORIENTATION_SWAP_XY)retro_aspect=1.0/retro_aspect;
+
 	our_target->compute_minimum_size(fb_width, fb_height);
 	fb_pitch = fb_width;
 
@@ -1650,6 +1652,7 @@ void retro_osd_interface::update(bool skip_redraw)
       if (alternate_renderer==false){
 		render_layer_config temp=our_target->layer_config();
 		view_aspect =our_target->current_view()->effective_aspect(temp);
+		if(our_target->orientation() & ORIENTATION_SWAP_XY)view_aspect=1.0f/view_aspect;
 	        our_target->compute_minimum_size(minwidth, minheight);
       }
       else
@@ -1684,6 +1687,9 @@ void retro_osd_interface::update(bool skip_redraw)
 
 	 render_layer_config temp=our_target->layer_config();
 	 retro_aspect =our_target->current_view()->effective_aspect(temp);
+
+	 if(our_target->orientation() & ORIENTATION_SWAP_XY)retro_aspect=1.0/retro_aspect;
+
 	 view_aspect =retro_aspect;
 
 	 if(fb_width>max_width || fb_height>max_height)
