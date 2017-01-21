@@ -19,11 +19,16 @@ extern const char bare_build_version[];
 
 int retro_pause = 0;
 
-int fb_width   = 320;
-int fb_height  = 240;
-int fb_pitch   = 1600;
-float retro_aspect = 0;
+int fb_width   = 640;
+int fb_height  = 480;
+int fb_pitch   = 640;
+int max_width   = 640;
+int max_height  = 480;
+
+float view_aspect=1.0f; // aspect for current view
+float retro_aspect = (float)4.0f/(float)3.0f;
 float retro_fps = 60.0;
+
 int SHIFTON           = -1;
 int NEWGAME_FROM_OSD  = 0;
 char RPATH[512];
@@ -386,18 +391,29 @@ void retro_get_system_info(struct retro_system_info *info)
    info->block_extract    = true;
 }
 
+void update_geometry()
+{
+   struct retro_system_av_info system_av_info;
+   system_av_info.geometry.base_width = fb_width;
+   system_av_info.geometry.base_height = fb_height;
+   system_av_info.geometry.aspect_ratio = retro_aspect;
+   environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &system_av_info);
+}
+
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
    check_variables();
 
    info->geometry.base_width  = fb_width;
    info->geometry.base_height = fb_height;
+   info->geometry.max_width  = fb_width;
+   info->geometry.max_height = fb_height;
 
    if (log_cb)
       log_cb(RETRO_LOG_INFO, "AV_INFO: width=%d height=%d\n",info->geometry.base_width,info->geometry.base_height);
 
-   info->geometry.max_width   = 1600;
-   info->geometry.max_height  = 1200;
+   max_width=fb_width;
+   max_height=fb_height;
 
    if (log_cb)
       log_cb(RETRO_LOG_INFO, "AV_INFO: max_width=%d max_height=%d\n",info->geometry.max_width,info->geometry.max_height);
@@ -519,6 +535,11 @@ void retro_run (void)
          log_cb(RETRO_LOG_INFO, "ChangeAV: w:%d h:%d ra:%f.\n",
                ninfo.geometry.base_width, ninfo.geometry.base_height, ninfo.geometry.aspect_ratio);
 
+      NEWGAME_FROM_OSD=0;
+   }
+   else if (NEWGAME_FROM_OSD == 2){
+      update_geometry();
+	printf("w:%d h:%d a:%f\n",fb_width,fb_height,retro_aspect);
       NEWGAME_FROM_OSD=0;
    }
 

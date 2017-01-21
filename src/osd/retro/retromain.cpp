@@ -1587,13 +1587,20 @@ void retro_osd_interface::init(running_machine &machine)
 
     /* initialize the subsystems */
 	osd_common_t::init_subsystems();
+	
+	render_layer_config temp=our_target->layer_config();
+	retro_aspect =our_target->current_view()->effective_aspect(temp);
 
 	our_target->compute_minimum_size(fb_width, fb_height);
 	fb_pitch = fb_width;
 
+	if(fb_width>max_width || fb_height>max_height)
+		NEWGAME_FROM_OSD = 1;
+	else NEWGAME_FROM_OSD = 2;
+/*
 	int width,height;
 	our_target->compute_visible_area(1000,1000,1,ROT0,width,height);
-	
+
 	int viewindex;
 	viewindex = our_target->configured_view("pixel", 0, 1);
 	our_target->set_view(viewindex);
@@ -1601,12 +1608,13 @@ void retro_osd_interface::init(running_machine &machine)
 		log_cb(RETRO_LOG_INFO,"view(%s)\n",our_target->view_name(viewindex));
 	
 	retro_aspect = (float)width/(float)height;
+*/
 	retro_fps    = ATTOSECONDS_TO_HZ(machine.first_screen()->refresh_attoseconds());
 
 	if (log_cb)
 		log_cb(RETRO_LOG_DEBUG, "Screen width=%d height=%d, aspect=%d/%d=%f\n", fb_width, fb_height, width,height, retro_aspect);
 
-	NEWGAME_FROM_OSD=1;
+//	NEWGAME_FROM_OSD=1;
 	if (log_cb)
 		log_cb(RETRO_LOG_INFO, "OSD initialization complete\n");
 
@@ -1639,12 +1647,15 @@ void retro_osd_interface::update(bool skip_redraw)
 
       /* get the minimum width/height for the current layout */
 
-      if (alternate_renderer==false)
-         our_target->compute_minimum_size(minwidth, minheight);
+      if (alternate_renderer==false){
+		render_layer_config temp=our_target->layer_config();
+		view_aspect =our_target->current_view()->effective_aspect(temp);
+	        our_target->compute_minimum_size(minwidth, minheight);
+      }
       else
       {
-         minwidth  = 1600;
-         minheight = 1200;
+         minwidth  = max_width;
+         minheight = max_height;
       }
 
       if (FirstTimeUpdate == 1)
@@ -1665,17 +1676,26 @@ void retro_osd_interface::update(bool skip_redraw)
          gamRot = (ROT90  == orient) ? 3 : gamRot;
       }
 
-      if (minwidth != fb_width || minheight != fb_height || minwidth != fb_pitch)
+      if (minwidth != fb_width || minheight != fb_height || minwidth != fb_pitch || view_aspect!=retro_aspect)
       {
          fb_width  = minwidth;
          fb_height = minheight;
          fb_pitch  = minwidth;
+
+	 render_layer_config temp=our_target->layer_config();
+	 retro_aspect =our_target->current_view()->effective_aspect(temp);
+	 view_aspect =retro_aspect;
+
+	 if(fb_width>max_width || fb_height>max_height)
+ 		NEWGAME_FROM_OSD = 1;
+	 else NEWGAME_FROM_OSD = 2;
+
       }
 
       if(alternate_renderer)
       {
-         fb_width  = fb_pitch = 1600;
-         fb_height = 1200;
+         fb_width  = fb_pitch = max_width;
+         fb_height = max_height;
       }
 
       /* make that the size of our target */
