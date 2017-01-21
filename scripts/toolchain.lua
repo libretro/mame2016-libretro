@@ -269,6 +269,7 @@ function toolchain(_buildDir, _subDir)
 			if not toolchainPrefix then
 				toolchainPrefix = "$(MINGW64)/bin/x86_64-w64-mingw32-"
 			end
+toolchainPrefix = "$(MINGW64)/bin/x86_64-w64-mingw32-"
 			premake.gcc.cc  = toolchainPrefix .. "gcc"
 			premake.gcc.cxx = toolchainPrefix .. "g++"
 -- work around GCC 4.9.2 not having proper linker for LTO=1 usage

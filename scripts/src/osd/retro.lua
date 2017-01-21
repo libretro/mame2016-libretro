@@ -66,7 +66,6 @@ project ("osd_" .. _OPTIONS["osd"])
 	}
 
 	files {
-      MAME_DIR .. "src/osd/retro/libretro-common/libco/libco.c",
 		MAME_DIR .. "src/osd/osdnet.cpp",
 		MAME_DIR .. "src/osd/modules/netdev/taptun.cpp",
 		MAME_DIR .. "src/osd/modules/netdev/pcap.cpp",
@@ -207,14 +206,4 @@ project ("ocore_" .. _OPTIONS["osd"])
 		}
 	end
 
-project ("libco")
-	uuid (os.uuid("libco"))
-	kind "StaticLib"
 
-	includedirs {
-		MAME_DIR .. "src/osd/retro/libretro-common/include",
-	}
-
-	files {
-		MAME_DIR .. "src/osd/retro/libretro-common/libco/libco.c",
-	}

@@ -203,6 +203,10 @@ public:
 	inline device_t *device(const char *tag) const { return root_device().subdevice(tag); }
 	template<class _DeviceClass> inline _DeviceClass *device(const char *tag) { return downcast<_DeviceClass *>(device(tag)); }
 
+#ifdef __LIBRETRO__
+void retro_machineexit();
+void retro_loop();
+#endif
 	// immediate operations
 	int run(bool quiet);
 	void pause();

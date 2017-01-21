@@ -184,8 +184,6 @@ end
 		includedirs {
 			MAME_DIR .. "src/osd/retro/libretro-common/include",
 		}
-		links { "libco" }
-
 		-- Workaround: Compile the public libretro API into the shlib
 		-- rather than the OSD to keep linkers from being "helpful"
 		-- and stripping it out.

@@ -1455,12 +1455,16 @@ static int execute_game_cmd(char* path)
 extern "C"
 #endif
 
+retro_osd_interface *retro_global_osd;
+
 int mmain(int argc, const char *argv)
 {
    unsigned i;
    osd_options options;
    //cli_options MRoptions;
    int result = 0;
+
+   static osd_options retro_global_options;
 
    strcpy(gameName,argv);
 
@@ -1492,11 +1496,14 @@ int mmain(int argc, const char *argv)
          log_cb(RETRO_LOG_DEBUG, " %s\n",XARGV[i]);
    }
 
+   retro_global_osd= global_alloc(retro_osd_interface(retro_global_options));
+   retro_global_osd->register_options();
+/*
    retro_osd_interface osd(options);
    osd.register_options();
-
-  // cli_frontend frontend(options, osd);
-   result =  emulator_info::start_frontend(options, osd,PARAMCOUNT, ( char **)xargv_cmd);
+   cli_frontend frontend(options, osd);
+*/
+   result =  emulator_info::start_frontend(retro_global_options, *retro_global_osd,PARAMCOUNT, ( char **)xargv_cmd);
 
 
    xargv_cmd[PARAMCOUNT - 2] = NULL;
@@ -1603,7 +1610,7 @@ void retro_osd_interface::init(running_machine &machine)
 	if (log_cb)
 		log_cb(RETRO_LOG_INFO, "OSD initialization complete\n");
 
-   retro_switch_to_main_thread();
+   //retro_switch_to_main_thread();
 }
 
 void retro_osd_interface::update(bool skip_redraw)
@@ -1704,7 +1711,7 @@ void retro_osd_interface::update(bool skip_redraw)
 		ui_ipt_pushchar=-1;
 	}
 
-   retro_switch_to_main_thread();
+	RLOOP=0;
 }
 
 //============================================================

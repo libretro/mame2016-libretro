@@ -1,8 +1,6 @@
 #ifndef _LIBRETRO_SHARED_H
 #define _LIBRETRO_SHARED_H
 
-#include <libco.h>
-
 #ifndef MAX_BUTTONS
 #define MAX_BUTTONS 16
 #endif
@@ -69,8 +67,6 @@ static const char core[] = "mame";
 /* libretro callbacks */
 extern retro_log_printf_t log_cb;
 extern retro_input_state_t input_state_cb;
-
-void retro_switch_to_main_thread(void);
 
 void retro_frame_draw_enable(bool enable);
 

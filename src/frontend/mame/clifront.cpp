@@ -166,6 +166,21 @@ cli_frontend::~cli_frontend()
 	mame_options::remove_device_options(m_options);
 }
 
+#ifdef __LIBRETRO__
+mame_machine_manager *retro_manager;
+
+void retro_execute(){
+  retro_manager->execute();
+}
+
+void free_man(){
+
+	util::archive_file::cache_clear();
+	global_free(retro_manager);
+}
+
+#endif
+
 //-------------------------------------------------
 //  execute - execute a game via the standard
 //  command line interface
@@ -278,8 +293,16 @@ int cli_frontend::execute(int argc, char **argv)
 			if (system == nullptr && *(m_options.system_name()) != 0)
 				throw emu_fatalerror(EMU_ERR_NO_SUCH_GAME, "Unknown system '%s'", m_options.system_name());
 
+#ifdef __LIBRETRO__
+	                retro_manager = mame_machine_manager::instance(m_options, m_osd);
+			//retro_manager = machine_manager::instance(m_options, m_osd);
+	        	m_result = retro_manager->execute();
+
+			goto retro_exit;
+#else
 			// otherwise just run the game
 			m_result = manager->execute();
+#endif
 		}
 	}
 
@@ -333,6 +356,12 @@ int cli_frontend::execute(int argc, char **argv)
 	global_free(manager);
 
 	return m_result;
+
+#ifdef __LIBRETRO__
+	retro_exit:
+
+	return m_result;
+#endif
 }
 
 
