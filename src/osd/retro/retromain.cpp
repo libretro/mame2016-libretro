@@ -1627,8 +1627,9 @@ void retro_osd_interface::init(running_machine &machine)
 
     /* initialize the subsystems */
 	osd_common_t::init_subsystems();
-	
+
 	render_layer_config temp=our_target->layer_config();
+
 	retro_aspect =our_target->current_view()->effective_aspect(temp);
 
 	if(our_target->orientation() & ORIENTATION_SWAP_XY)retro_aspect=1.0/retro_aspect;
@@ -1639,29 +1640,16 @@ void retro_osd_interface::init(running_machine &machine)
 	if(fb_width>max_width || fb_height>max_height)
 		NEWGAME_FROM_OSD = 1;
 	else NEWGAME_FROM_OSD = 2;
-/*
-	int width,height;
-	our_target->compute_visible_area(1000,1000,1,ROT0,width,height);
 
-	int viewindex;
-	viewindex = our_target->configured_view("pixel", 0, 1);
-	our_target->set_view(viewindex);
-	if (log_cb)
-		log_cb(RETRO_LOG_INFO,"view(%s)\n",our_target->view_name(viewindex));
-	
-	retro_aspect = (float)width/(float)height;
-*/
 	if(machine.first_screen()!= nullptr)
 		retro_fps = ATTOSECONDS_TO_HZ(machine.first_screen()->refresh_attoseconds());
 
 	if (log_cb)
 		log_cb(RETRO_LOG_DEBUG, "Screen width=%d height=%d, aspect=%f\n", fb_width, fb_height, retro_aspect);
 
-//	NEWGAME_FROM_OSD=1;
 	if (log_cb)
 		log_cb(RETRO_LOG_INFO, "OSD initialization complete\n");
 
-   //retro_switch_to_main_thread();
 }
 
 void retro_osd_interface::update(bool skip_redraw)
@@ -1746,7 +1734,7 @@ void retro_osd_interface::update(bool skip_redraw)
       }
 
       /* make that the size of our target */
-      our_target->set_bounds(fb_width, fb_height);
+      our_target->set_bounds(fb_width, fb_height,retro_aspect/(float)((float)fb_width/(float)fb_height));
 
       /* get the list of primitives for the target at the current size */
 
