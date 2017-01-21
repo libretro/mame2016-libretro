@@ -16,6 +16,7 @@
 /* forward decls / externs / prototypes */
 
 extern const char bare_build_version[];
+extern void retro_finish();
 
 int retro_pause = 0;
 

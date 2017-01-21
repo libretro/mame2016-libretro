@@ -107,6 +107,8 @@ int vertical,orient;
 static bool arcade=FALSE;
 static int FirstTimeUpdate = 1;
 
+extern int RLOOP;
+
 // rom file name and path
 char g_rom_dir[1024];
 char mediaType[10];
@@ -1649,11 +1651,11 @@ void retro_osd_interface::init(running_machine &machine)
 	
 	retro_aspect = (float)width/(float)height;
 */
-	if(machine().first_screen()!= nullptr)
-		retro_fps = ATTOSECONDS_TO_HZ(machine().first_screen()->refresh_attoseconds());
+	if(machine.first_screen()!= nullptr)
+		retro_fps = ATTOSECONDS_TO_HZ(machine.first_screen()->refresh_attoseconds());
 
 	if (log_cb)
-		log_cb(RETRO_LOG_DEBUG, "Screen width=%d height=%d, aspect=%d/%d=%f\n", fb_width, fb_height, width,height, retro_aspect);
+		log_cb(RETRO_LOG_DEBUG, "Screen width=%d height=%d, aspect=%f\n", fb_width, fb_height, retro_aspect);
 
 //	NEWGAME_FROM_OSD=1;
 	if (log_cb)
