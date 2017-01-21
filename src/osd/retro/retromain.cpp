@@ -1649,7 +1649,8 @@ void retro_osd_interface::init(running_machine &machine)
 	
 	retro_aspect = (float)width/(float)height;
 */
-	retro_fps    = ATTOSECONDS_TO_HZ(machine.first_screen()->refresh_attoseconds());
+	if(machine().first_screen()!= nullptr)
+		retro_fps = ATTOSECONDS_TO_HZ(machine().first_screen()->refresh_attoseconds());
 
 	if (log_cb)
 		log_cb(RETRO_LOG_DEBUG, "Screen width=%d height=%d, aspect=%d/%d=%f\n", fb_width, fb_height, width,height, retro_aspect);
