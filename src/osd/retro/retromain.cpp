@@ -1455,12 +1455,34 @@ static int execute_game_cmd(char* path)
 extern "C"
 #endif
 
+#include <fstream>
+#include <string>
+static char CMDFILE[512];
+
+int loadcmdfile(char *argv)
+{
+  std::ifstream cmdfile(argv);
+  std::string cmdstr; 
+  
+  if(cmdfile.is_open()){
+  
+    std::getline(cmdfile, cmdstr);
+    cmdfile.close();
+    
+    sprintf(CMDFILE, "%s", cmdstr.c_str());
+
+    return 1;
+  }
+  
+  return 0;
+}
+
 retro_osd_interface *retro_global_osd;
 
 int mmain(int argc, const char *argv)
 {
-   unsigned i;
-   osd_options options;
+   unsigned i=0;
+   //osd_options options;
    //cli_options MRoptions;
    int result = 0;
 
@@ -1468,6 +1490,22 @@ int mmain(int argc, const char *argv)
 
    strcpy(gameName,argv);
 
+ // handle cmd file 
+   if (strlen(gameName) >= strlen("cmd")){
+           if(!core_stricmp(&gameName[strlen(gameName)-strlen("cmd")], "cmd"))
+                       i=loadcmdfile(gameName);                        
+   }
+   
+   if(i==1)
+   {
+      parse_cmdline(CMDFILE);
+      if (log_cb)
+         log_cb(RETRO_LOG_INFO, "Starting game from command line:%s\n",CMDFILE);
+
+      result = execute_game_cmd(ARGUV[ARGUC-1]);      
+
+   }
+   else
    if(experimental_cmdline)
    {
       parse_cmdline(argv);
