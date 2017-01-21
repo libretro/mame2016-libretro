@@ -317,7 +317,7 @@ void free_machineconfig(){
 		global_free(retro_global_machine);
 		global_free(retro_global_config);
 
-		retro_manager->set_machine(NULL);
+		retro_manager->set_machine(nullptr);
 }
 
 extern void free_man();
@@ -351,7 +351,7 @@ void retro_main_loop()
 			
 			global_free(retro_global_machine);
 			global_free(retro_global_config);
-			retro_manager->set_machine(NULL);
+			retro_manager->set_machine(nullptr);
 
 			printf("exit scope, restart empty driver\n");
 			//FIXME restart empty driver else it crash
