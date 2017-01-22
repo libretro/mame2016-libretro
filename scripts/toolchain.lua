@@ -92,7 +92,9 @@ function toolchain(_buildDir, _subDir)
 
 	location (_buildDir .. "projects/" .. _subDir .. "/".. _ACTION)
 
-	local androidPlatform = "android-14"
+--	local androidPlatform = "android-14"
+	local androidPlatform = "android-19"
+
 	if _OPTIONS["with-android"] then
 		androidPlatform = "android-" .. _OPTIONS["with-android"]
 	elseif _OPTIONS["PLATFORM"]:find("64", -2) then
@@ -774,11 +776,23 @@ toolchainPrefix = "$(MINGW64)/bin/x86_64-w64-mingw32-"
 		targetdir (_buildDir .. "openbsd" .. "/bin/x64/Debug")
 
 	configuration { "android-*" }
-		targetdir (_buildDir .. "android-" .. _OPTIONS["PLATFORM"] .. "/bin")
+--		targetdir (_buildDir .. "android-" .. _OPTIONS["PLATFORM"] .. "/bin")
 		objdir (_buildDir .. "android-" .. _OPTIONS["PLATFORM"] .. "/obj")
+
+		if (os.isfile("$(ANDROID_NDK_ROOT)/sources/cxx-stl/llvm-libc++/libcxx/include/list")) then
+			includedirs {
+				"$(ANDROID_NDK_ROOT)/sources/cxx-stl/llvm-libc++/libcxx/include",
+			}
+		else
+-- path for ndk 13 and above	
+			includedirs {
+				"$(ANDROID_NDK_ROOT)/sources/cxx-stl/llvm-libc++/include",
+			}
+		end
+
 		includedirs {
 			MAME_DIR .. "3rdparty/bgfx/3rdparty/khronos",
-			"$(ANDROID_NDK_ROOT)/sources/cxx-stl/llvm-libc++/libcxx/include",
+--			"$(ANDROID_NDK_ROOT)/sources/cxx-stl/llvm-libc++/libcxx/include",
 			"$(ANDROID_NDK_ROOT)/sources/android/support/include",
 			"$(ANDROID_NDK_ROOT)/sources/android/native_app_glue",
 		}
@@ -797,6 +811,17 @@ toolchainPrefix = "$(MINGW64)/bin/x86_64-w64-mingw32-"
 			"c++_static",
 			"gcc",
 		}
+
+		if (os.isfile("$(ANDROID_NDK_ROOT)/sources/cxx-stl/llvm-libc++/libcxx/include/list")) then
+
+		else
+			links {
+				"c++abi",
+				"unwind",
+				"android_support",
+			}
+		end
+
 		buildoptions {
 			"-fpic",
 			"-ffunction-sections",

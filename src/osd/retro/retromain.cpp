@@ -1453,10 +1453,6 @@ static int execute_game_cmd(char* path)
    return 0;
 }
 
-#ifdef __cplusplus
-extern "C"
-#endif
-
 #include <fstream>
 #include <string>
 static char CMDFILE[512];

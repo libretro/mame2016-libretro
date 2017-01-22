@@ -1065,17 +1065,21 @@ endif
 #-------------------------------------------------
 # android-arm
 #-------------------------------------------------
-
-$(PROJECTDIR_SDL)/$(MAKETYPE)-android-arm/Makefile: makefile android-ndk $(SCRIPTS) $(GENIE)
+$(PROJECTDIR)/$(MAKETYPE)-android-arm/Makefile: makefile android-ndk $(SCRIPTS) $(GENIE)
+#$(PROJECTDIR_SDL)/$(MAKETYPE)-android-arm/Makefile: makefile android-ndk $(SCRIPTS) $(GENIE)
 ifndef ANDROID_NDK_ARM
 	$(error ANDROID_NDK_ARM is not set)
 endif
-	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-arm --gcc_version=3.8.0 --osd=sdl --targetos=android --PLATFORM=arm --NO_USE_MIDI=1 --NO_OPENGL=1 --USE_QTDEBUG=0 --NO_X11=1 --DONT_USE_NETWORK=1 --NOASM=1 $(MAKETYPE)
+	$(SILENT) $(GENIE) $(PARAMS) $(TARGET_PARAMS)  --gcc=android-arm --gcc_version=3.8.0 --targetos=android --PLATFORM=arm --NO_USE_MIDI=1 --NOASM=1 $(MAKETYPE)
+#	$(SILENT) $(GENIE) $(PARAMS) --gcc=android-arm --gcc_version=3.8.0 --osd=sdl --targetos=android --PLATFORM=arm --NO_USE_MIDI=1 --NO_OPENGL=1 --USE_QTDEBUG=0 --NO_X11=1 --DONT_USE_NETWORK=1 --NOASM=1 $(MAKETYPE)
 
 .PHONY: android-arm
-android-arm: generate $(PROJECTDIR_SDL)/$(MAKETYPE)-android-arm/Makefile
-	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR_SDL)/$(MAKETYPE)-android-arm config=$(CONFIG) precompile
-	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR_SDL)/$(MAKETYPE)-android-arm config=$(CONFIG)
+android-arm: generate $(PROJECTDIR)/$(MAKETYPE)-android-arm/Makefile
+	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-android-arm config=$(CONFIG) precompile
+	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/$(MAKETYPE)-android-arm config=$(CONFIG)
+#android-arm: generate $(PROJECTDIR_SDL)/$(MAKETYPE)-android-arm/Makefile
+#	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR_SDL)/$(MAKETYPE)-android-arm config=$(CONFIG) precompile
+#	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR_SDL)/$(MAKETYPE)-android-arm config=$(CONFIG)
 
 #-------------------------------------------------
 # android-arm64

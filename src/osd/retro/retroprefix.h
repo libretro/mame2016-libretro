@@ -14,6 +14,10 @@
 #include <cstdlib>
 #endif
 
+#ifndef UINT64_C
+#define UINT64_C(c) (c ## ULL)
+#endif
+
 //static inline double log2(double x) { return log(x) * M_LOG2E; }
 #undef _C
 #define SDLMAME_ARM 1
