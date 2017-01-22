@@ -811,7 +811,6 @@ toolchainPrefix = "$(MINGW64)/bin/x86_64-w64-mingw32-"
 			"android",
 			"log",
 			"c++_static",
-			"gcc",
 		}
 
 		if (os.isfile(checkndk13)) then
@@ -823,7 +822,11 @@ toolchainPrefix = "$(MINGW64)/bin/x86_64-w64-mingw32-"
 				"android_support",
 			}
 		end
-
+	
+		links {
+			"gcc",
+		}
+	
 		buildoptions {
 			"-fpic",
 			"-ffunction-sections",
