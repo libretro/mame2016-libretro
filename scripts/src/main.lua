@@ -12,12 +12,12 @@
 function mainProject(_target, _subtarget)
 if (_OPTIONS["SOURCES"] == nil) then
 	if (_target == _subtarget) then
-		project (_target)
+		project (_target .. "2016")
 	else
 		if (_subtarget=="mess") then
-			project (_subtarget)
+			project (_subtarget .. "2016")
 		else
-			project (_target .. _subtarget)
+			project (_target .. _subtarget .. "2016")
 		end
 	end
 else
@@ -27,16 +27,16 @@ end
 	kind "ConsoleApp"
 
 	configuration { "android*" }
-		targetprefix "lib"
-		if _OPTIONS["osd"] == "retro" then
-			targetname "mame2016"
-		else
-			targetname "main"
-		end
+--		targetprefix "lib"
+--		if _OPTIONS["osd"] == "retro" then
+--			targetname "mame2016"
+--		else
+--			targetname "main"
+--		end
 		targetextension ".so"
 		linkoptions {
 			"-shared",
-			"-Wl,-soname,libmain.so"
+--			"-Wl,-soname,libmain.so"
 		}
 		links {
 			"EGL",
