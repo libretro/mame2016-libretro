@@ -778,8 +778,10 @@ toolchainPrefix = "$(MINGW64)/bin/x86_64-w64-mingw32-"
 	configuration { "android-*" }
 --		targetdir (_buildDir .. "android-" .. _OPTIONS["PLATFORM"] .. "/bin")
 		objdir (_buildDir .. "android-" .. _OPTIONS["PLATFORM"] .. "/obj")
+	
+		checkndk13 = os.getenv("ANDROID_NDK_ROOT") .. "/sources/cxx-stl/llvm-libc++/libcxx/include/list"
 
-		if (os.isfile("$(ANDROID_NDK_ROOT)/sources/cxx-stl/llvm-libc++/libcxx/include/list")) then
+		if (os.isfile(checkndk13)) then
 			includedirs {
 				"$(ANDROID_NDK_ROOT)/sources/cxx-stl/llvm-libc++/libcxx/include",
 			}
@@ -812,7 +814,7 @@ toolchainPrefix = "$(MINGW64)/bin/x86_64-w64-mingw32-"
 			"gcc",
 		}
 
-		if (os.isfile("$(ANDROID_NDK_ROOT)/sources/cxx-stl/llvm-libc++/libcxx/include/list")) then
+		if (os.isfile(checkndk13)) then
 
 		else
 			links {
