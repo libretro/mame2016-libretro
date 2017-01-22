@@ -29,7 +29,7 @@ end
 	configuration { "android*" }
 		targetprefix "lib"
 		if _OPTIONS["osd"] == "retro" then
-			targetname "mame"
+			targetname "mame2016"
 		else
 			targetname "main"
 		end
