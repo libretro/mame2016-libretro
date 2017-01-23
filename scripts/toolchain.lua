@@ -778,7 +778,7 @@ toolchainPrefix = "$(MINGW64)/bin/x86_64-w64-mingw32-"
 	configuration { "android-*" }
 --		targetdir (_buildDir .. "android-" .. _OPTIONS["PLATFORM"] .. "/bin")
 		objdir (_buildDir .. "android-" .. _OPTIONS["PLATFORM"] .. "/obj")
-	
+if os.getenv("ANDROID_NDK_ROOT") then	
 		checkndk13 = os.getenv("ANDROID_NDK_ROOT") .. "/sources/cxx-stl/llvm-libc++/libcxx/include/list"
 
 		if (os.isfile(checkndk13)) then
@@ -791,7 +791,7 @@ toolchainPrefix = "$(MINGW64)/bin/x86_64-w64-mingw32-"
 				"$(ANDROID_NDK_ROOT)/sources/cxx-stl/llvm-libc++/include",
 			}
 		end
-
+end
 		includedirs {
 			MAME_DIR .. "3rdparty/bgfx/3rdparty/khronos",
 --			"$(ANDROID_NDK_ROOT)/sources/cxx-stl/llvm-libc++/libcxx/include",
@@ -812,7 +812,8 @@ toolchainPrefix = "$(MINGW64)/bin/x86_64-w64-mingw32-"
 			"log",
 			"c++_static",
 		}
-
+	
+if os.getenv("ANDROID_NDK_ROOT") then
 		if (os.isfile(checkndk13)) then
 
 		else
@@ -822,7 +823,7 @@ toolchainPrefix = "$(MINGW64)/bin/x86_64-w64-mingw32-"
 				"android_support",
 			}
 		end
-	
+end	
 		links {
 			"gcc",
 		}
