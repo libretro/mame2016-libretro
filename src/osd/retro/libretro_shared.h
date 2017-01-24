@@ -65,7 +65,7 @@ extern float retro_aspect;
 extern float retro_fps;
 extern float view_aspect;
 
-static const char core[] = "mame";
+static const char core[] = "mame2016";
 
 /* libretro callbacks */
 extern retro_log_printf_t log_cb;
