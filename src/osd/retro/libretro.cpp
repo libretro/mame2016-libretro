@@ -18,6 +18,7 @@
 extern const char bare_build_version[];
 extern void retro_finish();
 
+bool retro_load_ok  = false;
 int retro_pause = 0;
 
 int fb_width   = 640;
@@ -497,7 +498,7 @@ void retro_init (void)
 void retro_deinit(void)
 {
    printf("RETRO DEINIT\n");
-   retro_finish();
+   if(retro_load_ok)retro_finish();
 }
 
 void retro_reset (void)
@@ -521,6 +522,7 @@ void retro_run (void)
       mfirst++;
       mmain(1,RPATH);
       printf("MAIN FIRST\n");
+      retro_load_ok=true;
       return;
    }
 
