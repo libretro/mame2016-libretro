@@ -9,7 +9,11 @@
 #if defined(__ANDROID__)
 #include <math.h>
 #include <stdarg.h>
-static inline double log2(double x) { return log(x) * M_LOG2E; }
+#ifdef __cplusplus
+#include <cstddef>
+#include <cstdlib>
+#endif
+//static inline double log2(double x) { return log(x) * M_LOG2E; }
 #undef _C
 #define SDLMAME_ARM 1
 #undef PAGE_MASK

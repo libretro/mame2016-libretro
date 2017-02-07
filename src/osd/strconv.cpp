@@ -129,6 +129,7 @@ error:
 }
 
 #else
+#if !defined(ANDROID) && !defined(__ANDROID__)
 #include "unicode.h"
 //============================================================
 //  osd_uchar_from_osdchar
@@ -146,5 +147,5 @@ int osd_uchar_from_osdchar(unicode_char *uchar, const char *osdchar, size_t coun
 
 	return count;
 }
-
+#endif
 #endif

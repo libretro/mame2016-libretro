@@ -61,6 +61,9 @@ public:
 	datfile_manager &datfile() const { assert(m_datfile != nullptr); return *m_datfile; }
 	inifile_manager &inifile() const { assert(m_inifile != nullptr); return *m_inifile; }
 	favorite_manager &favorite() const { assert(m_favorite != nullptr); return *m_favorite; }
+#ifdef __LIBRETRO__
+void mmchange();
+#endif
 private:
 	std::unique_ptr<plugin_options> m_plugins;              // pointer to plugin options
 	lua_engine *            m_lua;

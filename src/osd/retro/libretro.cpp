@@ -16,16 +16,18 @@
 /* forward decls / externs / prototypes */
 
 extern const char bare_build_version[];
-
+bool retro_load_ok  = false;
 int retro_pause = 0;
 
-static cothread_t mainThread;
-static cothread_t emuThread;
+int fb_width   = 640;
+int fb_height  = 480;
+int fb_pitch   = 640;
+int max_width   = 640;
+int max_height  = 480;
 
-int fb_width   = 320;
-int fb_height  = 240;
-int fb_pitch   = 1600;
-float retro_aspect = 0;
+float view_aspect=1.0f; // aspect for current view
+float retro_aspect = (float)4.0f/(float)3.0f;
+
 float retro_fps = 60.0;
 int SHIFTON           = -1;
 int NEWGAME_FROM_OSD  = 0;
@@ -386,9 +388,18 @@ void retro_get_system_info(struct retro_system_info *info)
 
    info->library_name     = "MAME";
    info->library_version  = bare_build_version;
-   info->valid_extensions = "zip|chd|7z";
+   info->valid_extensions = "zip|chd|7z|cmd";
    info->need_fullpath    = true;
    info->block_extract    = true;
+}
+
+void update_geometry()
+{
+   struct retro_system_av_info system_av_info;
+   system_av_info.geometry.base_width = fb_width;
+   system_av_info.geometry.base_height = fb_height;
+   system_av_info.geometry.aspect_ratio = retro_aspect;
+   environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &system_av_info);
 }
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
@@ -397,12 +408,14 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
 
    info->geometry.base_width  = fb_width;
    info->geometry.base_height = fb_height;
+   info->geometry.max_width  = fb_width;
+   info->geometry.max_height = fb_height;
 
    if (log_cb)
       log_cb(RETRO_LOG_INFO, "AV_INFO: width=%d height=%d\n",info->geometry.base_width,info->geometry.base_height);
 
-   info->geometry.max_width   = 1600;
-   info->geometry.max_height  = 1200;
+   max_width   = fb_width;
+   max_height  = fb_height;
 
    if (log_cb)
       log_cb(RETRO_LOG_INFO, "AV_INFO: max_width=%d max_height=%d\n",info->geometry.max_width,info->geometry.max_height);
@@ -418,26 +431,6 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    if (log_cb)
       log_cb(RETRO_LOG_INFO, "AV_INFO: fps = %f sample_rate = %f\n",info->timing.fps,info->timing.sample_rate);
 
-}
-
-static void retro_wrap_emulator(void)
-{
-   mmain(1,RPATH);
-
-   retro_pause = -1;
-
-   environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, 0);
-
-   /* Were done here. */
-   co_switch(mainThread);
-
-   /* Dead emulator, but libco says not to return. */
-   while(true)
-   {
-      if (log_cb)
-         log_cb(RETRO_LOG_ERROR, "Running a dead emulator.\n");
-      co_switch(mainThread);
-   }
 }
 
 void retro_init (void)
@@ -500,20 +493,16 @@ void retro_init (void)
       exit(0);
    }
 
-   if(!emuThread && !mainThread)
-   {
-      mainThread = co_active();
-      emuThread  = co_create(65536 * sizeof(void*), retro_wrap_emulator);
-   }
 }
+
+int RLOOP=1;
+extern void retro_main_loop();
+extern void retro_finish();
 
 void retro_deinit(void)
 {
-   if (emuThread)
-   {
-      co_delete(emuThread);
-      emuThread = 0;
-   }
+    printf("RETRO DEINIT\n");
+    if(retro_load_ok)retro_finish();
 }
 
 void retro_reset (void)
@@ -522,11 +511,21 @@ void retro_reset (void)
 }
 
 void retro_run (void)
-{
+{  
+   static int mfirst=1;
    bool updated = false;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
       check_variables();
+
+   if(mfirst==1)
+   {
+      mfirst++;
+      mmain(1,RPATH);
+      printf("MAIN FIRST\n");
+      retro_load_ok=true;
+      return;
+   }
 
    if (NEWGAME_FROM_OSD == 1)
    {
@@ -542,8 +541,17 @@ void retro_run (void)
 
       NEWGAME_FROM_OSD=0;
    }
+   else if (NEWGAME_FROM_OSD == 2){
+      update_geometry();
+      printf("w:%d h:%d a:%f\n",fb_width,fb_height,retro_aspect);
+      NEWGAME_FROM_OSD=0;
+   }
+
+   if(retro_pause==0)retro_main_loop();
 
    input_poll_cb();
+
+   RLOOP=1;
 
    process_mouse_state();
    process_keyboard_state();
@@ -558,7 +566,6 @@ void retro_run (void)
       video_cb(NULL, fb_width, fb_height, fb_pitch << LOG_PIXEL_BYTES);
 #endif
 
-   co_switch(emuThread);
 }
 
 bool retro_load_game(const struct retro_game_info *info)
@@ -594,8 +601,6 @@ bool retro_load_game(const struct retro_game_info *info)
     extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
     strcpy(RPATH,info->path);
 
-    co_switch(emuThread);
-
     return true;
 }
 
@@ -604,7 +609,6 @@ void retro_unload_game(void)
    if (retro_pause == 0)
    {
       retro_pause = -1;
-      co_switch(emuThread);
    }
 }
 
@@ -620,11 +624,6 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
 void retro_cheat_reset(void) {}
 void retro_cheat_set(unsigned unused, bool unused1, const char* unused2) {}
 void retro_set_controller_port_device(unsigned in_port, unsigned device) {}
-
-void retro_switch_to_main_thread(void)
-{
-	co_switch(mainThread);
-}
 
 void *retro_get_fb_ptr(void)
 {

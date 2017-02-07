@@ -1,8 +1,6 @@
 #ifndef _LIBRETRO_SHARED_H
 #define _LIBRETRO_SHARED_H
 
-#include <libco.h>
-
 #ifndef MAX_BUTTONS
 #define MAX_BUTTONS 16
 #endif
@@ -22,6 +20,7 @@
 #endif
 
 extern int NEWGAME_FROM_OSD;
+extern int RLOOP;
 
 extern char g_rom_dir[1024];
 extern const char *retro_save_directory;
@@ -58,19 +57,20 @@ extern bool nobuffer_enable;
 
 extern int mame_reset;
 
+extern int max_width;
+extern int max_height;
 extern int fb_width;
 extern int fb_height;
 extern int fb_pitch;
 extern float retro_aspect;
 extern float retro_fps;
+extern float view_aspect;
 
-static const char core[] = "mame";
+static const char core[] = "mame2016";
 
 /* libretro callbacks */
 extern retro_log_printf_t log_cb;
 extern retro_input_state_t input_state_cb;
-
-void retro_switch_to_main_thread(void);
 
 void retro_frame_draw_enable(bool enable);
 

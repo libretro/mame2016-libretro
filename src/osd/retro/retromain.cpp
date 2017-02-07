@@ -871,6 +871,14 @@ static int parsePath(char* path, char* gamePath, char* gameName)
          if (path[i] == '.')
             dotIndex = i;
    }
+
+   if (slashIndex < 0 && dotIndex >0){
+	strcpy(gamePath, ".\0");
+   	strncpy(gameName, path , dotIndex );
+   	gameName[dotIndex] = 0;
+   	return 1;
+   }
+
    if (slashIndex < 0 || dotIndex < 0)
       return 0;
 
@@ -1447,19 +1455,61 @@ static int execute_game_cmd(char* path)
    return 0;
 }
 
-#ifdef __cplusplus
-extern "C"
-#endif
+//#ifdef __cplusplus
+//extern "C"
+//#endif
+
+#include <fstream>
+#include <string>
+static char CMDFILE[512];
+
+int loadcmdfile(char *argv)
+{
+  std::ifstream cmdfile(argv);
+  std::string cmdstr; 
+  
+  if(cmdfile.is_open()){
+  
+    std::getline(cmdfile, cmdstr);
+    cmdfile.close();
+    
+    sprintf(CMDFILE, "%s", cmdstr.c_str());
+
+    return 1;
+  }
+  
+  return 0;
+}
+
+retro_osd_interface *retro_global_osd;
 
 int mmain(int argc, const char *argv)
 {
-   unsigned i;
-   osd_options options;
+   unsigned i=0;
+   //osd_options options;
    //cli_options MRoptions;
    int result = 0;
 
+   static osd_options retro_global_options;
+
    strcpy(gameName,argv);
 
+ // handle cmd file 
+   if (strlen(gameName) >= strlen("cmd")){
+           if(!core_stricmp(&gameName[strlen(gameName)-strlen("cmd")], "cmd"))
+                       i=loadcmdfile(gameName);                        
+   }
+   
+   if(i==1)
+   {
+      parse_cmdline(CMDFILE);
+      if (log_cb)
+         log_cb(RETRO_LOG_INFO, "Starting game from command line:%s\n",CMDFILE);
+
+      result = execute_game_cmd(ARGUV[ARGUC-1]);      
+
+   }
+   else
    if(experimental_cmdline)
    {
       parse_cmdline(argv);
@@ -1488,12 +1538,15 @@ int mmain(int argc, const char *argv)
          log_cb(RETRO_LOG_DEBUG, " %s\n",XARGV[i]);
    }
 
-   retro_osd_interface osd(options);
-   osd.register_options();
+  retro_global_osd= global_alloc(retro_osd_interface(retro_global_options));
+  retro_global_osd->register_options();
+
+  // retro_osd_interface osd(options);
+  // osd.register_options();
 
   // cli_frontend frontend(options, osd);
-   result =  emulator_info::start_frontend(options, osd,PARAMCOUNT, ( char **)xargv_cmd);
-
+   //result =  emulator_info::start_frontend(options, osd,PARAMCOUNT, ( char **)xargv_cmd);
+  result =  emulator_info::start_frontend(retro_global_options, *retro_global_osd,PARAMCOUNT, ( char **)xargv_cmd);
 
    xargv_cmd[PARAMCOUNT - 2] = NULL;
 
@@ -1577,23 +1630,34 @@ void retro_osd_interface::init(running_machine &machine)
     /* initialize the subsystems */
 	osd_common_t::init_subsystems();
 
+	render_layer_config temp=our_target->layer_config();
+	retro_aspect =our_target->current_view()->effective_aspect(temp);
+        if(our_target->orientation() & ORIENTATION_SWAP_XY)retro_aspect=1.0/retro_aspect;
+
 	our_target->compute_minimum_size(fb_width, fb_height);
 	fb_pitch = fb_width;
 
+	if(fb_width>max_width || fb_height>max_height)
+		NEWGAME_FROM_OSD = 1;
+	else NEWGAME_FROM_OSD = 2;
+/*
 	int width,height;
 	our_target->compute_visible_area(1000,1000,1,ROT0,width,height);
 
 	retro_aspect = (float)width/(float)height;
-	retro_fps    = ATTOSECONDS_TO_HZ(machine.first_screen()->refresh_attoseconds());
+*/
+	if(machine.first_screen()!= nullptr)
+		retro_fps    = ATTOSECONDS_TO_HZ(machine.first_screen()->refresh_attoseconds());
 
 	if (log_cb)
-		log_cb(RETRO_LOG_DEBUG, "Screen width=%d height=%d, aspect=%d/%d=%f\n", fb_width, fb_height, width,height, retro_aspect);
+		log_cb(RETRO_LOG_DEBUG, "Screen width=%d height=%d, aspect=%f\n", fb_width, fb_height,  retro_aspect);
 
-	NEWGAME_FROM_OSD=1;
+	//NEWGAME_FROM_OSD=1;
+
 	if (log_cb)
 		log_cb(RETRO_LOG_INFO, "OSD initialization complete\n");
 
-   retro_switch_to_main_thread();
+   //retro_switch_to_main_thread();
 }
 
 void retro_osd_interface::update(bool skip_redraw)
@@ -1605,14 +1669,14 @@ void retro_osd_interface::update(bool skip_redraw)
       mame_reset = -1;
    }
 
-	if(retro_pause == -1)
+   if(retro_pause == -1)
    {
-		machine().schedule_exit();
-		return;
-	}
+	machine().schedule_exit();
+	return;
+   }
 
-	if (FirstTimeUpdate == 1)
-		skip_redraw = 0; //force redraw to make sure the video texture is created
+   if (FirstTimeUpdate == 1)
+	skip_redraw = 0; //force redraw to make sure the video texture is created
 
    if (!skip_redraw)
    {
@@ -1622,12 +1686,18 @@ void retro_osd_interface::update(bool skip_redraw)
 
       /* get the minimum width/height for the current layout */
 
-      if (alternate_renderer==false)
-         our_target->compute_minimum_size(minwidth, minheight);
+ //     if (alternate_renderer==false)
+  //       our_target->compute_minimum_size(minwidth, minheight);
+      if (alternate_renderer==false){
+		render_layer_config temp=our_target->layer_config();
+		view_aspect =our_target->current_view()->effective_aspect(temp);
+		if(our_target->orientation() & ORIENTATION_SWAP_XY)view_aspect=1.0f/view_aspect;
+	        our_target->compute_minimum_size(minwidth, minheight);
+      }
       else
       {
-         minwidth  = 1600;
-         minheight = 1200;
+         minwidth  = max_width;
+         minheight = max_height;
       }
 
       if (FirstTimeUpdate == 1)
@@ -1648,21 +1718,29 @@ void retro_osd_interface::update(bool skip_redraw)
          gamRot = (ROT90  == orient) ? 3 : gamRot;
       }
 
-      if (minwidth != fb_width || minheight != fb_height || minwidth != fb_pitch)
+      if (minwidth != fb_width || minheight != fb_height || minwidth != fb_pitch || view_aspect!=retro_aspect)
       {
          fb_width  = minwidth;
          fb_height = minheight;
          fb_pitch  = minwidth;
+	 render_layer_config temp=our_target->layer_config();
+	 retro_aspect =our_target->current_view()->effective_aspect(temp);
+	 if(our_target->orientation() & ORIENTATION_SWAP_XY)retro_aspect=1.0/retro_aspect;
+	 view_aspect =retro_aspect;
+
+	 if(fb_width>max_width || fb_height>max_height)
+ 		NEWGAME_FROM_OSD = 1;
+	 else NEWGAME_FROM_OSD = 2;
       }
 
       if(alternate_renderer)
       {
-         fb_width  = fb_pitch = 1600;
-         fb_height = 1200;
+         fb_width  = fb_pitch = max_width;
+         fb_height = max_height;
       }
 
       /* make that the size of our target */
-      our_target->set_bounds(fb_width, fb_height);
+      our_target->set_bounds(fb_width, fb_height,retro_aspect/(float)((float)fb_width/(float)fb_height));
 
       /* get the list of primitives for the target at the current size */
 
@@ -1694,7 +1772,8 @@ void retro_osd_interface::update(bool skip_redraw)
 		ui_ipt_pushchar=-1;
 	}
 
-   retro_switch_to_main_thread();
+  // retro_switch_to_main_thread();
+  RLOOP=0;
 }
 
 //============================================================

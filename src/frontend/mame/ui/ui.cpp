@@ -362,10 +362,9 @@ void mame_ui_manager::display_startup_screens(bool first_time)
 	if (!first_time || (str > 0 && str < 60*5) || &machine().system() == &GAME_NAME(___empty) || (machine().debug_flags & DEBUG_FLAG_ENABLED) != 0)
 		show_gameinfo = show_warnings = show_mandatory_fileman = FALSE;
 
-	#if defined(EMSCRIPTEN)
-	// also disable for the JavaScript port since the startup screens do not run asynchronously
-	show_gameinfo = show_warnings = FALSE;
-	#endif
+	#if defined(EMSCRIPTEN) || defined(__LIBRETRO__) //LIBRETRO to early ,freeze without libco.
+ 		show_gameinfo = show_warnings = FALSE;
+ 	#endif
 
 #if 0
 	#ifdef OSD_RETRO

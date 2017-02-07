@@ -243,7 +243,9 @@ dependency {
 }
 
 custombuildtask {
-	{ MAME_DIR .. "scripts/font/NotoSans-Bold.bdc", GEN_DIR .. "emu/uismall.fh",     {  MAME_DIR .. "scripts/build/file2str.py" }, {"@echo Converting NotoSans-Bold.bdc...", PYTHON .. " $(1) $(<) $(@) font_uismall UINT8" }},
+	{ MAME_DIR .. "src/osd/retro/temp.bdc", GEN_DIR .. "emu/uismall.fh",     {  MAME_DIR .. "scripts/build/file2str.py" }, {"@echo Converting ui.bdc...", PYTHON .. " $(1) $(<) $(@) font_uismall UINT8" }},
+
+--	{ MAME_DIR .. "scripts/font/NotoSans-Bold.bdc", GEN_DIR .. "emu/uismall.fh",     {  MAME_DIR .. "scripts/build/file2str.py" }, {"@echo Converting NotoSans-Bold.bdc...", PYTHON .. " $(1) $(<) $(@) font_uismall UINT8" }},
 }
 
 custombuildtask {
