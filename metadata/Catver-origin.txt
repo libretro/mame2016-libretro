@@ -1,0 +1,28 @@
+--- CLASSIFICATION FILES FOR MAME ---
+
+This project is born and is based on the pre-existen catlist, maintained by Triggerfin, on http://www.mameworld.net/catlist. It is in NO WAY intended to replace this project, it is limited to carry it on until Triggerfin finds the time and the way to update his procedures, and update all his files.
+
+All updates are published on http://www.progettoemma.net/?catlist and are maintained by me, SWOS and Scuore
+
+The project is composed by 4 files: 
+- CAT32: Game classifications to be used in MAME32: unpack all files in the FOLDER directory of your mame32 (or compatible emu) folder, run your emulator and you will find the classification in the folders column in the left.
+- DELUXE32: detailed classification, for mame32, classifying the games by genre and then by cathegory.
+- CATVER: classification by cathegory and version, compatible with many frontends, eg mamewah.
+- GENREV: classification by genre and version, compatible with many frontends, eg mamewah.
+
+To notify mistakes, doubts, advices or anything else, please contact me on www.progettoemma.net/forum
+
+
+--- FILES DI CLASSIFICAZIONE PER MAME ---
+
+Questo progetto è nato e si sviluppa sulle basi del pre-esistente catlist, curato da Triggerfin, su http://www.mameworld.net/catlist. Non intende in alcun modo sostituirsi a quel progetto, ma si limita a portelo avanti finchè Triggerfin non troverà il tempo ed il modo di riprendere con le sue procedure ad aggiornare i files.
+
+Gli aggiornamenti vengono pubblicati su http://www.progettoemma.net/?catlist e sono mantenuti aggiornati grazie al contributo mio, di SWOS e di Scuore
+
+Il progetto di compone di 4 files:
+- CAT32: Classificazioni dei giochi da utilizzare con MAME32: scompattate i files nella cartella FOLDER di mame32, avviate mame32 (o compatibile) per trovare nelal colonna "folders" la suddivisione
+- DELUXE32: classificazione dettagliata, sempre per mame32, che suddivide i giochi per genere e quindi per categoria
+- CATVER: suddivisione per categoria e per versione, in formato compatibile con vari frontend, come ad esempio mamewah
+- GENREV: suddivisione per genere e per versione, in formato compatibile con vari frontend, come ad esempio mamewah
+
+Per segnalare errori, dubbi, consigli o altro, contattatemi sul forum www.progettoemma.ne/forum
