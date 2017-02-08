@@ -129,7 +129,7 @@ error:
 }
 
 #else
-#if !defined(ANDROID) && !defined(__ANDROID__)
+#if !defined(ANDROID) && !defined(__ANDROID__)
 #include "unicode.h"
 //============================================================
 //  osd_uchar_from_osdchar
