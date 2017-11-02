@@ -828,6 +828,18 @@ ROM_START( dfkbl )
 	ROM_LOAD16_WORD_SWAP( "u24", 0x400000, 0x400000, CRC(31f9eb0a) SHA1(322158779e969bb321241065dd49c1167b91ff6c) )
 ROM_END
 
+ROM_START( akatana )
+	ROM_REGION( 0x400000, "maincpu", ROMREGION_ERASEFF)
+	ROM_LOAD16_WORD_SWAP( "u4", 0x000000, 0x400000, CRC(613fd380) SHA1(6e28480eef3b483d00b42d811a9d2c7fa1097924) ) // (2010/ 8/13 MASTER VER.)
+
+	ROM_REGION( 0x8400000, "game", ROMREGION_ERASEFF)
+	ROM_LOAD( "u2", 0x000000, 0x8400000, CRC(89a2e1a5) SHA1(e6f4ec974406283665697fdd52bd606d0337dd11) )
+
+	ROM_REGION( 0x800000, "ymz770", ROMREGION_ERASEFF)
+	ROM_LOAD16_WORD_SWAP( "u23", 0x000000, 0x400000, CRC(34a67e24) SHA1(78a7e82123b86311f1116a80c39f147b8b695549) )
+	ROM_LOAD16_WORD_SWAP( "u24", 0x400000, 0x400000, CRC(10760fed) SHA1(b70f4506c00f3901ff38f5efd4b897af1afc7a0c) )
+ROM_END
+
 READ64_MEMBER( cv1k_state::speedup_r )
 {
 	if (m_maincpu->pc()== m_idlepc ) m_maincpu->spin_until_time( attotime::from_usec(10));
@@ -936,6 +948,9 @@ GAME( 2008, ddpdfk10,   ddpdfk,   cv1k_d, cv1k, cv1k_state, dpddfk,    ROT270, "
 
 // CA019B Do-Don-Pachi Dai-Fukkatsu Black Label
 GAME( 2010, dfkbl,      0,        cv1k_d, cv1k, cv1k_state, dpddfk,    ROT270, "Cave (AMI license)", "DoDonPachi Dai-Fukkatsu Black Label (2010/1/18 BLACK LABEL)",     0 )
+
+// CA021  Akai Katana
+GAME( 2010, akatana,    0,        cv1k_d, cv1k, cv1k_state, dpddfk,    ROT0,   "Cave (AMI license)", "Akai Katana (2010/ 8/13 MASTER VER.)",     0 )
 
 // CMDL01 Medal Mahjong Moukari Bancho
 GAME( 2007, mmmbanc,    0,        cv1k,   cv1k, cv1k_state, pinkswts,  ROT0,   "Cave (AMI license)", "Medal Mahjong Moukari Bancho (2007/06/05 MASTER VER.)",            MACHINE_NOT_WORKING )
