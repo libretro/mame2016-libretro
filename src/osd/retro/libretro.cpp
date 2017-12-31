@@ -547,15 +547,15 @@ void retro_run (void)
       NEWGAME_FROM_OSD=0;
    }
 
-   if(retro_pause==0)retro_main_loop();
-
    input_poll_cb();
-
-   RLOOP=1;
 
    process_mouse_state();
    process_keyboard_state();
    process_joypad_state();
+
+   if(retro_pause==0)retro_main_loop();
+
+   RLOOP=1;
 
 #ifdef HAVE_GL
    do_glflush();
