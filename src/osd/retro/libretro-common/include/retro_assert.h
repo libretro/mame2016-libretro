@@ -1,7 +1,7 @@
 /* Copyright  (C) 2010-2018 The RetroArch team
  *
  * ---------------------------------------------------------------------------------------
- * The following license statement only applies to this file (libco.h).
+ * The following license statement only applies to this file (retro_assert.h).
  * ---------------------------------------------------------------------------------------
  *
  * Permission is hereby granted, free of charge,
@@ -20,60 +20,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef LIBCO_H
-#define LIBCO_H
+#ifndef __RETRO_ASSERT_H
+#define __RETRO_ASSERT_H
 
-#include <retro_common_api.h>
+#include <assert.h>
 
-#ifdef LIBCO_C
-  #ifdef LIBCO_MP
-    #define thread_local __thread
-  #else
-    #define thread_local
-  #endif
+#ifdef RARCH_INTERNAL
+#define retro_assert(cond) do { \
+   if (!(cond)) { printf("Assertion failed at %s:%d.\n", __FILE__, __LINE__); abort(); } \
+} while(0)
+#else
+#define retro_assert(cond) assert(cond)
 #endif
 
-RETRO_BEGIN_DECLS
-
-typedef void* cothread_t;
-
-/**
- * co_active:
- *
- * Gets the currently active context.
- *
- * Returns: active context.
- **/
-cothread_t co_active(void);
-
-/**
- * co_create:
- * @int                : stack size
- * @funcptr            : thread entry function callback
- *
- * Create a co_thread.
- *
- * Returns: cothread if successful, otherwise NULL.
- */
-cothread_t co_create(unsigned int, void (*)(void));
-
-/**
- * co_delete:
- * @cothread           : cothread object
- *
- * Frees a co_thread.
- */
-void co_delete(cothread_t cothread);
-
-/**
- * co_switch:
- * @cothread           : cothread object to switch to
- *
- * Do a context switch to @cothread.
- */
-void co_switch(cothread_t cothread);
-
-RETRO_END_DECLS
-
-/* ifndef LIBCO_H */
 #endif

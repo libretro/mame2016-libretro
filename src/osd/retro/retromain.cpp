@@ -9,7 +9,7 @@
 #include "uiinput.h"
 #include "drivenum.h"
 
-#include "libretro.h"
+#include <libretro.h>
 #include "options.h"
 #include "osdepend.h"
 #include "modules/lib/osdobj_common.h"

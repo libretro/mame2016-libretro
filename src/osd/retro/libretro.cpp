@@ -10,7 +10,7 @@
 #include "uiinput.h"
 #include "drivenum.h"
 
-#include "libretro.h"
+#include <libretro.h>
 #include "libretro_shared.h"
 
 /* forward decls / externs / prototypes */
