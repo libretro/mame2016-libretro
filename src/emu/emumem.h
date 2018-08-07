@@ -730,6 +730,7 @@ public:
 	const tagged_list<memory_bank> &banks() const { return m_banklist; }
 	const tagged_list<memory_region> &regions() const { return m_regionlist; }
 	const tagged_list<memory_share> &shares() const { return m_sharelist; }
+	const simple_list<address_space> &spaces() const { return m_spacelist; }
 
 	// dump the internal memory tables to the given file
 	void dump(FILE *file);
