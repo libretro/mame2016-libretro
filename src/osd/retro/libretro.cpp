@@ -4,6 +4,7 @@
 
 #include "osdepend.h"
 
+#include "../frontend/mame/mame.h"
 #include "emu.h"
 #include "render.h"
 #include "ui/uimain.h"
@@ -618,8 +619,30 @@ bool retro_serialize(void *data, size_t size) { return false; }
 bool retro_unserialize(const void * data, size_t size) { return false; }
 
 unsigned retro_get_region (void) { return RETRO_REGION_NTSC; }
-void *retro_get_memory_data(unsigned type) { return 0; }
-size_t retro_get_memory_size(unsigned type) { return 0; }
+void *retro_get_memory_data(unsigned type)
+{
+	if ( type == RETRO_MEMORY_SYSTEM_RAM && mame_machine_manager::instance() != NULL &&
+			mame_machine_manager::instance()->machine() != NULL )
+	{
+		for (memory_region &region : mame_machine_manager::instance()->machine()->memory().regions())
+		{
+			return region.base() ;
+		}
+	}
+	return 0;
+}
+size_t retro_get_memory_size(unsigned type)
+{
+	if ( type == RETRO_MEMORY_SYSTEM_RAM && mame_machine_manager::instance() != NULL &&
+			mame_machine_manager::instance()->machine() != NULL )
+	{
+		for (memory_region &region : mame_machine_manager::instance()->machine()->memory().regions())
+		{
+			return region.bytes() ;
+		}
+	}
+	return 0;
+}
 bool retro_load_game_special(unsigned game_type, const struct retro_game_info *info, size_t num_info) {return false; }
 void retro_cheat_reset(void) {}
 void retro_cheat_set(unsigned unused, bool unused1, const char* unused2) {}
