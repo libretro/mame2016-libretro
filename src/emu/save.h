@@ -156,6 +156,9 @@ public:
 	static save_error check_file(running_machine &machine, emu_file &file, const char *gamename, void (CLIB_DECL *errormsg)(const char *fmt, ...));
 	save_error write_file(emu_file &file);
 	save_error read_file(emu_file &file);
+	save_error write_data(void *data, size_t size);
+	save_error read_data(void *data, size_t size);
+	INT32 state_size() ;
 
 private:
 	// internal helpers
@@ -182,6 +185,7 @@ private:
 	running_machine &       m_machine;              // reference to our machine
 	bool                    m_reg_allowed;          // are registrations allowed?
 	int                     m_illegal_regs;         // number of illegal registrations
+	int                     m_state_size;           // the buffer size required to store save-state data
 
 	simple_list<state_entry> m_entry_list;          // list of reigstered entries
 	simple_list<state_callback> m_presave_list;     // list of pre-save functions
