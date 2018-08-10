@@ -62,7 +62,8 @@ enum
 save_manager::save_manager(running_machine &machine)
 	: m_machine(machine),
 		m_reg_allowed(true),
-		m_illegal_regs(0)
+		m_illegal_regs(0),
+		m_state_size(-1)
 {
 }
 
@@ -318,6 +319,118 @@ save_error save_manager::write_file(emu_file &file)
 			return STATERR_WRITE_ERROR;
 	}
 	return STATERR_NONE;
+}
+
+//-------------------------------------------------
+//  write_data - writes the data to buffer
+//-------------------------------------------------
+
+save_error save_manager::write_data(void *data, size_t size)
+{
+	unsigned char *pos = (unsigned char*)data ;
+
+	// if we have illegal registrations, return an error
+	if (m_illegal_regs > 0)
+		return STATERR_ILLEGAL_REGISTRATIONS;
+
+	if ( data == NULL )
+		return STATERR_WRITE_ERROR ;
+
+	// generate the header
+	UINT8 header[HEADER_SIZE];
+	memcpy(&header[0], STATE_MAGIC_NUM, 8);
+	header[8] = SAVE_VERSION;
+	header[9] = NATIVE_ENDIAN_VALUE_LE_BE(0, SS_MSB_FIRST);
+	strncpy((char *)&header[0x0a], machine().system().name, 0x1c - 0x0a);
+	UINT32 sig = signature();
+	*(UINT32 *)&header[0x1c] = LITTLE_ENDIANIZE_INT32(sig);
+
+	memcpy(pos, header, sizeof(header)) ;
+	pos += sizeof(header) ;
+
+	// call the pre-save functions
+	dispatch_presave();
+
+	// then write all the data
+	for (state_entry &entry : m_entry_list)
+	{
+		UINT32 totalsize = entry.m_typesize * entry.m_typecount;
+		memcpy(pos, entry.m_data, totalsize) ;
+		pos += totalsize ;
+	}
+	return STATERR_NONE;
+}
+
+//-------------------------------------------------
+//  read_data - read the data from a buffer
+//-------------------------------------------------
+
+save_error save_manager::read_data(void *data, size_t size)
+{
+	unsigned char *pos = (unsigned char*)data ;
+
+	// if we have illegal registrations, return an error
+	if (m_illegal_regs > 0)
+		return STATERR_ILLEGAL_REGISTRATIONS;
+
+	if ( data == NULL )
+		return STATERR_READ_ERROR ;
+
+	UINT8 header[HEADER_SIZE];
+	memcpy(header, pos, sizeof(header)) ;
+	pos += sizeof(header) ;
+
+	// verify the header and report an error if it doesn't match
+	UINT32 sig = signature();
+	if (validate_header(header, machine().system().name, sig, nullptr, "Error: ")  != STATERR_NONE)
+		return STATERR_INVALID_HEADER;
+
+	// determine whether or not to flip the data when done
+	bool flip = NATIVE_ENDIAN_VALUE_LE_BE((header[9] & SS_MSB_FIRST) != 0, (header[9] & SS_MSB_FIRST) == 0);
+
+	// read all the data, flipping if necessary
+	for (state_entry &entry : m_entry_list)
+	{
+		UINT32 totalsize = entry.m_typesize * entry.m_typecount;
+		memcpy(entry.m_data, pos, totalsize) ;
+		pos += totalsize ;
+
+		// handle flipping
+		if (flip)
+			entry.flip_data();
+	}
+
+	// call the post-load functions
+	dispatch_postload();
+
+	return STATERR_NONE;
+}
+
+//-------------------------------------------------------------------
+//  state_size - calculate the buffer size needed to store state data
+//-------------------------------------------------------------------
+
+INT32 save_manager::state_size()
+{
+	UINT8 header[HEADER_SIZE];
+
+	// if we have illegal registrations, return an error
+	if (m_illegal_regs > 0)
+		return -1 ;
+
+	if ( m_state_size != -1 )
+		return m_state_size ;
+
+	m_state_size = sizeof(header) ;
+
+	// call the pre-save functions
+	dispatch_presave();
+
+	// then calculate size
+	for (state_entry &entry : m_entry_list)
+		m_state_size += ( entry.m_typesize * entry.m_typecount );
+
+	return m_state_size ;
 }
 
 

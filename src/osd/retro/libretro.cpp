@@ -6,6 +6,7 @@
 
 #include "../frontend/mame/mame.h"
 #include "emu.h"
+#include "emuopts.h"
 #include "render.h"
 #include "ui/uimain.h"
 #include "uiinput.h"
@@ -607,6 +608,11 @@ bool retro_load_game(const struct retro_game_info *info)
 
 void retro_unload_game(void)
 {
+   if ( mame_machine_manager::instance() != NULL && mame_machine_manager::instance()->machine() != NULL &&
+		   mame_machine_manager::instance()->machine()->options().autosave() &&
+		   (mame_machine_manager::instance()->machine()->system().flags & MACHINE_SUPPORTS_SAVE) != 0)
+	   mame_machine_manager::instance()->machine()->immediate_save("auto");
+
    if (retro_pause == 0)
    {
       retro_pause = -1;
@@ -614,9 +620,28 @@ void retro_unload_game(void)
 }
 
 /* Stubs */
-size_t retro_serialize_size(void) { return 0; }
-bool retro_serialize(void *data, size_t size) { return false; }
-bool retro_unserialize(const void * data, size_t size) { return false; }
+size_t retro_serialize_size(void)
+{
+	if ( mame_machine_manager::instance() != NULL && mame_machine_manager::instance()->machine() != NULL &&
+			mame_machine_manager::instance()->machine()->save().state_size() > 0)
+		return mame_machine_manager::instance()->machine()->save().state_size();
+
+	return 0;
+}
+bool retro_serialize(void *data, size_t size)
+{
+	if ( mame_machine_manager::instance() != NULL && mame_machine_manager::instance()->machine() != NULL &&
+			mame_machine_manager::instance()->machine()->save().state_size() > 0)
+		return (mame_machine_manager::instance()->machine()->save().write_data(data, size) == STATERR_NONE);
+	return false;
+}
+bool retro_unserialize(const void * data, size_t size)
+{
+	if ( mame_machine_manager::instance() != NULL && mame_machine_manager::instance()->machine() != NULL &&
+			mame_machine_manager::instance()->machine()->save().state_size() > 0)
+		return (mame_machine_manager::instance()->machine()->save().read_data((void*)data, size) == STATERR_NONE);
+	return false;
+}
 
 unsigned retro_get_region (void) { return RETRO_REGION_NTSC; }
 
