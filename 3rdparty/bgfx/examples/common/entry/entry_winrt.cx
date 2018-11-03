@@ -7,8 +7,10 @@
 
 #if BX_PLATFORM_WINRT || BX_PLATFORM_XBOXONE
 
-#include <bgfx/bgfxplatform.h>
+#include <bgfx/platform.h>
 #include <bx/thread.h>
+#include <bx/math.h>
+#include <Unknwn.h>
 
 using namespace Windows::ApplicationModel;
 using namespace Windows::ApplicationModel::Core;
@@ -22,9 +24,21 @@ using namespace Windows::Graphics::Display;
 #endif // BX_PLATFORM_WINRT
 using namespace Platform;
 
-static char* g_emptyArgs[] = { "" };
+static const char* const g_emptyArgs[] = { "app.exe", "", "" };
 static entry::WindowHandle g_defaultWindow = { 0 };
 static entry::EventQueue g_eventQueue;
+
+///
+inline void winrtSetWindow(::IUnknown* _window)
+{
+	bgfx::PlatformData pd;
+	pd.ndt          = NULL;
+	pd.nwh          = _window;
+	pd.context      = NULL;
+	pd.backBuffer   = NULL;
+	pd.backBufferDS = NULL;
+	bgfx::setPlatformData(pd);
+}
 
 ref class App sealed : public IFrameworkView
 {
@@ -56,7 +70,7 @@ public:
 		window->Closed += ref new
 			TypedEventHandler<CoreWindow^, CoreWindowEventArgs^>(this, &App::OnWindowClosed);
 
-		bgfx::winrtSetWindow(reinterpret_cast<IUnknown*>(window) );
+		winrtSetWindow(reinterpret_cast<IUnknown*>(window) );
 	}
 
 	virtual void Load(String^ entryPoint)
@@ -65,6 +79,8 @@ public:
 
 	virtual void Run()
 	{
+		bgfx::renderFrame();
+
 		bx::Thread thread;
 		thread.init(MainThreadFunc, nullptr);
 
@@ -75,8 +91,8 @@ public:
 		auto dpi = DisplayInformation::GetForCurrentView()->LogicalDpi;
 		static const float dipsPerInch = 96.0f;
 		g_eventQueue.postSizeEvent(g_defaultWindow
-			, lround(bx::ffloor(bounds.Width  * dpi / dipsPerInch + 0.5f) )
-			, lround(bx::ffloor(bounds.Height * dpi / dipsPerInch + 0.5f) )
+			, lround(bx::floor(bounds.Width  * dpi / dipsPerInch + 0.5f) )
+			, lround(bx::floor(bounds.Height * dpi / dipsPerInch + 0.5f) )
 			);
 #endif // BX_PLATFORM_WINRT
 
@@ -90,9 +106,13 @@ public:
 			{
 				window->Dispatcher->ProcessEvents(CoreProcessEventsOption::ProcessOneAndAllPending);
 			}
+
+			bgfx::renderFrame();
 		}
 
 		g_eventQueue.postExitEvent();
+
+		while (bgfx::RenderFrame::NoContext != bgfx::renderFrame() ) {};
 
 		thread.shutdown();
 	}
@@ -130,9 +150,9 @@ private:
 		m_windowClosed = true;
 	}
 
-	static int32_t MainThreadFunc(void*)
+	static int32_t MainThreadFunc(bx::Thread*, void*)
 	{
-		return entry::main(0, g_emptyArgs);
+		return entry::main(BX_COUNTOF(g_emptyArgs), g_emptyArgs);
 	}
 };
 
@@ -189,9 +209,9 @@ namespace entry
 		BX_UNUSED(_handle, _title);
 	}
 
-	void toggleWindowFrame(WindowHandle _handle)
+	void setWindowFlags(WindowHandle _handle, uint32_t _flags, bool _enabled)
 	{
-		BX_UNUSED(_handle);
+		BX_UNUSED(_handle, _flags, _enabled);
 	}
 
 	void toggleFullscreen(WindowHandle _handle)

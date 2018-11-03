@@ -1586,6 +1586,7 @@ CPPCHECK_PARAMS += -I3rdparty/zlib
 endif
 CPPCHECK_PARAMS += -I3rdparty/bgfx/include
 CPPCHECK_PARAMS += -I3rdparty/bx/include
+CPPCHECK_PARAMS += -I3rdparty/bimg/include
 CPPCHECK_PARAMS += -I$(BUILDDIR)/generated/emu
 CPPCHECK_PARAMS += -I$(BUILDDIR)/generated/emu/layout
 CPPCHECK_PARAMS += -I$(BUILDDIR)/generated/mame/layout

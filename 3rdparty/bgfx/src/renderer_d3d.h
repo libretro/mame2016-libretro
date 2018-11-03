@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -19,13 +19,66 @@
 #	define DX_CHECK_EXTRA_ARGS
 #endif // BGFX_CONFIG_DEBUG && BGFX_CONFIG_RENDERER_DIRECT3D9
 
+#define DXGI_FORMAT_ASTC_4X4_TYPELESS     DXGI_FORMAT(133)
+#define DXGI_FORMAT_ASTC_4X4_UNORM        DXGI_FORMAT(134)
+#define DXGI_FORMAT_ASTC_4X4_UNORM_SRGB   DXGI_FORMAT(135)
+#define DXGI_FORMAT_ASTC_5X4_TYPELESS     DXGI_FORMAT(137)
+#define DXGI_FORMAT_ASTC_5X4_UNORM        DXGI_FORMAT(138)
+#define DXGI_FORMAT_ASTC_5X4_UNORM_SRGB   DXGI_FORMAT(139)
+#define DXGI_FORMAT_ASTC_5X5_TYPELESS     DXGI_FORMAT(141)
+#define DXGI_FORMAT_ASTC_5X5_UNORM        DXGI_FORMAT(142)
+#define DXGI_FORMAT_ASTC_5X5_UNORM_SRGB   DXGI_FORMAT(143)
+#define DXGI_FORMAT_ASTC_6X5_TYPELESS     DXGI_FORMAT(145)
+#define DXGI_FORMAT_ASTC_6X5_UNORM        DXGI_FORMAT(146)
+#define DXGI_FORMAT_ASTC_6X5_UNORM_SRGB   DXGI_FORMAT(147)
+#define DXGI_FORMAT_ASTC_6X6_TYPELESS     DXGI_FORMAT(149)
+#define DXGI_FORMAT_ASTC_6X6_UNORM        DXGI_FORMAT(150)
+#define DXGI_FORMAT_ASTC_6X6_UNORM_SRGB   DXGI_FORMAT(151)
+#define DXGI_FORMAT_ASTC_8X5_TYPELESS     DXGI_FORMAT(153)
+#define DXGI_FORMAT_ASTC_8X5_UNORM        DXGI_FORMAT(154)
+#define DXGI_FORMAT_ASTC_8X5_UNORM_SRGB   DXGI_FORMAT(155)
+#define DXGI_FORMAT_ASTC_8X6_TYPELESS     DXGI_FORMAT(157)
+#define DXGI_FORMAT_ASTC_8X6_UNORM        DXGI_FORMAT(158)
+#define DXGI_FORMAT_ASTC_8X6_UNORM_SRGB   DXGI_FORMAT(159)
+#define DXGI_FORMAT_ASTC_8X8_TYPELESS     DXGI_FORMAT(161)
+#define DXGI_FORMAT_ASTC_8X8_UNORM        DXGI_FORMAT(162)
+#define DXGI_FORMAT_ASTC_8X8_UNORM_SRGB   DXGI_FORMAT(163)
+#define DXGI_FORMAT_ASTC_10X5_TYPELESS    DXGI_FORMAT(165)
+#define DXGI_FORMAT_ASTC_10X5_UNORM       DXGI_FORMAT(166)
+#define DXGI_FORMAT_ASTC_10X5_UNORM_SRGB  DXGI_FORMAT(167)
+#define DXGI_FORMAT_ASTC_10X6_TYPELESS    DXGI_FORMAT(169)
+#define DXGI_FORMAT_ASTC_10X6_UNORM       DXGI_FORMAT(170)
+#define DXGI_FORMAT_ASTC_10X6_UNORM_SRGB  DXGI_FORMAT(171)
+#define DXGI_FORMAT_ASTC_10X8_TYPELESS    DXGI_FORMAT(173)
+#define DXGI_FORMAT_ASTC_10X8_UNORM       DXGI_FORMAT(174)
+#define DXGI_FORMAT_ASTC_10X8_UNORM_SRGB  DXGI_FORMAT(175)
+#define DXGI_FORMAT_ASTC_10X10_TYPELESS   DXGI_FORMAT(177)
+#define DXGI_FORMAT_ASTC_10X10_UNORM      DXGI_FORMAT(178)
+#define DXGI_FORMAT_ASTC_10X10_UNORM_SRGB DXGI_FORMAT(179)
+#define DXGI_FORMAT_ASTC_12X10_TYPELESS   DXGI_FORMAT(181)
+#define DXGI_FORMAT_ASTC_12X10_UNORM      DXGI_FORMAT(182)
+#define DXGI_FORMAT_ASTC_12X10_UNORM_SRGB DXGI_FORMAT(183)
+#define DXGI_FORMAT_ASTC_12X12_TYPELESS   DXGI_FORMAT(185)
+#define DXGI_FORMAT_ASTC_12X12_UNORM      DXGI_FORMAT(186)
+#define DXGI_FORMAT_ASTC_12X12_UNORM_SRGB DXGI_FORMAT(187)
+
 namespace bgfx
 {
-#if BX_PLATFORM_XBOXONE
-	typedef ::IGraphicsUnknown IUnknown;
-#else
+	constexpr uint32_t toRgba8(uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a)
+	{
+		return 0
+			| (uint32_t(_r)<<24)
+			| (uint32_t(_g)<<16)
+			| (uint32_t(_b)<< 8)
+			| (uint32_t(_a)    )
+			;
+	}
+
+#if BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
 	typedef ::IUnknown IUnknown;
-#endif // BX_PLATFORM_XBOXONE
+#else
+	typedef ::IGraphicsUnknown IUnknown;
+#endif // BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
 
 #define _DX_CHECK(_call) \
 			BX_MACRO_BLOCK_BEGIN \
@@ -69,32 +122,51 @@ namespace bgfx
 #endif // BGFX_CONFIG_DEBUG_OBJECT_NAME
 
 #define DX_RELEASE(_ptr, _expected) _DX_RELEASE(_ptr, _expected, BX_CHECK)
-#define DX_RELEASE_WARNONLY(_ptr, _expected) _DX_RELEASE(_ptr, _expected, BX_WARN)
+#define DX_RELEASE_W(_ptr, _expected) _DX_RELEASE(_ptr, _expected, BX_WARN)
+#define DX_RELEASE_I(_ptr) _DX_RELEASE(_ptr, 0, BX_NOOP)
 
-	typedef int     (WINAPI* PFN_D3DPERF_BEGIN_EVENT)(DWORD _color, LPCWSTR _wszName);
+	typedef int     (WINAPI* PFN_D3DPERF_BEGIN_EVENT)(DWORD _color, LPCWSTR _name);
 	typedef int     (WINAPI* PFN_D3DPERF_END_EVENT)();
-	typedef void    (WINAPI* PFN_D3DPERF_SET_MARKER)(DWORD _color, LPCWSTR _wszName);
-	typedef void    (WINAPI* PFN_D3DPERF_SET_REGION)(DWORD _color, LPCWSTR _wszName);
+	typedef void    (WINAPI* PFN_D3DPERF_SET_MARKER)(DWORD _color, LPCWSTR _name);
+	typedef void    (WINAPI* PFN_D3DPERF_SET_REGION)(DWORD _color, LPCWSTR _name);
 	typedef BOOL    (WINAPI* PFN_D3DPERF_QUERY_REPEAT_FRAME)();
 	typedef void    (WINAPI* PFN_D3DPERF_SET_OPTIONS)(DWORD _options);
 	typedef DWORD   (WINAPI* PFN_D3DPERF_GET_STATUS)();
-	typedef HRESULT (WINAPI* PFN_CREATE_DXGI_FACTORY)(REFIID _riid, void** _factory);
-	typedef HRESULT (WINAPI* PFN_GET_DEBUG_INTERFACE)(REFIID _riid, void** _debug);
-	typedef HRESULT (WINAPI* PFN_GET_DEBUG_INTERFACE1)(UINT _flags, REFIID _riid, void** _debug);
 
-#define _PIX_SETMARKER(_col, _name) D3DPERF_SetMarker(_col, _name)
+#define _PIX_SETMARKER(_col, _name)  D3DPERF_SetMarker(_col, _name)
 #define _PIX_BEGINEVENT(_col, _name) D3DPERF_BeginEvent(_col, _name)
-#define _PIX_ENDEVENT() D3DPERF_EndEvent()
+#define _PIX_ENDEVENT()              D3DPERF_EndEvent()
 
 #if BGFX_CONFIG_DEBUG_PIX
 #	define PIX_SETMARKER(_color, _name)  _PIX_SETMARKER(_color, _name)
 #	define PIX_BEGINEVENT(_color, _name) _PIX_BEGINEVENT(_color, _name)
-#	define PIX_ENDEVENT() _PIX_ENDEVENT()
+#	define PIX_ENDEVENT()                _PIX_ENDEVENT()
 #else
 #	define PIX_SETMARKER(_color, _name)  BX_UNUSED(_name)
 #	define PIX_BEGINEVENT(_color, _name) BX_UNUSED(_name)
 #	define PIX_ENDEVENT()
 #endif // BGFX_CONFIG_DEBUG_PIX
+
+#define D3DCOLOR_FRAME   toRgba8(0xff, 0xd7, 0xc9, 0xff)
+#define D3DCOLOR_VIEW    toRgba8(0xe4, 0xb4, 0x8e, 0xff)
+#define D3DCOLOR_VIEW_L  toRgba8(0xf9, 0xee, 0xe5, 0xff)
+#define D3DCOLOR_VIEW_R  toRgba8(0xe8, 0xd3, 0xc0, 0xff)
+#define D3DCOLOR_DRAW    toRgba8(0xc6, 0xe5, 0xb9, 0xff)
+#define D3DCOLOR_COMPUTE toRgba8(0xa7, 0xdb, 0xd8, 0xff)
+#define D3DCOLOR_MARKER  toRgba8(0xff, 0x00, 0x00, 0xff)
+
+	inline bool isType(IUnknown* _interface, const GUID& _id)
+	{
+		IUnknown* out;
+		HRESULT hr = _interface->QueryInterface(_id, (void**)&out);
+		if (FAILED(hr) )
+		{
+			return false;
+		}
+
+		out->Release();
+		return true;
+	}
 
 	inline int getRefCount(IUnknown* _interface)
 	{
@@ -133,7 +205,7 @@ namespace bgfx
 			typename HashMap::iterator it = m_hashMap.find(_key);
 			if (it != m_hashMap.end() )
 			{
-				DX_RELEASE_WARNONLY(it->second, 0);
+				DX_RELEASE_W(it->second, 0);
 				m_hashMap.erase(it);
 			}
 		}
@@ -159,171 +231,11 @@ namespace bgfx
 		HashMap m_hashMap;
 	};
 
-	class StateCache
-	{
-	public:
-		void add(uint64_t _key, uint16_t _value)
-		{
-			invalidate(_key);
-			m_hashMap.insert(stl::make_pair(_key, _value) );
-		}
-
-		uint16_t find(uint64_t _key)
-		{
-			HashMap::iterator it = m_hashMap.find(_key);
-			if (it != m_hashMap.end() )
-			{
-				return it->second;
-			}
-
-			return UINT16_MAX;
-		}
-
-		void invalidate(uint64_t _key)
-		{
-			HashMap::iterator it = m_hashMap.find(_key);
-			if (it != m_hashMap.end() )
-			{
-				m_hashMap.erase(it);
-			}
-		}
-
-		void invalidate()
-		{
-			m_hashMap.clear();
-		}
-
-		uint32_t getCount() const
-		{
-			return uint32_t(m_hashMap.size() );
-		}
-
-	private:
-		typedef stl::unordered_map<uint64_t, uint16_t> HashMap;
-		HashMap m_hashMap;
-	};
-
-	template<typename Ty>
-	inline void release(Ty)
-	{
-	}
-
 	template<>
 	inline void release<IUnknown*>(IUnknown* _ptr)
 	{
 		DX_RELEASE(_ptr, 0);
 	}
-
-	template <typename Ty, uint16_t MaxHandleT>
-	class StateCacheLru
-	{
-	public:
-		void add(uint64_t _key, Ty _value, uint16_t _parent)
-		{
-			uint16_t handle = m_alloc.alloc();
-			if (UINT16_MAX == handle)
-			{
-				uint16_t back = m_alloc.getBack();
-				invalidate(back);
-				handle = m_alloc.alloc();
-			}
-
-			BX_CHECK(UINT16_MAX != handle, "Failed to find handle.");
-
-			Data& data = m_data[handle];
-			data.m_hash   = _key;
-			data.m_value  = _value;
-			data.m_parent = _parent;
-			m_hashMap.insert(stl::make_pair(_key, handle) );
-		}
-
-		Ty* find(uint64_t _key)
-		{
-			HashMap::iterator it = m_hashMap.find(_key);
-			if (it != m_hashMap.end() )
-			{
-				uint16_t handle = it->second;
-				m_alloc.touch(handle);
-				return &m_data[handle].m_value;
-			}
-
-			return NULL;
-		}
-
-		void invalidate(uint64_t _key)
-		{
-			HashMap::iterator it = m_hashMap.find(_key);
-			if (it != m_hashMap.end() )
-			{
-				uint16_t handle = it->second;
-				m_alloc.free(handle);
-				m_hashMap.erase(it);
-				release(m_data[handle].m_value);
-			}
-		}
-
-		void invalidate(uint16_t _handle)
-		{
-			if (m_alloc.isValid(_handle) )
-			{
-				m_alloc.free(_handle);
-				Data& data = m_data[_handle];
-				m_hashMap.erase(m_hashMap.find(data.m_hash) );
-				release(data.m_value);
-			}
-		}
-
-		void invalidateWithParent(uint16_t _parent)
-		{
-			for (uint16_t ii = 0; ii < m_alloc.getNumHandles();)
-			{
-				uint16_t handle = m_alloc.getHandleAt(ii);
-				Data& data = m_data[handle];
-
-				if (data.m_parent == _parent)
-				{
-					m_alloc.free(handle);
-					m_hashMap.erase(m_hashMap.find(data.m_hash) );
-					release(data.m_value);
-				}
-				else
-				{
-					++ii;
-				}
-			}
-		}
-
-		void invalidate()
-		{
-			for (uint16_t ii = 0, num = m_alloc.getNumHandles(); ii < num; ++ii)
-			{
-				uint16_t handle = m_alloc.getHandleAt(ii);
-				Data& data = m_data[handle];
-				release(data.m_value);
-			}
-
-			m_hashMap.clear();
-			m_alloc.reset();
-		}
-
-		uint32_t getCount() const
-		{
-			return uint32_t(m_hashMap.size() );
-		}
-
-	private:
-		typedef stl::unordered_map<uint64_t, uint16_t> HashMap;
-		HashMap m_hashMap;
-		bx::HandleAllocLruT<MaxHandleT> m_alloc;
-		struct Data
-		{
-			uint64_t m_hash;
-			Ty m_value;
-			uint16_t m_parent;
-		};
-
-		Data m_data[MaxHandleT];
-	};
 
 } // namespace bgfx
 
