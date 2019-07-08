@@ -294,8 +294,14 @@ end
 			ext_lib("portmidi"),
 		}
 	end
+
+   if _OPTIONS["USE_BGFX"]~="0" then
+		links {
+			"bgfx",
+		}
+	end
 	links {
-		"bgfx",
+   -- "bgfx",
 		"ocore_" .. _OPTIONS["osd"],
 	}
 

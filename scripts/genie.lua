@@ -387,7 +387,20 @@ newoption {
 	description = "Arguments for running debug build.",
 }
 
+newoption {
+	trigger = "USE_BGFX",
+	description = "Use bgfx.",
+	allowed = {
+		{ "0",   "Disabled"     },
+		{ "1",   "Enabled"      },
+	}
+}
+
 dofile ("extlib.lua")
+
+if not _OPTIONS["USE_BGFX"] then
+	_OPTIONS["USE_BGFX"] = "0"
+end
 
 if _OPTIONS["SHLIB"]=="1" then
 	LIBTYPE = "SharedLib"

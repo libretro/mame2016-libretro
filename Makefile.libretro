@@ -55,6 +55,8 @@ VERBOSE ?= 1
 # scripts/toolchain.lua)
 # PTR64 = 1
 
+USE_BGFX ?= 0
+
 ###########################################################################
 #
 #   LIBRETRO PLATFORM GUESSING
