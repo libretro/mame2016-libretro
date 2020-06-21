@@ -37,6 +37,7 @@ char RPATH[512];
 
 static char option_mouse[50];
 static char option_cheats[50];
+static char option_overclock[50];
 static char option_nag[50];
 static char option_info[50];
 static char option_renderer[50];
@@ -53,6 +54,8 @@ static char option_auto_save[50];
 static char option_throttle[50];
 static char option_nobuffer[50];
 static char option_saves[50];
+
+static int cpu_overclock = 100;
 
 const char *retro_save_directory;
 const char *retro_system_directory;
@@ -132,6 +135,7 @@ void retro_set_environment(retro_environment_t cb)
 {
    sprintf(option_mouse, "%s_%s", core, "mouse_enable");
    sprintf(option_cheats, "%s_%s", core, "cheats_enable");
+   sprintf(option_overclock, "%s_%s", core, "cpu_overclock");
    sprintf(option_nag, "%s_%s",core,"hide_nagscreen");
    sprintf(option_info, "%s_%s",core,"hide_infoscreen");
    sprintf(option_warnings,"%s_%s",core,"hide_warnings");
@@ -161,6 +165,7 @@ void retro_set_environment(retro_environment_t cb)
     { option_mouse, "Enable in-game mouse; disabled|enabled" },
     { option_throttle, "Enable throttle; disabled|enabled" },
     { option_cheats, "Enable cheats; disabled|enabled" },
+    { option_overclock, "Main CPU Overclock; default|30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45|46|47|48|49|50|51|52|53|54|55|60|65|70|75|80|85|90|95|100|105|110|115|120|125|130|135|140|145|150" },
     { option_renderer, "Alternate render method; disabled|enabled" },
 
     { option_softlist, "Enable softlists; enabled|disabled" },
@@ -177,6 +182,14 @@ void retro_set_environment(retro_environment_t cb)
    environ_cb = cb;
 
    cb(RETRO_ENVIRONMENT_SET_VARIABLES, (void*)vars);
+}
+
+static void update_runtime_variables(void)
+{
+  // update CPU Overclock
+  if (mame_machine_manager::instance() != NULL && mame_machine_manager::instance()->machine() != NULL && 
+      mame_machine_manager::instance()->machine()->firstcpu != NULL)
+    mame_machine_manager::instance()->machine()->firstcpu->set_clock_scale((float)cpu_overclock * 0.01f);
 }
 
 static void check_variables(void)
@@ -236,6 +249,16 @@ static void check_variables(void)
          cheats_enable = false;
       if (!strcmp(var.value, "enabled"))
          cheats_enable = true;
+   }
+
+   var.key   = option_overclock;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      cpu_overclock = 100;
+      if (strcmp(var.value, "default"))
+        cpu_overclock = atoi(var.value);
    }
 
    var.key   = option_nag;
@@ -517,8 +540,10 @@ void retro_run (void)
    static int mfirst=1;
    bool updated = false;
 
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated) {
       check_variables();
+      update_runtime_variables();
+   }
 
    if(mfirst==1)
    {
@@ -526,6 +551,7 @@ void retro_run (void)
       mmain(1,RPATH);
       printf("MAIN FIRST\n");
       retro_load_ok=true;
+      update_runtime_variables();
       return;
    }
 
