@@ -1,14 +1,28 @@
 --
--- Copyright 2010-2016 Branimir Karadzic. All rights reserved.
+-- Copyright 2010-2018 Branimir Karadzic. All rights reserved.
 -- License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
 --
 
-project ("example-common")
-	uuid ("21cc0e26-bf62-11e2-a01e-0291bd4c8125")
+project ("example-glue")
 	kind "StaticLib"
 
 	includedirs {
-		path.join(BX_DIR, "include"),
+		path.join(BX_DIR,   "include"),
+		path.join(BIMG_DIR, "include"),
+		path.join(BGFX_DIR, "include"),
+		path.join(BGFX_DIR, "3rdparty"),
+	}
+
+	files {
+		path.join(BGFX_DIR, "examples/common/example-glue.cpp"),
+	}
+
+project ("example-common")
+	kind "StaticLib"
+
+	includedirs {
+		path.join(BX_DIR,   "include"),
+		path.join(BIMG_DIR, "include"),
 		path.join(BGFX_DIR, "include"),
 		path.join(BGFX_DIR, "3rdparty"),
 	}
@@ -16,11 +30,15 @@ project ("example-common")
 	files {
 		path.join(BGFX_DIR, "3rdparty/ib-compress/**.cpp"),
 		path.join(BGFX_DIR, "3rdparty/ib-compress/**.h"),
-		path.join(BGFX_DIR, "3rdparty/ocornut-imgui/**.cpp"),
-		path.join(BGFX_DIR, "3rdparty/ocornut-imgui/**.h"),
+		path.join(BGFX_DIR, "3rdparty/dear-imgui/**.cpp"),
+		path.join(BGFX_DIR, "3rdparty/dear-imgui/**.h"),
 		path.join(BGFX_DIR, "examples/common/**.cpp"),
 		path.join(BGFX_DIR, "examples/common/**.cpp"),
 		path.join(BGFX_DIR, "examples/common/**.h"),
+	}
+
+	removefiles {
+		path.join(BGFX_DIR, "examples/common/example-glue.cpp"),
 	}
 
 	if _OPTIONS["with-scintilla"] then
@@ -72,7 +90,7 @@ project ("example-common")
 			path.join(BGFX_DIR, "examples/common/**.mm"),
 		}
 
-	configuration { "winphone8* or winstore8* or durango"}
+	configuration { "winstore* or durango"}
 		files {
 			path.join(BGFX_DIR, "examples/common/**.cx"),
 		}

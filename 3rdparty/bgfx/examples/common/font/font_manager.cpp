@@ -3,8 +3,6 @@
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
-#define USE_EDTAA3 0
-
 #include <bx/macros.h>
 
 #if BX_COMPILER_MSVC
@@ -13,6 +11,7 @@
 
 BX_PRAGMA_DIAGNOSTIC_PUSH();
 BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4245) // error C4245: '=' : conversion from 'int' to 'FT_UInt', signed/unsigned mismatch
+BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4611) // warning C4611 : interaction between '_setjmp' and C++ object destruction is non - portable
 #if BX_COMPILER_MSVC || BX_COMPILER_GCC >= 40300
 #pragma push_macro("interface")
 #endif
@@ -26,14 +25,9 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 #include "../common.h"
 
 #include <bgfx/bgfx.h>
-#include <math.h>
 
-#if USE_EDTAA3
-#	include <edtaa3/edtaa3func.cpp>
-#else
-#	define SDF_IMPLEMENTATION
-#	include <sdf/sdf.h>
-#endif // USE_EDTAA3
+#define SDF_IMPLEMENTATION
+#include <sdf/sdf.h>
 
 #include <wchar.h> // wcslen
 
@@ -197,7 +191,7 @@ static void glyphInfoInit(GlyphInfo& _glyphInfo, FT_BitmapGlyph _bitmap, FT_Glyp
 
 	for (int32_t ii = 0; ii < hh; ++ii)
 	{
-		memcpy(_dst, src, dstPitch);
+		bx::memCopy(_dst, src, dstPitch);
 
 		_dst += dstPitch;
 		src += srcPitch;
@@ -272,102 +266,6 @@ bool TrueTypeFont::bakeGlyphSubpixel(CodePoint _codePoint, GlyphInfo& _glyphInfo
 	return true;
 }
 
-static void makeDistanceMap(const uint8_t* _img, uint8_t* _outImg, uint32_t _width, uint32_t _height)
-{
-#if USE_EDTAA3
-	int16_t* xdist = (int16_t*)malloc(_width * _height * sizeof(int16_t) );
-	int16_t* ydist = (int16_t*)malloc(_width * _height * sizeof(int16_t) );
-	double* gx = (double*)calloc(_width * _height, sizeof(double) );
-	double* gy = (double*)calloc(_width * _height, sizeof(double) );
-	double* data = (double*)calloc(_width * _height, sizeof(double) );
-	double* outside = (double*)calloc(_width * _height, sizeof(double) );
-	double* inside = (double*)calloc(_width * _height, sizeof(double) );
-	uint32_t ii;
-
-	// Convert img into double (data)
-	double img_min = 255, img_max = -255;
-	for (ii = 0; ii < _width * _height; ++ii)
-	{
-		double v = _img[ii];
-		data[ii] = v;
-		if (v > img_max)
-		{
-			img_max = v;
-		}
-
-		if (v < img_min)
-		{
-			img_min = v;
-		}
-	}
-
-	// Rescale image levels between 0 and 1
-	for (ii = 0; ii < _width * _height; ++ii)
-	{
-		data[ii] = (_img[ii] - img_min) / (img_max - img_min);
-	}
-
-	// Compute outside = edtaa3(bitmap); % Transform background (0's)
-	computegradient(data, _width, _height, gx, gy);
-	edtaa3(data, gx, gy, _width, _height, xdist, ydist, outside);
-	for (ii = 0; ii < _width * _height; ++ii)
-	{
-		if (outside[ii] < 0)
-		{
-			outside[ii] = 0.0;
-		}
-	}
-
-	// Compute inside = edtaa3(1-bitmap); % Transform foreground (1's)
-	memset(gx, 0, sizeof(double) * _width * _height);
-	memset(gy, 0, sizeof(double) * _width * _height);
-	for (ii = 0; ii < _width * _height; ++ii)
-	{
-		data[ii] = 1.0 - data[ii];
-	}
-
-	computegradient(data, _width, _height, gx, gy);
-	edtaa3(data, gx, gy, _width, _height, xdist, ydist, inside);
-	for (ii = 0; ii < _width * _height; ++ii)
-	{
-		if (inside[ii] < 0)
-		{
-			inside[ii] = 0.0;
-		}
-	}
-
-	// distmap = outside - inside; % Bipolar distance field
-	uint8_t* out = _outImg;
-	for (ii = 0; ii < _width * _height; ++ii)
-	{
-		outside[ii] -= inside[ii];
-		outside[ii] = 128 + outside[ii] * 16;
-
-		if (outside[ii] < 0)
-		{
-			outside[ii] = 0;
-		}
-
-		if (outside[ii] > 255)
-		{
-			outside[ii] = 255;
-		}
-
-		out[ii] = 255 - (uint8_t) outside[ii];
-	}
-
-	free(xdist);
-	free(ydist);
-	free(gx);
-	free(gy);
-	free(data);
-	free(outside);
-	free(inside);
-#else
-	sdfBuild(_outImg, _width, 8.0f, _img, _width, _height, _width);
-#endif // USE_EDTAA3
-}
-
 bool TrueTypeFont::bakeGlyphDistance(CodePoint _codePoint, GlyphInfo& _glyphInfo, uint8_t* _outBuffer)
 {
 	BX_CHECK(m_font != NULL, "TrueTypeFont not initialized");
@@ -418,15 +316,15 @@ bool TrueTypeFont::bakeGlyphDistance(CodePoint _codePoint, GlyphInfo& _glyphInfo
 		uint32_t buffSize = nw * nh * sizeof(uint8_t);
 
 		uint8_t* alphaImg = (uint8_t*)malloc(buffSize);
-		memset(alphaImg, 0, nw * nh * sizeof(uint8_t) );
+		bx::memSet(alphaImg, 0, nw * nh * sizeof(uint8_t) );
 
 		//copy the original buffer to the temp one
 		for (uint32_t ii = dh; ii < nh - dh; ++ii)
 		{
-			memcpy(alphaImg + ii * nw + dw, _outBuffer + (ii - dh) * ww, ww);
+			bx::memCopy(alphaImg + ii * nw + dw, _outBuffer + (ii - dh) * ww, ww);
 		}
 
-		makeDistanceMap(alphaImg, _outBuffer, nw, nh);
+		sdfBuild(_outBuffer, nw, 8.0f, alphaImg, nw, nh, nw);
 		free(alphaImg);
 
 		_glyphInfo.offset_x -= (float)dw;
@@ -446,7 +344,7 @@ struct FontManager::CachedFont
 	CachedFont()
 		: trueTypeFont(NULL)
 	{
-		masterFontHandle.idx = bx::HandleAlloc::invalid;
+		masterFontHandle.idx = bx::kInvalidHandle;
 	}
 
 	FontInfo fontInfo;
@@ -466,7 +364,7 @@ FontManager::FontManager(Atlas* _atlas)
 	init();
 }
 
-FontManager::FontManager(uint32_t _textureSideWidth) 
+FontManager::FontManager(uint16_t _textureSideWidth)
 	: m_ownAtlas(true)
 	, m_atlas(new Atlas(_textureSideWidth) )
 {
@@ -482,7 +380,7 @@ void FontManager::init()
 	const uint32_t W = 3;
 	// Create filler rectangle
 	uint8_t buffer[W * W * 4];
-	memset(buffer, 255, W * W * 4);
+	bx::memSet(buffer, 255, W * W * 4);
 
 	m_blackGlyph.width = W;
 	m_blackGlyph.height = W;
@@ -510,10 +408,10 @@ FontManager::~FontManager()
 TrueTypeHandle FontManager::createTtf(const uint8_t* _buffer, uint32_t _size)
 {
 	uint16_t id = m_filesHandles.alloc();
-	BX_CHECK(id != bx::HandleAlloc::invalid, "Invalid handle used");
+	BX_CHECK(id != bx::kInvalidHandle, "Invalid handle used");
 	m_cachedFiles[id].buffer = new uint8_t[_size];
 	m_cachedFiles[id].bufferSize = _size;
-	memcpy(m_cachedFiles[id].buffer, _buffer, _size);
+	bx::memCopy(m_cachedFiles[id].buffer, _buffer, _size);
 
 	TrueTypeHandle ret = { id };
 	return ret;
@@ -536,20 +434,20 @@ FontHandle FontManager::createFontByPixelSize(TrueTypeHandle _ttfHandle, uint32_
 	if (!ttf->init(m_cachedFiles[_ttfHandle.idx].buffer, m_cachedFiles[_ttfHandle.idx].bufferSize, _typefaceIndex, _pixelSize) )
 	{
 		delete ttf;
-		FontHandle invalid = { bx::HandleAlloc::invalid };
+		FontHandle invalid = { bx::kInvalidHandle };
 		return invalid;
 	}
 
 	uint16_t fontIdx = m_fontHandles.alloc();
-	BX_CHECK(fontIdx != bx::HandleAlloc::invalid, "Invalid handle used");
+	BX_CHECK(fontIdx != bx::kInvalidHandle, "Invalid handle used");
 
 	CachedFont& font = m_cachedFonts[fontIdx];
 	font.trueTypeFont = ttf;
 	font.fontInfo = ttf->getFontInfo();
-	font.fontInfo.fontType = _fontType;
-	font.fontInfo.pixelSize = _pixelSize;
+	font.fontInfo.fontType  = int16_t(_fontType);
+	font.fontInfo.pixelSize = uint16_t(_pixelSize);
 	font.cachedGlyphs.clear();
-	font.masterFontHandle.idx = bx::HandleAlloc::invalid;
+	font.masterFontHandle.idx = bx::kInvalidHandle;
 
 	FontHandle handle = { fontIdx };
 	return handle;
@@ -561,18 +459,18 @@ FontHandle FontManager::createScaledFontToPixelSize(FontHandle _baseFontHandle, 
 	CachedFont& baseFont = m_cachedFonts[_baseFontHandle.idx];
 	FontInfo& fontInfo = baseFont.fontInfo;
 
-	FontInfo newFontInfo = fontInfo;
-	newFontInfo.pixelSize = _pixelSize;
-	newFontInfo.scale = (float)_pixelSize / (float) fontInfo.pixelSize;
-	newFontInfo.ascender = (newFontInfo.ascender * newFontInfo.scale);
+	FontInfo newFontInfo  = fontInfo;
+	newFontInfo.pixelSize = uint16_t(_pixelSize);
+	newFontInfo.scale     = (float)_pixelSize / (float) fontInfo.pixelSize;
+	newFontInfo.ascender  = (newFontInfo.ascender * newFontInfo.scale);
 	newFontInfo.descender = (newFontInfo.descender * newFontInfo.scale);
-	newFontInfo.lineGap = (newFontInfo.lineGap * newFontInfo.scale);
-	newFontInfo.maxAdvanceWidth = (newFontInfo.maxAdvanceWidth * newFontInfo.scale);
+	newFontInfo.lineGap   = (newFontInfo.lineGap * newFontInfo.scale);
+	newFontInfo.maxAdvanceWidth    = (newFontInfo.maxAdvanceWidth * newFontInfo.scale);
 	newFontInfo.underlineThickness = (newFontInfo.underlineThickness * newFontInfo.scale);
-	newFontInfo.underlinePosition = (newFontInfo.underlinePosition * newFontInfo.scale);
+	newFontInfo.underlinePosition  = (newFontInfo.underlinePosition * newFontInfo.scale);
 
 	uint16_t fontIdx = m_fontHandles.alloc();
-	BX_CHECK(fontIdx != bx::HandleAlloc::invalid, "Invalid handle used");
+	BX_CHECK(fontIdx != bx::kInvalidHandle, "Invalid handle used");
 
 	CachedFont& font = m_cachedFonts[fontIdx];
 	font.cachedGlyphs.clear();
@@ -719,6 +617,11 @@ const GlyphInfo* FontManager::getGlyphInfo(FontHandle _handle, CodePoint _codePo
 
 bool FontManager::addBitmap(GlyphInfo& _glyphInfo, const uint8_t* _data)
 {
-	_glyphInfo.regionIndex = m_atlas->addRegion( (uint16_t) ceil(_glyphInfo.width), (uint16_t) ceil(_glyphInfo.height), _data, AtlasRegion::TYPE_GRAY);
+	_glyphInfo.regionIndex = m_atlas->addRegion(
+		  (uint16_t)bx::ceil(_glyphInfo.width)
+		, (uint16_t)bx::ceil(_glyphInfo.height)
+		, _data
+		, AtlasRegion::TYPE_GRAY
+		);
 	return true;
 }

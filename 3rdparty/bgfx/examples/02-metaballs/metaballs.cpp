@@ -1,14 +1,28 @@
 /*
- * Copyright 2011-2016 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
 #include "common.h"
 #include "bgfx_utils.h"
+#include "imgui/imgui.h"
+
+#include <bgfx/embedded_shader.h>
 
 // embedded shaders
 #include "vs_metaballs.bin.h"
 #include "fs_metaballs.bin.h"
+
+namespace
+{
+
+static const bgfx::EmbeddedShader s_embeddedShaders[] =
+{
+	BGFX_EMBEDDED_SHADER(vs_metaballs),
+	BGFX_EMBEDDED_SHADER(fs_metaballs),
+
+	BGFX_EMBEDDED_SHADER_END()
+};
 
 struct PosNormalColorVertex
 {
@@ -361,7 +375,7 @@ float vertLerp(float* __restrict _result, float _iso, uint32_t _idx0, float _v0,
 	const float* __restrict edge0 = s_cube[_idx0];
 	const float* __restrict edge1 = s_cube[_idx1];
 
-	if (fabsf(_iso-_v1) < 0.00001f)
+	if (bx::abs(_iso-_v1) < 0.00001f)
 	{
 		_result[0] = edge1[0];
 		_result[1] = edge1[1];
@@ -369,8 +383,8 @@ float vertLerp(float* __restrict _result, float _iso, uint32_t _idx0, float _v0,
 		return 1.0f;
 	}
 
-	if (fabsf(_iso-_v0) < 0.00001f
-	||  fabsf(_v0-_v1) < 0.00001f)
+	if (bx::abs(_iso-_v0) < 0.00001f
+	||  bx::abs(_v0-_v1) < 0.00001f)
 	{
 		_result[0] = edge0[0];
 		_result[1] = edge0[1];
@@ -464,17 +478,28 @@ uint32_t triangulate(uint8_t* _result, uint32_t _stride, const float* __restrict
 
 class ExampleMetaballs : public entry::AppI
 {
-	void init(int _argc, char** _argv) BX_OVERRIDE
+public:
+	ExampleMetaballs(const char* _name, const char* _description)
+		: entry::AppI(_name, _description)
+	{
+	}
+
+	void init(int32_t _argc, const char* const* _argv, uint32_t _width, uint32_t _height) override
 	{
 		Args args(_argc, _argv);
 
-		m_width  = 1280;
-		m_height = 720;
-		m_debug  = BGFX_DEBUG_TEXT;
+		m_width  = _width;
+		m_height = _height;
+		m_debug  = BGFX_DEBUG_NONE;
 		m_reset  = BGFX_RESET_VSYNC;
 
-		bgfx::init(args.m_type, args.m_pciId);
-		bgfx::reset(m_width, m_height, m_reset);
+		bgfx::Init init;
+		init.type     = args.m_type;
+		init.vendorId = args.m_pciId;
+		init.resolution.width  = m_width;
+		init.resolution.height = m_height;
+		init.resolution.reset  = m_reset;
+		bgfx::init(init);
 
 		// Enable debug text.
 		bgfx::setDebug(m_debug);
@@ -490,49 +515,28 @@ class ExampleMetaballs : public entry::AppI
 		// Create vertex stream declaration.
 		PosNormalColorVertex::init();
 
-		const bgfx::Memory* vs_metaballs;
-		const bgfx::Memory* fs_metaballs;
+		bgfx::RendererType::Enum type = bgfx::getRendererType();
 
-		switch (bgfx::getRendererType() )
-		{
-			case bgfx::RendererType::Direct3D9:
-				vs_metaballs = bgfx::makeRef(vs_metaballs_dx9, sizeof(vs_metaballs_dx9) );
-				fs_metaballs = bgfx::makeRef(fs_metaballs_dx9, sizeof(fs_metaballs_dx9) );
-				break;
-
-			case bgfx::RendererType::Direct3D11:
-			case bgfx::RendererType::Direct3D12:
-				vs_metaballs = bgfx::makeRef(vs_metaballs_dx11, sizeof(vs_metaballs_dx11) );
-				fs_metaballs = bgfx::makeRef(fs_metaballs_dx11, sizeof(fs_metaballs_dx11) );
-				break;
-
-			case bgfx::RendererType::Metal:
-				vs_metaballs = bgfx::makeRef(vs_metaballs_mtl, sizeof(vs_metaballs_mtl) );
-				fs_metaballs = bgfx::makeRef(fs_metaballs_mtl, sizeof(fs_metaballs_mtl) );
-				break;
-
-			default:
-				vs_metaballs = bgfx::makeRef(vs_metaballs_glsl, sizeof(vs_metaballs_glsl) );
-				fs_metaballs = bgfx::makeRef(fs_metaballs_glsl, sizeof(fs_metaballs_glsl) );
-				break;
-		}
-
-		bgfx::ShaderHandle vsh = bgfx::createShader(vs_metaballs);
-		bgfx::ShaderHandle fsh = bgfx::createShader(fs_metaballs);
+		bgfx::ShaderHandle vsh = bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_metaballs");
+		bgfx::ShaderHandle fsh = bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_metaballs");
 
 		// Create program from shaders.
 		m_program = bgfx::createProgram(vsh, fsh, true /* destroy shaders when program is destroyed */);
 
 		m_grid = new Grid[DIMS*DIMS*DIMS];
 		m_timeOffset = bx::getHPCounter();
+
+		imguiCreate();
 	}
 
-	int shutdown() BX_OVERRIDE
+	int shutdown() override
 	{
+		imguiDestroy();
+
 		delete [] m_grid;
 
 		// Cleanup.
-		bgfx::destroyProgram(m_program);
+		bgfx::destroy(m_program);
 
 		// Shutdown bgfx.
 		bgfx::shutdown();
@@ -540,14 +544,26 @@ class ExampleMetaballs : public entry::AppI
 		return 0;
 	}
 
-	bool update() BX_OVERRIDE
+	bool update() override
 	{
 		const uint32_t ypitch = DIMS;
 		const uint32_t zpitch = DIMS*DIMS;
 		const float invdim = 1.0f/float(DIMS-1);
 
-		if (!entry::processEvents(m_width, m_height, m_debug, m_reset) )
+		if (!entry::processEvents(m_width, m_height, m_debug, m_reset, &m_mouseState) )
 		{
+			imguiBeginFrame(m_mouseState.m_mx
+				,  m_mouseState.m_my
+				, (m_mouseState.m_buttons[entry::MouseButton::Left  ] ? IMGUI_MBUT_LEFT   : 0)
+				| (m_mouseState.m_buttons[entry::MouseButton::Right ] ? IMGUI_MBUT_RIGHT  : 0)
+				| (m_mouseState.m_buttons[entry::MouseButton::Middle] ? IMGUI_MBUT_MIDDLE : 0)
+				,  m_mouseState.m_mz
+				, uint16_t(m_width)
+				, uint16_t(m_height)
+				);
+
+			showExampleDialog(this);
+
 			// Set view 0 default viewport.
 			bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height) );
 
@@ -563,35 +579,16 @@ class ExampleMetaballs : public entry::AppI
 			const double toMs = 1000.0/freq;
 			float time = (float)( (now - m_timeOffset)/double(bx::getHPFrequency() ) );
 
-			// Use debug font to print information about this example.
-			bgfx::dbgTextClear();
-			bgfx::dbgTextPrintf(0, 1, 0x4f, "bgfx/examples/02-metaball");
-			bgfx::dbgTextPrintf(0, 2, 0x6f, "Description: Rendering with transient buffers and embedding shaders.");
-
 			float at[3]  = { 0.0f, 0.0f,   0.0f };
 			float eye[3] = { 0.0f, 0.0f, -50.0f };
 
 			// Set view and projection matrix for view 0.
-			const bgfx::HMD* hmd = bgfx::getHMD();
-			if (NULL != hmd && 0 != (hmd->flags & BGFX_HMD_RENDERING) )
-			{
-				float view[16];
-				bx::mtxQuatTranslationHMD(view, hmd->eye[0].rotation, eye);
-				bgfx::setViewTransform(0, view, hmd->eye[0].projection, BGFX_VIEW_STEREO, hmd->eye[1].projection);
-
-				// Set view 0 default viewport.
-				//
-				// Use HMD's width/height since HMD's internal frame buffer size
-				// might be much larger than window size.
-				bgfx::setViewRect(0, 0, 0, hmd->width, hmd->height);
-			}
-			else
 			{
 				float view[16];
 				bx::mtxLookAt(view, eye, at);
 
 				float proj[16];
-				bx::mtxProj(proj, 60.0f, float(m_width)/float(m_height), 0.1f, 100.0f);
+				bx::mtxProj(proj, 60.0f, float(m_width)/float(m_height), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
 				bgfx::setViewTransform(0, view, proj);
 
 				// Set view 0 default viewport.
@@ -613,10 +610,10 @@ class ExampleMetaballs : public entry::AppI
 			float sphere[numSpheres][4];
 			for (uint32_t ii = 0; ii < numSpheres; ++ii)
 			{
-				sphere[ii][0] = sinf(time*(ii*0.21f)+ii*0.37f) * (DIMS * 0.5f - 8.0f);
-				sphere[ii][1] = sinf(time*(ii*0.37f)+ii*0.67f) * (DIMS * 0.5f - 8.0f);
-				sphere[ii][2] = cosf(time*(ii*0.11f)+ii*0.13f) * (DIMS * 0.5f - 8.0f);
-				sphere[ii][3] = 1.0f/(2.0f + (sinf(time*(ii*0.13f) )*0.5f+0.5f)*2.0f);
+				sphere[ii][0] = bx::sin(time*(ii*0.21f)+ii*0.37f) * (DIMS * 0.5f - 8.0f);
+				sphere[ii][1] = bx::sin(time*(ii*0.37f)+ii*0.67f) * (DIMS * 0.5f - 8.0f);
+				sphere[ii][2] = bx::cos(time*(ii*0.11f)+ii*0.13f) * (DIMS * 0.5f - 8.0f);
+				sphere[ii][3] = 1.0f/(2.0f + (bx::sin(time*(ii*0.13f) )*0.5f+0.5f)*2.0f);
 			}
 
 			profUpdate = bx::getHPCounter();
@@ -741,7 +738,7 @@ class ExampleMetaballs : public entry::AppI
 			bgfx::setTransform(mtx);
 
 			// Set vertex and index buffer.
-			bgfx::setVertexBuffer(&tvb, 0, numVertices);
+			bgfx::setVertexBuffer(0, &tvb, 0, numVertices);
 
 			// Set render states.
 			bgfx::setState(BGFX_STATE_DEFAULT);
@@ -750,11 +747,28 @@ class ExampleMetaballs : public entry::AppI
 			bgfx::submit(0, m_program);
 
 			// Display stats.
-			bgfx::dbgTextPrintf(1, 4, 0x0f, "Num vertices: %5d (%6.4f%%)", numVertices, float(numVertices)/maxVertices * 100);
-			bgfx::dbgTextPrintf(1, 5, 0x0f, "      Update: % 7.3f[ms]", double(profUpdate)*toMs);
-			bgfx::dbgTextPrintf(1, 6, 0x0f, "Calc normals: % 7.3f[ms]", double(profNormal)*toMs);
-			bgfx::dbgTextPrintf(1, 7, 0x0f, " Triangulate: % 7.3f[ms]", double(profTriangulate)*toMs);
-			bgfx::dbgTextPrintf(1, 8, 0x0f, "       Frame: % 7.3f[ms]", double(frameTime)*toMs);
+			ImGui::SetNextWindowPos(
+				  ImVec2(m_width - m_width / 5.0f - 10.0f, 10.0f)
+				, ImGuiCond_FirstUseEver
+				);
+			ImGui::SetNextWindowSize(
+				  ImVec2(m_width / 5.0f, m_height / 4.0f)
+				, ImGuiCond_FirstUseEver
+				);
+			ImGui::Begin("Stats"
+				, NULL
+				, 0
+				);
+
+			ImGui::Text("Num vertices:"); ImGui::SameLine(100); ImGui::Text("%5d (%6.4f%%)", numVertices, float(numVertices)/maxVertices * 100);
+			ImGui::Text("Update:");       ImGui::SameLine(100); ImGui::Text("% 7.3f[ms]", double(profUpdate)*toMs);
+			ImGui::Text("Calc normals:"); ImGui::SameLine(100); ImGui::Text("% 7.3f[ms]", double(profNormal)*toMs);
+			ImGui::Text("Triangulate:");  ImGui::SameLine(100); ImGui::Text("% 7.3f[ms]", double(profTriangulate)*toMs);
+			ImGui::Text("Frame:");        ImGui::SameLine(100); ImGui::Text("% 7.3f[ms]", double(frameTime)*toMs);
+
+			ImGui::End();
+
+			imguiEndFrame();
 
 			// Advance to next frame. Rendering thread will be kicked to
 			// process submitted rendering primitives.
@@ -766,6 +780,8 @@ class ExampleMetaballs : public entry::AppI
 		return false;
 	}
 
+	entry::MouseState m_mouseState;
+
 	uint32_t m_width;
 	uint32_t m_height;
 	uint32_t m_debug;
@@ -776,4 +792,6 @@ class ExampleMetaballs : public entry::AppI
 	int64_t m_timeOffset;
 };
 
-ENTRY_IMPLEMENT_MAIN(ExampleMetaballs);
+} // namespace
+
+ENTRY_IMPLEMENT_MAIN(ExampleMetaballs, "02-metaball", "Rendering with transient buffers and embedding shaders.");
