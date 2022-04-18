@@ -61,21 +61,35 @@ typedef struct joystate_t
    int a2[2];
 }Joystate;
 
+typedef struct mousestate_t
+{
+   int mouseBUT[4];
+}Mousestate;
+
+typedef struct lightgunstate_t
+{
+   int lightgunBUT[4];
+}Lightgunstate;
+
 /* rendering target */
 static render_target *our_target = NULL;
 
 /* input device */
-static input_device *retrokbd_device; // KEYBD
-static input_device *mouse_device;    // MOUSE
-static input_device *joy_device[4];// JOY0/JOY1/JOY2/JOY3
-static input_device *Pad_device[4];// PAD0/PAD1/PAD2/PAD3
+static input_device *retrokbd_device;    // KEYBD
+static input_device *mouse_device[4];    // MOUSE0/MOUSE1/MOUSE2/MOUSE3
+static input_device *lightgun_device[4]; // GUN0/GUN1/GUN2/GUN3
+static input_device *joy_device[4];      // JOY0/JOY1/JOY2/JOY3
+static input_device *Pad_device[4];      // PAD0/PAD1/PAD2/PAD3
 
 /* state */
 UINT16 retrokbd_state[RETROK_LAST];
-int mouseLX;
-int mouseLY;
-int mouseBUT[4];
+int mouseLX[4];
+int mouseLY[4];
+int lightgunLX[4];
+int lightgunLY[4];
 static Joystate joystate[4];
+static Mousestate mousestate[4];
+static Lightgunstate lightgunstate[4];
 
 static int ui_ipt_pushchar=-1;
 
@@ -87,7 +101,7 @@ bool hide_warnings = false;
 bool nobuffer_enable = false;
 
 bool hide_gameinfo = false;
-bool mouse_enable = false;
+int mouse_mode = 0;
 bool cheats_enable = false;
 bool alternate_renderer = false;
 bool boot_to_osd_enable = false;
@@ -353,10 +367,11 @@ static INT32 generic_button_get_state(void *device_internal, void *item_internal
 	return *itemdata >> 7;
 }
 
-#define input_device_item_add_joy(a,b,c,d,e)   joy_device[a]->add_item(b,d,e,c)
-#define input_device_item_add_mouse(a,b,c,d,e) mouse_device->add_item(b,d,e,c)
-#define input_device_item_add_kbd(a,b,c,d,e)   retrokbd_device->add_item(b,d,e,c)
-#define input_device_item_add_pad(a,b,c,d,e)   Pad_device[a]->add_item(b,d,e,c)
+#define input_device_item_add_joy(a,b,c,d,e)       joy_device[a]->add_item(b,d,e,c)
+#define input_device_item_add_mouse(a,b,c,d,e)     mouse_device[a]->add_item(b,d,e,c)
+#define input_device_item_add_lightgun(a,b,c,d,e)  lightgun_device[a]->add_item(b,d,e,c)
+#define input_device_item_add_kbd(a,b,c,d,e)       retrokbd_device->add_item(b,d,e,c)
+#define input_device_item_add_pad(a,b,c,d,e)       Pad_device[a]->add_item(b,d,e,c)
 
 void process_keyboard_state(void)
 {
@@ -397,42 +412,116 @@ void process_joypad_state(void)
 
 void process_mouse_state(void)
 {
-   static int mbL = 0, mbR = 0;
-   int mouse_l;
-   int mouse_r;
-   int16_t mouse_x;
-   int16_t mouse_y;
+   unsigned i;
 
-   if (!mouse_enable)
-      return;
-
-   mouse_x = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_X);
-   mouse_y = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_Y);
-   mouse_l = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_LEFT);
-   mouse_r = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_RIGHT);
-   mouseLX = mouse_x*INPUT_RELATIVE_PER_PIXEL;;
-   mouseLY = mouse_y*INPUT_RELATIVE_PER_PIXEL;;
-
-   if(mbL==0 && mouse_l)
+   for(i = 0;i < 4; i++)
    {
-      mbL=1;
-      mouseBUT[0]=0x80;
+      static int mbL[4] = {0}, mbR[4] = {0}, mbM[4] = {0};
+      int mouse_l[4];
+      int mouse_r[4];
+      int mouse_m[4];
+      int16_t mouse_x[4];
+      int16_t mouse_y[4];
+
+      if (mouse_mode == 0 || mouse_mode == 2)
+         return;
+
+      mouse_x[i] = input_state_cb(i, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_X);
+      mouse_y[i] = input_state_cb(i, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_Y);
+      mouse_l[i] = input_state_cb(i, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_LEFT);
+      mouse_r[i] = input_state_cb(i, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_RIGHT);
+      mouse_m[i] = input_state_cb(i, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_MIDDLE);
+
+      mouseLX[i] = mouse_x[i]*INPUT_RELATIVE_PER_PIXEL;;
+      mouseLY[i] = mouse_y[i]*INPUT_RELATIVE_PER_PIXEL;;
+	   
+      if(mbL[i]==0 && mouse_l[i])
+      {
+         mbL[i]=1;
+         mousestate[i].mouseBUT[0]=0x80;
+      }
+      else if(mbL[i]==1 && !mouse_l[i])
+      {
+         mousestate[i].mouseBUT[0]=0;
+         mbL[i]=0;
+      }
+	   
+      if(mbR[i]==0 && mouse_r[i])
+      {
+         mbR[i]=1;
+         mousestate[i].mouseBUT[1]=0x80;
+      }
+      else if(mbR[i]==1 && !mouse_r[i])
+      {
+         mousestate[i].mouseBUT[1]=0;
+         mbR[i]=0;
+      }
+
+      if(mbM[i]==0 && mouse_m[i])
+      {
+         mbM[i]=1;
+         mousestate[i].mouseBUT[2]=0x80;
+      }
+      else if(mbM[i]==1 && !mouse_m[i])
+      {
+         mousestate[i].mouseBUT[2]=0;
+         mbM[i]=0;
+      }
    }
-   else if(mbL==1 && !mouse_l)
-   {
-      mouseBUT[0]=0;
-      mbL=0;
-   }
+}
 
-   if(mbR==0 && mouse_r)
+void process_lightgun_state(void)
+{
+   unsigned i;
+
+   for(i = 0;i < 4; i++)
    {
-      mbR=1;
-      mouseBUT[1]=1;
-   }
-   else if(mbR==1 && !mouse_r)
-   {
-      mouseBUT[1]=0;
-      mbR=0;
+      static int gb1[4] = {0}, gb2[4] = {0};
+      int gun_1[4];
+      int gun_2[4];
+      int16_t lightgun_x[4];
+      int16_t lightgun_y[4];
+
+      if (mouse_mode == 0 || mouse_mode == 1)
+         return;
+
+      gun_1[i] = input_state_cb( i, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_TRIGGER ) || input_state_cb( i, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_RELOAD );
+      gun_2[i] = input_state_cb( i, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_AUX_A );
+
+      if(gb1[i]==0 && gun_1[i])
+	  {
+	     gb1[i]=1;
+	     lightgunstate[i].lightgunBUT[0] = 0x80;	  
+	  }
+      else if(gb1[i]==1 && !gun_1[i])
+	  {
+	     lightgunstate[i].lightgunBUT[0] = 0;	
+	     gb1[i]=0;
+	  }
+
+      if(gb2[i]==0 && gun_2[i])
+	  {
+	     gb2[i]=1;
+	     lightgunstate[i].lightgunBUT[1] = 0x80;	  
+	  }
+      else if(gb2[i]==1 && !gun_2[i])
+	  {
+	     lightgunstate[i].lightgunBUT[1] = 0;	
+	     gb2[i]=0;
+	  }
+
+      lightgun_x[i] = input_state_cb(i, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_SCREEN_X);
+      lightgun_y[i] = input_state_cb(i, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_SCREEN_Y);
+
+      lightgunLX[i] = lightgun_x[i]*2;;
+      lightgunLY[i] = lightgun_y[i]*2;;
+
+      //Place the cursor at screen top left when detected as offscreen or when Gun Reload input activated
+      if (input_state_cb( i, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN ) || input_state_cb( i, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_RELOAD ) )
+	  {
+	     lightgunLX[i] = -65534;
+	     lightgunLY[i] = -65534; 
+	  }
    }
 }
 
@@ -441,21 +530,46 @@ static void initInput(running_machine &machine)
    int i,j,button;
    char defname[20];
 
-   if (mouse_enable)
+   //MOUSE
+   if (mouse_mode == 1)
    {
-      //MOUSE
-      mouse_device = machine.input().device_class(DEVICE_CLASS_MOUSE).add_device("Mice1");
-      // add the axes
-      input_device_item_add_mouse(mouse_device , "X", &mouseLX, ITEM_ID_XAXIS, generic_axis_get_state);
-      input_device_item_add_mouse(mouse_device , "Y", &mouseLY, ITEM_ID_YAXIS, generic_axis_get_state);
-      // add the buttons
-      for (button = 0; button < 4; button++)
+      for(i=0;i<4;i++)
       {
-         input_item_id itemid = (input_item_id) (ITEM_ID_BUTTON1+button);
-         sprintf(defname, "B%d", button + 1);
-         input_device_item_add_mouse(mouse_device, defname, &mouseBUT[button], itemid, generic_button_get_state);
+         sprintf(defname, "Mouse%d", i);
+         mouse_device[i]=machine.input().device_class(DEVICE_CLASS_MOUSE).add_device(defname);
+         // add the axes
+         input_device_item_add_mouse (i , "X", &mouseLX[i], ITEM_ID_XAXIS, generic_axis_get_state);
+         input_device_item_add_mouse (i , "Y", &mouseLY[i], ITEM_ID_YAXIS, generic_axis_get_state);
+         // add the buttons
+         for (button = 0; button < 4; button++)
+         {
+            input_item_id itemid = (input_item_id) (ITEM_ID_BUTTON1+button);
+            sprintf(defname, "B%d", button + 1);
+            input_device_item_add_mouse(i, defname, &mousestate[i].mouseBUT[button], itemid, generic_button_get_state);
+         }
       }
    }
+	      
+   //LIGHTGUN
+   if (mouse_mode == 2)
+   {
+      for(i=0;i<4;i++)
+      {
+         sprintf(defname, "Gun%d", i);
+         lightgun_device[i]=machine.input().device_class(DEVICE_CLASS_LIGHTGUN).add_device(defname);
+         // add the axes
+         input_device_item_add_lightgun (i , "X", &lightgunLX[i], ITEM_ID_XAXIS, generic_axis_get_state);
+         input_device_item_add_lightgun (i , "Y", &lightgunLY[i], ITEM_ID_YAXIS, generic_axis_get_state);
+         // add the buttons
+         for (button = 0; button < 4; button++)
+         {
+            input_item_id itemid = (input_item_id) (ITEM_ID_BUTTON1+button);
+            sprintf(defname, "B%d", button + 1);
+            input_device_item_add_lightgun(i, defname, &lightgunstate[i].lightgunBUT[button], itemid, generic_button_get_state);
+         }
+      }
+   }
+
 
    //KEYBOARD
    retrokbd_device = machine.input().device_class(DEVICE_CLASS_KEYBOARD).add_device("Retrokdb");
@@ -1212,10 +1326,24 @@ static void Set_Default_Option(void)
    else
       Add_Option("-nocheat");
 
-   if(mouse_enable)
-      Add_Option("-mouse");
-   else
+   if(mouse_mode == 0)
+   {
       Add_Option("-nomouse");
+      Add_Option("-nolightgun");
+   }
+   if(mouse_mode == 1)
+   {
+      Add_Option("-mouse");
+      Add_Option("-multimouse");
+      Add_Option("-nolightgun");
+   }
+   if(mouse_mode == 2)
+   {
+      Add_Option("-nomouse");
+      Add_Option("-multimouse");
+      Add_Option("-lightgun");
+   }
+
 
    if(hide_gameinfo)
       Add_Option("-skip_gameinfo");
