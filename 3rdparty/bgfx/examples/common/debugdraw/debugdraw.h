@@ -1,6 +1,6 @@
 /*
- * Copyright 2011-2016 Branimir Karadzic. All rights reserved.
- * License: http://www.opensource.org/licenses/BSD-2-Clause
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
+ * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
 #ifndef DEBUGDRAW_H_HEADER_GUARD
@@ -21,103 +21,177 @@ struct Axis
 	};
 };
 
+struct DdVertex
+{
+	float x, y, z;
+};
+
+struct SpriteHandle { uint16_t idx; };
+inline bool isValid(SpriteHandle _handle) { return _handle.idx != UINT16_MAX; }
+
+struct GeometryHandle { uint16_t idx; };
+inline bool isValid(GeometryHandle _handle) { return _handle.idx != UINT16_MAX; }
+
 ///
-void ddInit(bool _depthTestLess = true, bx::AllocatorI* _allocator = NULL);
+void ddInit(bx::AllocatorI* _allocator = NULL);
 
 ///
 void ddShutdown();
 
 ///
-void ddBegin(uint8_t _viewId);
+SpriteHandle ddCreateSprite(uint16_t _width, uint16_t _height, const void* _data);
 
 ///
-void ddEnd();
+void ddDestroy(SpriteHandle _handle);
 
 ///
-void ddPush();
+GeometryHandle ddCreateGeometry(uint32_t _numVertices, const DdVertex* _vertices, uint32_t _numIndices = 0, const void* _indices = NULL, bool _index32 = false);
 
 ///
-void ddPop();
+void ddDestroy(GeometryHandle _handle);
 
-///
-void ddSetState(bool _depthTest, bool _depthWrite, bool _clockwise);
 
-///
-void ddSetColor(uint32_t _abgr);
+struct DebugDrawEncoder
+{
+	///
+	DebugDrawEncoder();
 
-///
-void ddSetLod(uint8_t _lod);
+	///
+	~DebugDrawEncoder();
 
-///
-void ddSetWireframe(bool _wireframe);
+	///
+	void begin(uint16_t _viewId, bool _depthTestLess = true, bgfx::Encoder* _encoder = NULL);
 
-///
-void ddSetStipple(bool _stipple, float _scale = 1.0f, float _offset = 0.0f);
+	///
+	void end();
 
-///
-void ddSetTransform(const void* _mtx);
+	///
+	void push();
 
-///
-void ddSetTranslate(float _x, float _y, float _z);
+	///
+	void pop();
 
-///
-void ddMoveTo(float _x, float _y, float _z = 0.0f);
+	///
+	void setDepthTestLess(bool _depthTestLess);
 
-///
-void ddMoveTo(const void* _pos);
+	///
+	void setState(bool _depthTest, bool _depthWrite, bool _clockwise);
 
-///
-void ddLineTo(float _x, float _y, float _z = 0.0f);
+	///
+	void setColor(uint32_t _abgr);
 
-///
-void ddLineTo(const void* _pos);
+	///
+	void setLod(uint8_t _lod);
 
-///
-void ddClose();
+	///
+	void setWireframe(bool _wireframe);
 
-///
-void ddDraw(const Aabb& _aabb);
+	///
+	void setStipple(bool _stipple, float _scale = 1.0f, float _offset = 0.0f);
 
-///
-void ddDraw(const Cylinder& _cylinder, bool _capsule = false);
+	///
+	void setSpin(float _spin);
 
-///
-void ddDraw(const Disk& _disk);
+	///
+	void setTransform(const void* _mtx);
 
-///
-void ddDraw(const Obb& _obb);
+	///
+	void setTranslate(float _x, float _y, float _z);
 
-///
-void ddDraw(const Sphere& _sphere);
+	///
+	void pushTransform(const void* _mtx);
 
-///
-void ddDrawFrustum(const void* _viewProj);
+	///
+	void popTransform();
 
-///
-void ddDrawArc(Axis::Enum _axis, float _x, float _y, float _z, float _radius, float _degrees);
+	///
+	void moveTo(float _x, float _y, float _z = 0.0f);
 
-///
-void ddDrawCircle(const void* _normal, const void* _center, float _radius, float _weight = 0.0f);
+	///
+	void moveTo(const void* _pos);
 
-///
-void ddDrawCircle(Axis::Enum _axis, float _x, float _y, float _z, float _radius, float _weight = 0.0f);
+	///
+	void lineTo(float _x, float _y, float _z = 0.0f);
 
-///
-void ddDrawCone(const void* _from, const void* _to, float _radius, float _weight = 0.0f);
+	///
+	void lineTo(const void* _pos);
 
-///
-void ddDrawCylinder(const void* _from, const void* _to, float _radius, float _weight = 0.0f);
+	///
+	void close();
 
-///
-void ddDrawAxis(float _x, float _y, float _z, float _len = 1.0f, Axis::Enum _highlight = Axis::Count);
+	///
+	void draw(const Aabb& _aabb);
 
-///
-void ddDrawGrid(const void* _normal, const void* _center, uint32_t _size = 20, float _step = 1.0f);
+	///
+	void draw(const Cylinder& _cylinder);
 
-///
-void ddDrawGrid(Axis::Enum _axis, const void* _center, uint32_t _size = 20, float _step = 1.0f);
+	///
+	void draw(const Capsule& _capsule);
 
-///
-void ddDrawOrb(float _x, float _y, float _z, float _radius, Axis::Enum _highlight = Axis::Count);
+	///
+	void draw(const Disk& _disk);
+
+	///
+	void draw(const Obb& _obb);
+
+	///
+	void draw(const Sphere& _sphere);
+
+	///
+	void draw(const Cone& _cone);
+
+	///
+	void draw(GeometryHandle _handle);
+
+	///
+	void drawLineList(uint32_t _numVertices, const DdVertex* _vertices, uint32_t _numIndices = 0, const uint16_t* _indices = NULL);
+
+	///
+	void drawTriList(uint32_t _numVertices, const DdVertex* _vertices, uint32_t _numIndices = 0, const uint16_t* _indices = NULL);
+
+	///
+	void drawFrustum(const void* _viewProj);
+
+	///
+	void drawArc(Axis::Enum _axis, float _x, float _y, float _z, float _radius, float _degrees);
+
+	///
+	void drawCircle(const void* _normal, const void* _center, float _radius, float _weight = 0.0f);
+
+	///
+	void drawCircle(Axis::Enum _axis, float _x, float _y, float _z, float _radius, float _weight = 0.0f);
+
+	///
+	void drawQuad(const float* _normal, const float* _center, float _size);
+
+	///
+	void drawQuad(SpriteHandle _handle, const float* _normal, const float* _center, float _size);
+
+	///
+	void drawQuad(bgfx::TextureHandle _handle, const float* _normal, const float* _center, float _size);
+
+	///
+	void drawCone(const void* _from, const void* _to, float _radius);
+
+	///
+	void drawCylinder(const void* _from, const void* _to, float _radius);
+
+	///
+	void drawCapsule(const void* _from, const void* _to, float _radius);
+
+	///
+	void drawAxis(float _x, float _y, float _z, float _len = 1.0f, Axis::Enum _highlight = Axis::Count, float _thickness = 0.0f);
+
+	///
+	void drawGrid(const void* _normal, const void* _center, uint32_t _size = 20, float _step = 1.0f);
+
+	///
+	void drawGrid(Axis::Enum _axis, const void* _center, uint32_t _size = 20, float _step = 1.0f);
+
+	///
+	void drawOrb(float _x, float _y, float _z, float _radius, Axis::Enum _highlight = Axis::Count);
+
+	BX_ALIGN_DECL_CACHE_LINE(uint8_t) m_internal[50<<10];
+};
 
 #endif // DEBUGDRAW_H_HEADER_GUARD

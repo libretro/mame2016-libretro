@@ -1,15 +1,23 @@
 /*
- * Copyright 2011-2016 Branimir Karadzic. All rights reserved.
- * License: http://www.opensource.org/licenses/BSD-2-Clause
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
+ * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
 #include <bgfx/bgfx.h>
+#include <bgfx/embedded_shader.h>
 #include "debugdraw.h"
+#include "../bgfx_utils.h"
+#include "../packrect.h"
 
-#include <bx/fpumath.h>
-#include <bx/radixsort.h>
+#include <bx/mutex.h>
+#include <bx/math.h>
+#include <bx/sort.h>
 #include <bx/uint32_t.h>
-#include <bx/crtimpl.h>
+#include <bx/handlealloc.h>
+
+#ifndef DEBUG_DRAW_CONFIG_MAX_GEOMETRY
+#	define DEBUG_DRAW_CONFIG_MAX_GEOMETRY 256
+#endif // DEBUG_DRAW_CONFIG_MAX_GEOMETRY
 
 struct DebugVertex
 {
@@ -34,18 +42,43 @@ struct DebugVertex
 
 bgfx::VertexDecl DebugVertex::ms_decl;
 
-struct DebugShapeVertex
+struct DebugUvVertex
 {
 	float m_x;
 	float m_y;
 	float m_z;
-	float m_mask;
+	float m_u;
+	float m_v;
+	uint32_t m_abgr;
 
 	static void init()
 	{
 		ms_decl
 			.begin()
-			.add(bgfx::Attrib::Position, 4, bgfx::AttribType::Float)
+			.add(bgfx::Attrib::Position,  3, bgfx::AttribType::Float)
+			.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+			.add(bgfx::Attrib::Color0,    4, bgfx::AttribType::Uint8, true)
+			.end();
+	}
+
+	static bgfx::VertexDecl ms_decl;
+};
+
+bgfx::VertexDecl DebugUvVertex::ms_decl;
+
+struct DebugShapeVertex
+{
+	float m_x;
+	float m_y;
+	float m_z;
+	uint8_t m_indices[4];
+
+	static void init()
+	{
+		ms_decl
+			.begin()
+			.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+			.add(bgfx::Attrib::Indices,  4, bgfx::AttribType::Uint8)
 			.end();
 	}
 
@@ -54,16 +87,50 @@ struct DebugShapeVertex
 
 bgfx::VertexDecl DebugShapeVertex::ms_decl;
 
+struct DebugMeshVertex
+{
+	float m_x;
+	float m_y;
+	float m_z;
+
+	static void init()
+	{
+		ms_decl
+			.begin()
+			.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+			.end();
+	}
+
+	static bgfx::VertexDecl ms_decl;
+};
+
+bgfx::VertexDecl DebugMeshVertex::ms_decl;
+
+static DebugShapeVertex s_quadVertices[4] =
+{
+	{-1.0f, 0.0f,  1.0f, { 0, 0, 0, 0 } },
+	{ 1.0f, 0.0f,  1.0f, { 0, 0, 0, 0 } },
+	{-1.0f, 0.0f, -1.0f, { 0, 0, 0, 0 } },
+	{ 1.0f, 0.0f, -1.0f, { 0, 0, 0, 0 } },
+
+};
+
+static const uint16_t s_quadIndices[6] =
+{
+	0, 1, 2,
+	1, 3, 2,
+};
+
 static DebugShapeVertex s_cubeVertices[8] =
 {
-	{-1.0f,  1.0f,  1.0f, 0.0f },
-	{ 1.0f,  1.0f,  1.0f, 0.0f },
-	{-1.0f, -1.0f,  1.0f, 0.0f },
-	{ 1.0f, -1.0f,  1.0f, 0.0f },
-	{-1.0f,  1.0f, -1.0f, 0.0f },
-	{ 1.0f,  1.0f, -1.0f, 0.0f },
-	{-1.0f, -1.0f, -1.0f, 0.0f },
-	{ 1.0f, -1.0f, -1.0f, 0.0f },
+	{-1.0f,  1.0f,  1.0f, { 0, 0, 0, 0 } },
+	{ 1.0f,  1.0f,  1.0f, { 0, 0, 0, 0 } },
+	{-1.0f, -1.0f,  1.0f, { 0, 0, 0, 0 } },
+	{ 1.0f, -1.0f,  1.0f, { 0, 0, 0, 0 } },
+	{-1.0f,  1.0f, -1.0f, { 0, 0, 0, 0 } },
+	{ 1.0f,  1.0f, -1.0f, { 0, 0, 0, 0 } },
+	{-1.0f, -1.0f, -1.0f, { 0, 0, 0, 0 } },
+	{ 1.0f, -1.0f, -1.0f, { 0, 0, 0, 0 } },
 };
 
 static const uint16_t s_cubeIndices[36] =
@@ -99,18 +166,18 @@ static uint8_t getCircleLod(uint8_t _lod)
 
 static void circle(float* _out, float _angle)
 {
-	float sa = bx::fsin(_angle);
-	float ca = bx::fcos(_angle);
+	float sa = bx::sin(_angle);
+	float ca = bx::cos(_angle);
 	_out[0] = sa;
 	_out[1] = ca;
 }
 
 static void squircle(float* _out, float _angle)
 {
-	float sa = bx::fsin(_angle);
-	float ca = bx::fcos(_angle);
-	_out[0] = bx::fsqrt(bx::fabsolute(sa) ) * bx::fsign(sa);
-	_out[1] = bx::fsqrt(bx::fabsolute(ca) ) * bx::fsign(ca);
+	float sa = bx::sin(_angle);
+	float ca = bx::cos(_angle);
+	_out[0] = bx::sqrt(bx::abs(sa) ) * bx::sign(sa);
+	_out[1] = bx::sqrt(bx::abs(ca) ) * bx::sign(ca);
 }
 
 uint32_t genSphere(uint8_t _subdiv0, void* _pos0 = NULL, uint16_t _posStride0 = 0, void* _normals0 = NULL, uint16_t _normalStride0 = 0)
@@ -127,7 +194,7 @@ uint32_t genSphere(uint8_t _subdiv0, void* _pos0 = NULL, uint16_t _posStride0 = 
 			{
 				static const float scale = 1.0f;
 				static const float golden = 1.6180339887f;
-				static const float len = bx::fsqrt(golden*golden + 1.0f);
+				static const float len = bx::sqrt(golden*golden + 1.0f);
 				static const float ss = 1.0f/len * scale;
 				static const float ll = ss*golden;
 
@@ -238,7 +305,7 @@ uint32_t genSphere(uint8_t _subdiv0, void* _pos0 = NULL, uint16_t _posStride0 = 
 		} gen(_pos0, _posStride0, _normals0, _normalStride0, _subdiv0);
 	}
 
-	uint32_t numVertices = 20*3*bx::uint32_max(1, (uint32_t)bx::fpow(4.0f, _subdiv0) );
+	uint32_t numVertices = 20*3*bx::uint32_max(1, (uint32_t)bx::pow(4.0f, _subdiv0) );
 	return numVertices;
 }
 
@@ -266,112 +333,324 @@ void getPoint(float* _result, Axis::Enum _axis, float _x, float _y)
 	}
 }
 
-
 #include "vs_debugdraw_lines.bin.h"
 #include "fs_debugdraw_lines.bin.h"
 #include "vs_debugdraw_lines_stipple.bin.h"
 #include "fs_debugdraw_lines_stipple.bin.h"
 #include "vs_debugdraw_fill.bin.h"
+#include "vs_debugdraw_fill_mesh.bin.h"
 #include "fs_debugdraw_fill.bin.h"
 #include "vs_debugdraw_fill_lit.bin.h"
+#include "vs_debugdraw_fill_lit_mesh.bin.h"
 #include "fs_debugdraw_fill_lit.bin.h"
+#include "vs_debugdraw_fill_texture.bin.h"
+#include "fs_debugdraw_fill_texture.bin.h"
 
-struct EmbeddedShader
+static const bgfx::EmbeddedShader s_embeddedShaders[] =
 {
-	bgfx::RendererType::Enum type;
-	const uint8_t* data;
-	uint32_t size;
+	BGFX_EMBEDDED_SHADER(vs_debugdraw_lines),
+	BGFX_EMBEDDED_SHADER(fs_debugdraw_lines),
+	BGFX_EMBEDDED_SHADER(vs_debugdraw_lines_stipple),
+	BGFX_EMBEDDED_SHADER(fs_debugdraw_lines_stipple),
+	BGFX_EMBEDDED_SHADER(vs_debugdraw_fill),
+	BGFX_EMBEDDED_SHADER(vs_debugdraw_fill_mesh),
+	BGFX_EMBEDDED_SHADER(fs_debugdraw_fill),
+	BGFX_EMBEDDED_SHADER(vs_debugdraw_fill_lit),
+	BGFX_EMBEDDED_SHADER(vs_debugdraw_fill_lit_mesh),
+	BGFX_EMBEDDED_SHADER(fs_debugdraw_fill_lit),
+	BGFX_EMBEDDED_SHADER(vs_debugdraw_fill_texture),
+	BGFX_EMBEDDED_SHADER(fs_debugdraw_fill_texture),
+
+	BGFX_EMBEDDED_SHADER_END()
 };
 
-#define BGFX_DECLARE_SHADER_EMBEDDED(_name) \
-			{ \
-				{ bgfx::RendererType::Direct3D9,  BX_CONCATENATE(_name, _dx9 ),  sizeof(BX_CONCATENATE(_name, _dx9 ) ) }, \
-				{ bgfx::RendererType::Direct3D11, BX_CONCATENATE(_name, _dx11),  sizeof(BX_CONCATENATE(_name, _dx11) ) }, \
-				{ bgfx::RendererType::Direct3D12, BX_CONCATENATE(_name, _dx11),  sizeof(BX_CONCATENATE(_name, _dx11) ) }, \
-				{ bgfx::RendererType::OpenGL,     BX_CONCATENATE(_name, _glsl),  sizeof(BX_CONCATENATE(_name, _glsl) ) }, \
-				{ bgfx::RendererType::OpenGLES,   BX_CONCATENATE(_name, _glsl),  sizeof(BX_CONCATENATE(_name, _glsl) ) }, \
-				{ bgfx::RendererType::Vulkan,     BX_CONCATENATE(_name, _glsl),  sizeof(BX_CONCATENATE(_name, _glsl) ) }, \
-				{ bgfx::RendererType::Metal,      BX_CONCATENATE(_name, _mtl ),  sizeof(BX_CONCATENATE(_name, _mtl ) ) }, \
-				{ bgfx::RendererType::Count,      NULL,                          0                                     }, \
-			}
+#define SPRITE_TEXTURE_SIZE 1024
 
-static const EmbeddedShader s_embeddedShaders[][8] =
+template<uint16_t MaxHandlesT = 256, uint16_t TextureSizeT = 1024>
+struct SpriteT
 {
-	BGFX_DECLARE_SHADER_EMBEDDED(vs_debugdraw_lines),
-	BGFX_DECLARE_SHADER_EMBEDDED(fs_debugdraw_lines),
-	BGFX_DECLARE_SHADER_EMBEDDED(vs_debugdraw_lines_stipple),
-	BGFX_DECLARE_SHADER_EMBEDDED(fs_debugdraw_lines_stipple),
-	BGFX_DECLARE_SHADER_EMBEDDED(vs_debugdraw_fill),
-	BGFX_DECLARE_SHADER_EMBEDDED(fs_debugdraw_fill),
-	BGFX_DECLARE_SHADER_EMBEDDED(vs_debugdraw_fill_lit),
-	BGFX_DECLARE_SHADER_EMBEDDED(fs_debugdraw_fill_lit),
-};
-
-static bgfx::ShaderHandle createEmbeddedShader(bgfx::RendererType::Enum _type, uint32_t _index)
-{
-	for (const EmbeddedShader* es = s_embeddedShaders[_index]; bgfx::RendererType::Count != es->type; ++es)
+	SpriteT()
+		: m_ra(TextureSizeT, TextureSizeT)
 	{
-		if (_type == es->type)
+	}
+
+	SpriteHandle create(uint16_t _width, uint16_t _height)
+	{
+		bx::MutexScope lock(m_lock);
+
+		SpriteHandle handle = { bx::kInvalidHandle };
+
+		if (m_handleAlloc.getNumHandles() < m_handleAlloc.getMaxHandles() )
 		{
-			return bgfx::createShader(bgfx::makeRef(es->data, es->size) );
+			Pack2D pack;
+			if (m_ra.find(_width, _height, pack) )
+			{
+				handle.idx = m_handleAlloc.alloc();
+
+				if (isValid(handle) )
+				{
+					m_pack[handle.idx] = pack;
+				}
+				else
+				{
+					m_ra.clear(pack);
+				}
+			}
 		}
+
+		return handle;
 	}
 
-	bgfx::ShaderHandle handle = BGFX_INVALID_HANDLE;
-	return handle;
-}
+	void destroy(SpriteHandle _sprite)
+	{
+		const Pack2D& pack = m_pack[_sprite.idx];
+		m_ra.clear(pack);
+		m_handleAlloc.free(_sprite.idx);
+	}
 
-struct DebugDraw
+	const Pack2D& get(SpriteHandle _sprite) const
+	{
+		return m_pack[_sprite.idx];
+	}
+
+	bx::Mutex                     m_lock;
+	bx::HandleAllocT<MaxHandlesT> m_handleAlloc;
+	Pack2D                        m_pack[MaxHandlesT];
+	RectPack2DT<256>              m_ra;
+};
+
+template<uint16_t MaxHandlesT = DEBUG_DRAW_CONFIG_MAX_GEOMETRY>
+struct GeometryT
 {
-	DebugDraw()
-		: m_depthTestLess(true)
-		, m_state(State::Count)
+	GeometryT()
 	{
 	}
 
-	void init(bool _depthTestLess, bx::AllocatorI* _allocator)
+	GeometryHandle create(uint32_t _numVertices, const DdVertex* _vertices, uint32_t _numIndices, const void* _indices, bool _index32)
 	{
-		m_allocator = _allocator;
-		m_depthTestLess = _depthTestLess;
+		BX_UNUSED(_numVertices, _vertices, _numIndices, _indices, _index32);
 
-#if BX_CONFIG_ALLOCATOR_CRT
+		GeometryHandle handle;
+		{
+			bx::MutexScope lock(m_lock);
+			handle = { m_handleAlloc.alloc() };
+		}
+
+		if (isValid(handle) )
+		{
+			Geometry& geometry = m_geometry[handle.idx];
+			geometry.m_vbh = bgfx::createVertexBuffer(
+				  bgfx::copy(_vertices, _numVertices*sizeof(DdVertex) )
+				, DebugMeshVertex::ms_decl
+				);
+
+			geometry.m_topologyNumIndices[0] = _numIndices;
+			geometry.m_topologyNumIndices[1] = bgfx::topologyConvert(
+				  bgfx::TopologyConvert::TriListToLineList
+				, NULL
+				, 0
+				, _indices
+				, _numIndices
+				, _index32
+				);
+
+			const uint32_t indexSize = _index32 ? sizeof(uint32_t) : sizeof(uint16_t);
+
+			const uint32_t numIndices = 0
+				+ geometry.m_topologyNumIndices[0]
+				+ geometry.m_topologyNumIndices[1]
+				;
+			const bgfx::Memory* mem = bgfx::alloc(numIndices*indexSize );
+			uint8_t* indexData = mem->data;
+
+			bx::memCopy(indexData, _indices, _numIndices*indexSize );
+			bgfx::topologyConvert(
+				  bgfx::TopologyConvert::TriListToLineList
+				, &indexData[geometry.m_topologyNumIndices[0]*indexSize ]
+				, geometry.m_topologyNumIndices[1]*indexSize
+				, _indices
+				, _numIndices
+				, _index32
+				);
+
+			geometry.m_ibh = bgfx::createIndexBuffer(
+				  mem
+				, _index32 ? BGFX_BUFFER_INDEX32 : BGFX_BUFFER_NONE
+				);
+		}
+
+		return handle;
+	}
+
+	void destroy(GeometryHandle _handle)
+	{
+		bx::MutexScope lock(m_lock);
+		Geometry& geometry = m_geometry[_handle.idx];
+		bgfx::destroy(geometry.m_vbh);
+		bgfx::destroy(geometry.m_ibh);
+
+		m_handleAlloc.free(_handle.idx);
+	}
+
+	struct Geometry
+	{
+		Geometry()
+		{
+			m_vbh.idx = bx::kInvalidHandle;
+			m_ibh.idx = bx::kInvalidHandle;
+			m_topologyNumIndices[0] = 0;
+			m_topologyNumIndices[1] = 0;
+		}
+
+		bgfx::VertexBufferHandle m_vbh;
+		bgfx::IndexBufferHandle  m_ibh;
+		uint32_t m_topologyNumIndices[2];
+	};
+
+	bx::Mutex m_lock;
+	bx::HandleAllocT<MaxHandlesT> m_handleAlloc;
+	Geometry m_geometry[MaxHandlesT];
+};
+
+struct Attrib
+{
+	uint64_t m_state;
+	float    m_offset;
+	float    m_scale;
+	float    m_spin;
+	uint32_t m_abgr;
+	bool     m_stipple;
+	bool     m_wireframe;
+	uint8_t  m_lod;
+};
+
+struct Program
+{
+	enum Enum
+	{
+		Lines,
+		LinesStipple,
+		Fill,
+		FillMesh,
+		FillLit,
+		FillLitMesh,
+		FillTexture,
+
+		Count
+	};
+};
+
+struct Mesh
+{
+	enum Enum
+	{
+		Sphere0,
+		Sphere1,
+		Sphere2,
+		Sphere3,
+
+		Cone0,
+		Cone1,
+		Cone2,
+		Cone3,
+
+		Cylinder0,
+		Cylinder1,
+		Cylinder2,
+		Cylinder3,
+
+		Capsule0,
+		Capsule1,
+		Capsule2,
+		Capsule3,
+
+		Quad,
+
+		Cube,
+
+		Count,
+
+		SphereMaxLod   = Sphere3   - Sphere0,
+		ConeMaxLod     = Cone3     - Cone0,
+		CylinderMaxLod = Cylinder3 - Cylinder0,
+		CapsuleMaxLod  = Capsule3  - Capsule0,
+	};
+
+	uint32_t m_startVertex;
+	uint32_t m_numVertices;
+	uint32_t m_startIndex[2];
+	uint32_t m_numIndices[2];
+};
+
+typedef SpriteT<256, SPRITE_TEXTURE_SIZE> Sprite;
+typedef GeometryT<DEBUG_DRAW_CONFIG_MAX_GEOMETRY> Geometry;
+
+struct DebugDrawShared
+{
+	void init(bx::AllocatorI* _allocator)
+	{
 		if (NULL == _allocator)
 		{
-			static bx::CrtAllocator allocator;
+			static bx::DefaultAllocator allocator;
 			m_allocator = &allocator;
 		}
-#endif // BX_CONFIG_ALLOCATOR_CRT
+		else
+		{
+			m_allocator = _allocator;
+		}
 
 		DebugVertex::init();
+		DebugUvVertex::init();
 		DebugShapeVertex::init();
+		DebugMeshVertex::init();
 
 		bgfx::RendererType::Enum type = bgfx::getRendererType();
 
-		m_program[Program::Lines] =
-			bgfx::createProgram(createEmbeddedShader(type, 0)
-							, createEmbeddedShader(type, 1)
-							, true
-							);
+		m_program[Program::Lines] = bgfx::createProgram(
+			  bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_debugdraw_lines")
+			, bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_debugdraw_lines")
+			, true
+			);
 
-		m_program[Program::LinesStipple] =
-			bgfx::createProgram(createEmbeddedShader(type, 2)
-							, createEmbeddedShader(type, 3)
-							, true
-							);
+		m_program[Program::LinesStipple] = bgfx::createProgram(
+			  bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_debugdraw_lines_stipple")
+			, bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_debugdraw_lines_stipple")
+			, true
+			);
 
-		m_program[Program::Fill] =
-			bgfx::createProgram(createEmbeddedShader(type, 4)
-							, createEmbeddedShader(type, 5)
-							, true
-							);
+		m_program[Program::Fill] = bgfx::createProgram(
+			  bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_debugdraw_fill")
+			, bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_debugdraw_fill")
+			, true
+			);
 
-		m_program[Program::FillLit] =
-			bgfx::createProgram(createEmbeddedShader(type, 6)
-							, createEmbeddedShader(type, 7)
-							, true
-							);
+		m_program[Program::FillMesh] = bgfx::createProgram(
+			  bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_debugdraw_fill_mesh")
+			, bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_debugdraw_fill")
+			, true
+			);
 
-		u_params = bgfx::createUniform("u_params", bgfx::UniformType::Vec4, 4);
+		m_program[Program::FillLit] = bgfx::createProgram(
+			  bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_debugdraw_fill_lit")
+			, bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_debugdraw_fill_lit")
+			, true
+			);
+
+		m_program[Program::FillLitMesh] = bgfx::createProgram(
+			  bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_debugdraw_fill_lit_mesh")
+			, bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_debugdraw_fill_lit")
+			, true
+			);
+
+		m_program[Program::FillTexture] = bgfx::createProgram(
+			  bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_debugdraw_fill_texture")
+			, bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_debugdraw_fill_texture")
+			, true
+			);
+
+		u_params   = bgfx::createUniform("u_params", bgfx::UniformType::Vec4, 4);
+		s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Int1);
+		m_texture  = bgfx::createTexture2D(SPRITE_TEXTURE_SIZE, SPRITE_TEXTURE_SIZE, false, 1, bgfx::TextureFormat::BGRA8);
 
 		void* vertices[Mesh::Count] = {};
 		uint16_t* indices[Mesh::Count] = {};
@@ -389,6 +668,7 @@ struct DebugDraw
 			const uint32_t numIndices  = numVertices;
 
 			vertices[id] = BX_ALLOC(m_allocator, numVertices*stride);
+			bx::memSet(vertices[id], 0, numVertices*stride);
 			genSphere(tess, vertices[id], stride);
 
 			uint16_t* trilist = (uint16_t*)BX_ALLOC(m_allocator, numIndices*sizeof(uint16_t) );
@@ -397,27 +677,26 @@ struct DebugDraw
 				trilist[ii] = uint16_t(ii);
 			}
 
-
-
-
-			uint32_t numLineListIndices = bgfx::topologyConvert(bgfx::TopologyConvert::TriListToLineList
-							, NULL
-							, 0
-							, trilist
-							, numIndices
-							, false
-							);
+			uint32_t numLineListIndices = bgfx::topologyConvert(
+				  bgfx::TopologyConvert::TriListToLineList
+				, NULL
+				, 0
+				, trilist
+				, numIndices
+				, false
+				);
 			indices[id] = (uint16_t*)BX_ALLOC(m_allocator, (numIndices + numLineListIndices)*sizeof(uint16_t) );
 			uint16_t* indicesOut = indices[id];
-			memcpy(indicesOut, trilist, numIndices*sizeof(uint16_t) );
+			bx::memCopy(indicesOut, trilist, numIndices*sizeof(uint16_t) );
 
-			bgfx::topologyConvert(bgfx::TopologyConvert::TriListToLineList
-							, &indicesOut[numIndices]
-							, numLineListIndices*sizeof(uint16_t)
-							, trilist
-							, numIndices
-							, false
-							);
+			bgfx::topologyConvert(
+				  bgfx::TopologyConvert::TriListToLineList
+				, &indicesOut[numIndices]
+				, numLineListIndices*sizeof(uint16_t)
+				, trilist
+				, numIndices
+				, false
+				);
 
 			m_mesh[id].m_startVertex = startVertex;
 			m_mesh[id].m_numVertices = numVertices;
@@ -432,6 +711,216 @@ struct DebugDraw
 			BX_FREE(m_allocator, trilist);
 		}
 
+		for (uint32_t mesh = 0; mesh < 4; ++mesh)
+		{
+			Mesh::Enum id = Mesh::Enum(Mesh::Cone0+mesh);
+
+			const uint32_t num = getCircleLod(uint8_t(mesh) );
+			const float step = bx::kPi * 2.0f / num;
+
+			const uint32_t numVertices = num+1;
+			const uint32_t numIndices  = num*6;
+			const uint32_t numLineListIndices = num*4;
+
+			vertices[id] = BX_ALLOC(m_allocator, numVertices*stride);
+			indices[id]  = (uint16_t*)BX_ALLOC(m_allocator, (numIndices + numLineListIndices)*sizeof(uint16_t) );
+			bx::memSet(indices[id], 0, (numIndices + numLineListIndices)*sizeof(uint16_t) );
+
+			DebugShapeVertex* vertex = (DebugShapeVertex*)vertices[id];
+			uint16_t* index = indices[id];
+
+			vertex[num].m_x = 0.0f;
+			vertex[num].m_y = 0.0f;
+			vertex[num].m_z = 0.0f;
+			vertex[num].m_indices[0] = 1;
+
+			for (uint32_t ii = 0; ii < num; ++ii)
+			{
+				const float angle = step * ii;
+
+				float xy[2];
+				circle(xy, angle);
+
+				vertex[ii].m_x = xy[1];
+				vertex[ii].m_y = 0.0f;
+				vertex[ii].m_z = xy[0];
+				vertex[ii].m_indices[0] = 0;
+
+				index[ii*3+0] = uint16_t(num);
+				index[ii*3+1] = uint16_t( (ii+1)%num);
+				index[ii*3+2] = uint16_t(ii);
+
+				index[num*3+ii*3+0] = 0;
+				index[num*3+ii*3+1] = uint16_t(ii);
+				index[num*3+ii*3+2] = uint16_t( (ii+1)%num);
+
+				index[numIndices+ii*2+0] = uint16_t(ii);
+				index[numIndices+ii*2+1] = uint16_t(num);
+
+				index[numIndices+num*2+ii*2+0] = uint16_t(ii);
+				index[numIndices+num*2+ii*2+1] = uint16_t( (ii+1)%num);
+			}
+
+			m_mesh[id].m_startVertex = startVertex;
+			m_mesh[id].m_numVertices = numVertices;
+			m_mesh[id].m_startIndex[0] = startIndex;
+			m_mesh[id].m_numIndices[0] = numIndices;
+			m_mesh[id].m_startIndex[1] = startIndex+numIndices;
+			m_mesh[id].m_numIndices[1] = numLineListIndices;
+
+			startVertex += numVertices;
+			startIndex  += numIndices + numLineListIndices;
+		}
+
+		for (uint32_t mesh = 0; mesh < 4; ++mesh)
+		{
+			Mesh::Enum id = Mesh::Enum(Mesh::Cylinder0+mesh);
+
+			const uint32_t num = getCircleLod(uint8_t(mesh) );
+			const float step = bx::kPi * 2.0f / num;
+
+			const uint32_t numVertices = num*2;
+			const uint32_t numIndices  = num*12;
+			const uint32_t numLineListIndices = num*6;
+
+			vertices[id] = BX_ALLOC(m_allocator, numVertices*stride);
+			indices[id]  = (uint16_t*)BX_ALLOC(m_allocator, (numIndices + numLineListIndices)*sizeof(uint16_t) );
+			bx::memSet(indices[id], 0, (numIndices + numLineListIndices)*sizeof(uint16_t) );
+
+			DebugShapeVertex* vertex = (DebugShapeVertex*)vertices[id];
+			uint16_t* index = indices[id];
+
+			for (uint32_t ii = 0; ii < num; ++ii)
+			{
+				const float angle = step * ii;
+
+				float xy[2];
+				circle(xy, angle);
+
+				vertex[ii].m_x = xy[1];
+				vertex[ii].m_y = 0.0f;
+				vertex[ii].m_z = xy[0];
+				vertex[ii].m_indices[0] = 0;
+
+				vertex[ii+num].m_x = xy[1];
+				vertex[ii+num].m_y = 0.0f;
+				vertex[ii+num].m_z = xy[0];
+				vertex[ii+num].m_indices[0] = 1;
+
+				index[ii*6+0] = uint16_t(ii+num);
+				index[ii*6+1] = uint16_t( (ii+1)%num);
+				index[ii*6+2] = uint16_t(ii);
+				index[ii*6+3] = uint16_t(ii+num);
+				index[ii*6+4] = uint16_t( (ii+1)%num+num);
+				index[ii*6+5] = uint16_t( (ii+1)%num);
+
+				index[num*6+ii*6+0] = uint16_t(0);
+				index[num*6+ii*6+1] = uint16_t(ii);
+				index[num*6+ii*6+2] = uint16_t( (ii+1)%num);
+				index[num*6+ii*6+3] = uint16_t(num);
+				index[num*6+ii*6+4] = uint16_t( (ii+1)%num+num);
+				index[num*6+ii*6+5] = uint16_t(ii+num);
+
+				index[numIndices+ii*2+0] = uint16_t(ii);
+				index[numIndices+ii*2+1] = uint16_t(ii+num);
+
+				index[numIndices+num*2+ii*2+0] = uint16_t(ii);
+				index[numIndices+num*2+ii*2+1] = uint16_t( (ii+1)%num);
+
+				index[numIndices+num*4+ii*2+0] = uint16_t(num + ii);
+				index[numIndices+num*4+ii*2+1] = uint16_t(num + (ii+1)%num);
+			}
+
+			m_mesh[id].m_startVertex = startVertex;
+			m_mesh[id].m_numVertices = numVertices;
+			m_mesh[id].m_startIndex[0] = startIndex;
+			m_mesh[id].m_numIndices[0] = numIndices;
+			m_mesh[id].m_startIndex[1] = startIndex+numIndices;
+			m_mesh[id].m_numIndices[1] = numLineListIndices;
+
+			startVertex += numVertices;
+			startIndex  += numIndices + numLineListIndices;
+		}
+
+		for (uint32_t mesh = 0; mesh < 4; ++mesh)
+		{
+			Mesh::Enum id = Mesh::Enum(Mesh::Capsule0+mesh);
+
+			const uint32_t num = getCircleLod(uint8_t(mesh) );
+			const float step = bx::kPi * 2.0f / num;
+
+			const uint32_t numVertices = num*2;
+			const uint32_t numIndices  = num*6;
+			const uint32_t numLineListIndices = num*6;
+
+			vertices[id] = BX_ALLOC(m_allocator, numVertices*stride);
+			indices[id]  = (uint16_t*)BX_ALLOC(m_allocator, (numIndices + numLineListIndices)*sizeof(uint16_t) );
+			bx::memSet(indices[id], 0, (numIndices + numLineListIndices)*sizeof(uint16_t) );
+
+			DebugShapeVertex* vertex = (DebugShapeVertex*)vertices[id];
+			uint16_t* index = indices[id];
+
+			for (uint32_t ii = 0; ii < num; ++ii)
+			{
+				const float angle = step * ii;
+
+				float xy[2];
+				circle(xy, angle);
+
+				vertex[ii].m_x = xy[1];
+				vertex[ii].m_y = 0.0f;
+				vertex[ii].m_z = xy[0];
+				vertex[ii].m_indices[0] = 0;
+
+				vertex[ii+num].m_x = xy[1];
+				vertex[ii+num].m_y = 0.0f;
+				vertex[ii+num].m_z = xy[0];
+				vertex[ii+num].m_indices[0] = 1;
+
+				index[ii*6+0] = uint16_t(ii+num);
+				index[ii*6+1] = uint16_t( (ii+1)%num);
+				index[ii*6+2] = uint16_t(ii);
+				index[ii*6+3] = uint16_t(ii+num);
+				index[ii*6+4] = uint16_t( (ii+1)%num+num);
+				index[ii*6+5] = uint16_t( (ii+1)%num);
+
+//				index[num*6+ii*6+0] = uint16_t(0);
+//				index[num*6+ii*6+1] = uint16_t(ii);
+//				index[num*6+ii*6+2] = uint16_t( (ii+1)%num);
+//				index[num*6+ii*6+3] = uint16_t(num);
+//				index[num*6+ii*6+4] = uint16_t( (ii+1)%num+num);
+//				index[num*6+ii*6+5] = uint16_t(ii+num);
+
+				index[numIndices+ii*2+0] = uint16_t(ii);
+				index[numIndices+ii*2+1] = uint16_t(ii+num);
+
+				index[numIndices+num*2+ii*2+0] = uint16_t(ii);
+				index[numIndices+num*2+ii*2+1] = uint16_t( (ii+1)%num);
+
+				index[numIndices+num*4+ii*2+0] = uint16_t(num + ii);
+				index[numIndices+num*4+ii*2+1] = uint16_t(num + (ii+1)%num);
+			}
+
+			m_mesh[id].m_startVertex = startVertex;
+			m_mesh[id].m_numVertices = numVertices;
+			m_mesh[id].m_startIndex[0] = startIndex;
+			m_mesh[id].m_numIndices[0] = numIndices;
+			m_mesh[id].m_startIndex[1] = startIndex+numIndices;
+			m_mesh[id].m_numIndices[1] = numLineListIndices;
+
+			startVertex += numVertices;
+			startIndex  += numIndices + numLineListIndices;
+		}
+
+		m_mesh[Mesh::Quad].m_startVertex = startVertex;
+		m_mesh[Mesh::Quad].m_numVertices = BX_COUNTOF(s_quadVertices);
+		m_mesh[Mesh::Quad].m_startIndex[0] = startIndex;
+		m_mesh[Mesh::Quad].m_numIndices[0] = BX_COUNTOF(s_quadIndices);
+		m_mesh[Mesh::Quad].m_startIndex[1] = 0;
+		m_mesh[Mesh::Quad].m_numIndices[1] = 0;
+		startVertex += BX_COUNTOF(s_quadVertices);
+		startIndex  += BX_COUNTOF(s_quadIndices);
+
 		m_mesh[Mesh::Cube].m_startVertex = startVertex;
 		m_mesh[Mesh::Cube].m_numVertices = BX_COUNTOF(s_cubeVertices);
 		m_mesh[Mesh::Cube].m_startIndex[0] = startIndex;
@@ -444,15 +933,15 @@ struct DebugDraw
 		const bgfx::Memory* vb = bgfx::alloc(startVertex*stride);
 		const bgfx::Memory* ib = bgfx::alloc(startIndex*sizeof(uint16_t) );
 
-		for (uint32_t mesh = 0; mesh < 4; ++mesh)
+		for (uint32_t mesh = Mesh::Sphere0; mesh < Mesh::Quad; ++mesh)
 		{
-			Mesh::Enum id = Mesh::Enum(Mesh::Sphere0+mesh);
-			memcpy(&vb->data[m_mesh[id].m_startVertex * stride]
+			Mesh::Enum id = Mesh::Enum(mesh);
+			bx::memCopy(&vb->data[m_mesh[id].m_startVertex * stride]
 				 , vertices[id]
 				 , m_mesh[id].m_numVertices*stride
 				 );
 
-			memcpy(&ib->data[m_mesh[id].m_startIndex[0] * sizeof(uint16_t)]
+			bx::memCopy(&ib->data[m_mesh[id].m_startIndex[0] * sizeof(uint16_t)]
 				 , indices[id]
 				 , (m_mesh[id].m_numIndices[0]+m_mesh[id].m_numIndices[1])*sizeof(uint16_t)
 				 );
@@ -461,68 +950,159 @@ struct DebugDraw
 			BX_FREE(m_allocator, indices[id]);
 		}
 
-		memcpy(&vb->data[m_mesh[Mesh::Cube].m_startVertex * stride]
+		bx::memCopy(&vb->data[m_mesh[Mesh::Quad].m_startVertex * stride]
+			, s_quadVertices
+			, sizeof(s_quadVertices)
+			);
+
+		bx::memCopy(&ib->data[m_mesh[Mesh::Quad].m_startIndex[0] * sizeof(uint16_t)]
+			, s_quadIndices
+			, sizeof(s_quadIndices)
+			);
+
+		bx::memCopy(&vb->data[m_mesh[Mesh::Cube].m_startVertex * stride]
 			, s_cubeVertices
 			, sizeof(s_cubeVertices)
 			);
 
-		memcpy(&ib->data[m_mesh[Mesh::Cube].m_startIndex[0] * sizeof(uint16_t)]
+		bx::memCopy(&ib->data[m_mesh[Mesh::Cube].m_startIndex[0] * sizeof(uint16_t)]
 			, s_cubeIndices
 			, sizeof(s_cubeIndices)
 			);
 
 		m_vbh = bgfx::createVertexBuffer(vb, DebugShapeVertex::ms_decl);
 		m_ibh = bgfx::createIndexBuffer(ib);
-
-		m_mtx       = 0;
-		m_viewId    = 0;
-		m_pos       = 0;
-		m_indexPos  = 0;
-		m_vertexPos = 0;
 	}
 
 	void shutdown()
 	{
-		bgfx::destroyIndexBuffer(m_ibh);
-		bgfx::destroyVertexBuffer(m_vbh);
+		bgfx::destroy(m_ibh);
+		bgfx::destroy(m_vbh);
 		for (uint32_t ii = 0; ii < Program::Count; ++ii)
 		{
-			bgfx::destroyProgram(m_program[ii]);
+			bgfx::destroy(m_program[ii]);
 		}
-		bgfx::destroyUniform(u_params);
+		bgfx::destroy(u_params);
+		bgfx::destroy(s_texColor);
+		bgfx::destroy(m_texture);
 	}
 
-	void begin(uint8_t _viewId)
+	SpriteHandle createSprite(uint16_t _width, uint16_t _height, const void* _data)
+	{
+		SpriteHandle handle = m_sprite.create(_width, _height);
+
+		if (isValid(handle) )
+		{
+			const Pack2D& pack = m_sprite.get(handle);
+			bgfx::updateTexture2D(
+				  m_texture
+				, 0
+				, 0
+				, pack.m_x
+				, pack.m_y
+				, pack.m_width
+				, pack.m_height
+				, bgfx::copy(_data, pack.m_width*pack.m_height*4)
+				);
+		}
+
+		return handle;
+	}
+
+	void destroy(SpriteHandle _handle)
+	{
+		m_sprite.destroy(_handle);
+	}
+
+	GeometryHandle createGeometry(uint32_t _numVertices, const DdVertex* _vertices, uint32_t _numIndices, const void* _indices, bool _index32)
+	{
+		return m_geometry.create(_numVertices, _vertices, _numIndices, _indices, _index32);
+	}
+
+	void destroy(GeometryHandle _handle)
+	{
+		m_geometry.destroy(_handle);
+	}
+
+	bx::AllocatorI* m_allocator;
+
+	Sprite m_sprite;
+	Geometry m_geometry;
+
+	Mesh m_mesh[Mesh::Count];
+
+	bgfx::UniformHandle s_texColor;
+	bgfx::TextureHandle m_texture;
+	bgfx::ProgramHandle m_program[Program::Count];
+	bgfx::UniformHandle u_params;
+
+	bgfx::VertexBufferHandle m_vbh;
+	bgfx::IndexBufferHandle  m_ibh;
+};
+
+static DebugDrawShared s_dds;
+
+struct DebugDrawEncoderImpl
+{
+	DebugDrawEncoderImpl()
+		: m_depthTestLess(true)
+		, m_state(State::Count)
+		, m_defaultEncoder(NULL)
+	{
+	}
+
+	void init(bgfx::Encoder* _encoder)
+	{
+		m_defaultEncoder = _encoder;
+	}
+
+	void shutdown()
+	{
+	}
+
+	void begin(bgfx::ViewId _viewId, bool _depthTestLess, bgfx::Encoder* _encoder)
 	{
 		BX_CHECK(State::Count == m_state);
 
-		m_viewId  = _viewId;
-		m_mtx     = 0;
-		m_state   = State::None;
-		m_stack   = 0;
+		m_viewId        = _viewId;
+		m_encoder       = _encoder == NULL ? m_defaultEncoder : _encoder;
+		m_state         = State::None;
+		m_stack         = 0;
+		m_depthTestLess = _depthTestLess;
+
+		m_pos       = 0;
+		m_indexPos  = 0;
+		m_vertexPos = 0;
+		m_posQuad   = 0;
 
 		Attrib& attrib = m_attrib[0];
 		attrib.m_state = 0
-			| BGFX_STATE_RGB_WRITE
+			| BGFX_STATE_WRITE_RGB
 			| (m_depthTestLess ? BGFX_STATE_DEPTH_TEST_LESS : BGFX_STATE_DEPTH_TEST_GREATER)
 			| BGFX_STATE_CULL_CW
-			| BGFX_STATE_DEPTH_WRITE
+			| BGFX_STATE_WRITE_Z
 			;
 		attrib.m_scale     = 1.0f;
+		attrib.m_spin      = 0.0f;
 		attrib.m_offset    = 0.0f;
 		attrib.m_abgr      = UINT32_MAX;
 		attrib.m_stipple   = false;
 		attrib.m_wireframe = false;
 		attrib.m_lod       = 0;
+
+		m_mtxStackCurrent = 0;
+		m_mtxStack[m_mtxStackCurrent].reset();
 	}
 
 	void end()
 	{
 		BX_CHECK(0 == m_stack, "Invalid stack %d.", m_stack);
 
+		flushQuad();
 		flush();
 
-		m_state  = State::Count;
+		m_encoder = NULL;
+		m_state   = State::Count;
 	}
 
 	void push()
@@ -545,20 +1125,43 @@ struct DebugDraw
 		--m_stack;
 	}
 
-	void setTransform(const void* _mtx)
+	void setDepthTestLess(bool _depthTestLess)
 	{
 		BX_CHECK(State::Count != m_state);
-		flush();
+		if (m_depthTestLess != _depthTestLess)
+		{
+			m_depthTestLess = _depthTestLess;
+			Attrib& attrib = m_attrib[m_stack];
+			if (attrib.m_state & BGFX_STATE_DEPTH_TEST_MASK)
+			{
+				flush();
+				attrib.m_state &= ~BGFX_STATE_DEPTH_TEST_MASK;
+				attrib.m_state |= _depthTestLess ? BGFX_STATE_DEPTH_TEST_LESS : BGFX_STATE_DEPTH_TEST_GREATER;
+			}
+		}
+	}
+
+	void setTransform(const void* _mtx, uint16_t _num = 1, bool _flush = true)
+	{
+		BX_CHECK(State::Count != m_state);
+		if (_flush)
+		{
+			flush();
+		}
+
+		MatrixStack& stack = m_mtxStack[m_mtxStackCurrent];
 
 		if (NULL == _mtx)
 		{
-			m_mtx = 0;
+			stack.reset();
 			return;
 		}
 
 		bgfx::Transform transform;
-		m_mtx = bgfx::allocTransform(&transform, 1);
-		memcpy(transform.data, _mtx, 64);
+		stack.mtx  = m_encoder->allocTransform(&transform, _num);
+		stack.num  = _num;
+		stack.data = transform.data;
+		bx::memCopy(transform.data, _mtx, _num*64);
 	}
 
 	void setTranslate(float _x, float _y, float _z)
@@ -573,6 +1176,60 @@ struct DebugDraw
 		setTranslate(_pos[0], _pos[1], _pos[2]);
 	}
 
+	void pushTransform(const void* _mtx, uint16_t _num, bool _flush = true)
+	{
+		BX_CHECK(m_mtxStackCurrent < BX_COUNTOF(m_mtxStack), "Out of matrix stack!");
+		BX_CHECK(State::Count != m_state);
+		if (_flush)
+		{
+			flush();
+		}
+
+		float* mtx = NULL;
+
+		const MatrixStack& stack = m_mtxStack[m_mtxStackCurrent];
+
+		if (NULL == stack.data)
+		{
+			mtx = (float*)_mtx;
+		}
+		else
+		{
+			mtx = (float*)alloca(_num*64);
+			for (uint16_t ii = 0; ii < _num; ++ii)
+			{
+				const float* mtxTransform = (const float*)_mtx;
+				bx::mtxMul(&mtx[ii*16], &mtxTransform[ii*16], stack.data);
+			}
+		}
+
+		m_mtxStackCurrent++;
+		setTransform(mtx, _num, _flush);
+	}
+
+	void popTransform(bool _flush = true)
+	{
+		BX_CHECK(State::Count != m_state);
+		if (_flush)
+		{
+			flush();
+		}
+
+		m_mtxStackCurrent--;
+	}
+
+	void pushTranslate(float _x, float _y, float _z)
+	{
+		float mtx[16];
+		bx::mtxTranslate(mtx, _x, _y, _z);
+		pushTransform(mtx, 1);
+	}
+
+	void pushTranslate(const float* _pos)
+	{
+		pushTranslate(_pos[0], _pos[1], _pos[2]);
+	}
+
 	void setState(bool _depthTest, bool _depthWrite, bool _clockwise)
 	{
 		const uint64_t depthTest = m_depthTestLess
@@ -580,27 +1237,34 @@ struct DebugDraw
 			: BGFX_STATE_DEPTH_TEST_GREATER
 			;
 
-		m_attrib[m_stack].m_state &= ~(0
+		uint64_t state = m_attrib[m_stack].m_state & ~(0
 			| BGFX_STATE_DEPTH_TEST_MASK
-			| BGFX_STATE_DEPTH_WRITE
+			| BGFX_STATE_WRITE_Z
 			| BGFX_STATE_CULL_CW
 			| BGFX_STATE_CULL_CCW
 			);
 
-		m_attrib[m_stack].m_state |= _depthTest
+		state |= _depthTest
 			? depthTest
 			: 0
 			;
 
-		m_attrib[m_stack].m_state |= _depthWrite
-			? BGFX_STATE_DEPTH_WRITE
+		state |= _depthWrite
+			? BGFX_STATE_WRITE_Z
 			: 0
 			;
 
-		m_attrib[m_stack].m_state |= _clockwise
+		state |= _clockwise
 			? BGFX_STATE_CULL_CW
 			: BGFX_STATE_CULL_CCW
 			;
+
+		if (m_attrib[m_stack].m_state != state)
+		{
+			flush();
+		}
+
+		m_attrib[m_stack].m_state = state;
 	}
 
 	void setColor(uint32_t _abgr)
@@ -635,6 +1299,12 @@ struct DebugDraw
 		attrib.m_stipple = _stipple;
 		attrib.m_offset  = _offset;
 		attrib.m_scale   = _scale;
+	}
+
+	void setSpin(float _spin)
+	{
+		Attrib& attrib = m_attrib[m_stack];
+		attrib.m_spin = _spin;
 	}
 
 	void moveTo(float _x, float _y, float _z = 0.0f)
@@ -688,14 +1358,14 @@ struct DebugDraw
 
 			flush();
 
-			memcpy(&m_cache[0], &m_cache[vertexPos], sizeof(DebugVertex) );
+			bx::memCopy(&m_cache[0], &m_cache[vertexPos], sizeof(DebugVertex) );
 			if (vertexPos == pos)
 			{
 				m_pos = 1;
 			}
 			else
 			{
-				memcpy(&m_cache[1], &m_cache[pos - 1], sizeof(DebugVertex) );
+				bx::memCopy(&m_cache[1], &m_cache[pos - 1], sizeof(DebugVertex) );
 				m_pos = 2;
 			}
 
@@ -753,39 +1423,49 @@ struct DebugDraw
 
 	void draw(const Aabb& _aabb)
 	{
-		moveTo(_aabb.m_min[0], _aabb.m_min[1], _aabb.m_min[2]);
-		lineTo(_aabb.m_max[0], _aabb.m_min[1], _aabb.m_min[2]);
-		lineTo(_aabb.m_max[0], _aabb.m_max[1], _aabb.m_min[2]);
-		lineTo(_aabb.m_min[0], _aabb.m_max[1], _aabb.m_min[2]);
-		close();
+		const Attrib& attrib = m_attrib[m_stack];
+		if (attrib.m_wireframe)
+		{
+			moveTo(_aabb.m_min[0], _aabb.m_min[1], _aabb.m_min[2]);
+			lineTo(_aabb.m_max[0], _aabb.m_min[1], _aabb.m_min[2]);
+			lineTo(_aabb.m_max[0], _aabb.m_max[1], _aabb.m_min[2]);
+			lineTo(_aabb.m_min[0], _aabb.m_max[1], _aabb.m_min[2]);
+			close();
 
-		moveTo(_aabb.m_min[0], _aabb.m_min[1], _aabb.m_max[2]);
-		lineTo(_aabb.m_max[0], _aabb.m_min[1], _aabb.m_max[2]);
-		lineTo(_aabb.m_max[0], _aabb.m_max[1], _aabb.m_max[2]);
-		lineTo(_aabb.m_min[0], _aabb.m_max[1], _aabb.m_max[2]);
-		close();
+			moveTo(_aabb.m_min[0], _aabb.m_min[1], _aabb.m_max[2]);
+			lineTo(_aabb.m_max[0], _aabb.m_min[1], _aabb.m_max[2]);
+			lineTo(_aabb.m_max[0], _aabb.m_max[1], _aabb.m_max[2]);
+			lineTo(_aabb.m_min[0], _aabb.m_max[1], _aabb.m_max[2]);
+			close();
 
-		moveTo(_aabb.m_min[0], _aabb.m_min[1], _aabb.m_min[2]);
-		lineTo(_aabb.m_min[0], _aabb.m_min[1], _aabb.m_max[2]);
+			moveTo(_aabb.m_min[0], _aabb.m_min[1], _aabb.m_min[2]);
+			lineTo(_aabb.m_min[0], _aabb.m_min[1], _aabb.m_max[2]);
 
-		moveTo(_aabb.m_max[0], _aabb.m_min[1], _aabb.m_min[2]);
-		lineTo(_aabb.m_max[0], _aabb.m_min[1], _aabb.m_max[2]);
+			moveTo(_aabb.m_max[0], _aabb.m_min[1], _aabb.m_min[2]);
+			lineTo(_aabb.m_max[0], _aabb.m_min[1], _aabb.m_max[2]);
 
-		moveTo(_aabb.m_min[0], _aabb.m_max[1], _aabb.m_min[2]);
-		lineTo(_aabb.m_min[0], _aabb.m_max[1], _aabb.m_max[2]);
+			moveTo(_aabb.m_min[0], _aabb.m_max[1], _aabb.m_min[2]);
+			lineTo(_aabb.m_min[0], _aabb.m_max[1], _aabb.m_max[2]);
 
-		moveTo(_aabb.m_max[0], _aabb.m_max[1], _aabb.m_min[2]);
-		lineTo(_aabb.m_max[0], _aabb.m_max[1], _aabb.m_max[2]);
+			moveTo(_aabb.m_max[0], _aabb.m_max[1], _aabb.m_min[2]);
+			lineTo(_aabb.m_max[0], _aabb.m_max[1], _aabb.m_max[2]);
+		}
+		else
+		{
+			Obb obb;
+			aabbToObb(obb, _aabb);
+			draw(Mesh::Cube, obb.m_mtx, 1, false);
+		}
 	}
 
 	void draw(const Cylinder& _cylinder, bool _capsule)
 	{
-		BX_UNUSED(_cylinder, _capsule);
+		drawCylinder(_cylinder.m_pos, _cylinder.m_end, _cylinder.m_radius, _capsule);
 	}
 
 	void draw(const Disk& _disk)
 	{
-		BX_UNUSED(_disk);
+		drawCircle(_disk.m_normal, _disk.m_center, _disk.m_radius, 0.0f);
 	}
 
 	void draw(const Obb& _obb)
@@ -793,7 +1473,7 @@ struct DebugDraw
 		const Attrib& attrib = m_attrib[m_stack];
 		if (attrib.m_wireframe)
 		{
-			setTransform(_obb.m_mtx);
+			pushTransform(_obb.m_mtx, 1);
 
 			moveTo(-1.0f, -1.0f, -1.0f);
 			lineTo( 1.0f, -1.0f, -1.0f);
@@ -819,11 +1499,11 @@ struct DebugDraw
 			moveTo(-1.0f, -1.0f, -1.0f);
 			lineTo(-1.0f, -1.0f,  1.0f);
 
-			setTransform(NULL);
+			popTransform();
 		}
 		else
 		{
-			draw(Mesh::Cube, _obb.m_mtx, false);
+			draw(Mesh::Cube, _obb.m_mtx, 1, false);
 		}
 	}
 
@@ -832,21 +1512,150 @@ struct DebugDraw
 		const Attrib& attrib = m_attrib[m_stack];
 		float mtx[16];
 		bx::mtxSRT(mtx
-				, _sphere.m_radius
-				, _sphere.m_radius
-				, _sphere.m_radius
-				, 0.0f
-				, 0.0f
-				, 0.0f
-				, _sphere.m_center[0]
-				, _sphere.m_center[1]
-				, _sphere.m_center[2]
-				);
+			, _sphere.m_radius
+			, _sphere.m_radius
+			, _sphere.m_radius
+			, 0.0f
+			, 0.0f
+			, 0.0f
+			, _sphere.m_center[0]
+			, _sphere.m_center[1]
+			, _sphere.m_center[2]
+			);
 		uint8_t lod = attrib.m_lod > Mesh::SphereMaxLod
-					? uint8_t(Mesh::SphereMaxLod)
-					: attrib.m_lod
-					;
-		draw(Mesh::Enum(Mesh::Sphere0 + lod), mtx, attrib.m_wireframe);
+			? uint8_t(Mesh::SphereMaxLod)
+			: attrib.m_lod
+			;
+		draw(Mesh::Enum(Mesh::Sphere0 + lod), mtx, 1, attrib.m_wireframe);
+	}
+
+	void setUParams(const Attrib& _attrib, bool _wireframe)
+	{
+		const float flip = 0 == (_attrib.m_state & BGFX_STATE_CULL_CCW) ? 1.0f : -1.0f;
+		const uint8_t alpha = _attrib.m_abgr >> 24;
+
+		float params[4][4] =
+		{
+			{ // lightDir
+				 0.0f * flip,
+				-1.0f * flip,
+				 0.0f * flip,
+				 3.0f, // shininess
+			},
+			{ // skyColor
+				1.0f,
+				0.9f,
+				0.8f,
+				0.0f, // unused
+			},
+			{ // groundColor.xyz0
+				0.2f,
+				0.22f,
+				0.5f,
+				0.0f, // unused
+			},
+			{ // matColor
+				( (_attrib.m_abgr)       & 0xff) / 255.0f,
+				( (_attrib.m_abgr >> 8)  & 0xff) / 255.0f,
+				( (_attrib.m_abgr >> 16) & 0xff) / 255.0f,
+				(alpha) / 255.0f,
+			},
+		};
+
+		bx::vec3Norm(params[0], params[0]);
+		m_encoder->setUniform(s_dds.u_params, params, 4);
+
+		m_encoder->setState(0
+			| _attrib.m_state
+			| (_wireframe ? BGFX_STATE_PT_LINES | BGFX_STATE_LINEAA | BGFX_STATE_BLEND_ALPHA
+			: (alpha < 0xff) ? BGFX_STATE_BLEND_ALPHA : 0)
+			);
+	}
+
+	void draw(GeometryHandle _handle)
+	{
+		const Geometry::Geometry& geometry = s_dds.m_geometry.m_geometry[_handle.idx];
+		m_encoder->setVertexBuffer(0, geometry.m_vbh);
+
+		const Attrib& attrib = m_attrib[m_stack];
+		const bool wireframe = attrib.m_wireframe;
+		setUParams(attrib, wireframe);
+
+		if (wireframe)
+		{
+			m_encoder->setIndexBuffer(
+				  geometry.m_ibh
+				, geometry.m_topologyNumIndices[0]
+				, geometry.m_topologyNumIndices[1]
+				);
+		}
+		else if (0 != geometry.m_topologyNumIndices[0])
+		{
+			m_encoder->setIndexBuffer(
+				  geometry.m_ibh
+				, 0
+				, geometry.m_topologyNumIndices[0]
+				);
+		}
+
+		m_encoder->setTransform(m_mtxStack[m_mtxStackCurrent].mtx);
+		bgfx::ProgramHandle program = s_dds.m_program[wireframe ? Program::FillMesh : Program::FillLitMesh];
+		m_encoder->submit(m_viewId, program);
+	}
+
+	void draw(bool _lineList, uint32_t _numVertices, const DdVertex* _vertices, uint32_t _numIndices, const uint16_t* _indices)
+	{
+		flush();
+
+		if (_numVertices == bgfx::getAvailTransientVertexBuffer(_numVertices, DebugMeshVertex::ms_decl) )
+		{
+			bgfx::TransientVertexBuffer tvb;
+			bgfx::allocTransientVertexBuffer(&tvb, _numVertices, DebugMeshVertex::ms_decl);
+			bx::memCopy(tvb.data, _vertices, _numVertices * DebugMeshVertex::ms_decl.m_stride);
+			m_encoder->setVertexBuffer(0, &tvb);
+
+			const Attrib& attrib = m_attrib[m_stack];
+			const bool wireframe = _lineList || attrib.m_wireframe;
+			setUParams(attrib, wireframe);
+
+			if (0 < _numIndices)
+			{
+				uint32_t numIndices = _numIndices;
+				bgfx::TransientIndexBuffer tib;
+				if (!_lineList && wireframe)
+				{
+					numIndices = bgfx::topologyConvert(
+						  bgfx::TopologyConvert::TriListToLineList
+						, NULL
+						, 0
+						, _indices
+						, _numIndices
+						, false
+						);
+
+
+					bgfx::allocTransientIndexBuffer(&tib, numIndices);
+					bgfx::topologyConvert(
+						  bgfx::TopologyConvert::TriListToLineList
+						, tib.data
+						, numIndices * sizeof(uint16_t)
+						, _indices
+						, _numIndices
+						, false
+					);
+				}
+				else
+				{
+					bgfx::allocTransientIndexBuffer(&tib, numIndices);
+					bx::memCopy(tib.data, _indices, numIndices * sizeof(uint16_t) );
+				}
+				m_encoder->setIndexBuffer(&tib);
+			}
+
+			m_encoder->setTransform(m_mtxStack[m_mtxStackCurrent].mtx);
+			bgfx::ProgramHandle program = s_dds.m_program[wireframe ? Program::FillMesh : Program::FillLitMesh];
+			m_encoder->submit(m_viewId, program);
+		}
 	}
 
 	void drawFrustum(const float* _viewProj)
@@ -898,14 +1707,14 @@ struct DebugDraw
 	{
 		const Attrib& attrib = m_attrib[m_stack];
 		const uint32_t num = getCircleLod(attrib.m_lod);
-		const float step = bx::pi * 2.0f / num;
+		const float step = bx::kPi * 2.0f / num;
 
-		_degrees = bx::fwrap(_degrees, 360.0f);
+		_degrees = bx::wrap(_degrees, 360.0f);
 
 		float pos[3];
 		getPoint(pos, _axis
-			, bx::fsin(step * 0)*_radius
-			, bx::fcos(step * 0)*_radius
+			, bx::sin(step * 0)*_radius
+			, bx::cos(step * 0)*_radius
 			);
 
 		moveTo(pos[0] + _x, pos[1] + _y, pos[2] + _z);
@@ -915,38 +1724,37 @@ struct DebugDraw
 		for (uint32_t ii = 1; ii < n+1; ++ii)
 		{
 			getPoint(pos, _axis
-				 , bx::fsin(step * ii)*_radius
-				 , bx::fcos(step * ii)*_radius
-				 );
+				, bx::sin(step * ii)*_radius
+				, bx::cos(step * ii)*_radius
+				);
 			lineTo(pos[0] + _x, pos[1] + _y, pos[2] + _z);
 		}
 
 		moveTo(_x, _y, _z);
 		getPoint(pos, _axis
-			 , bx::fsin(step * 0)*_radius
-			 , bx::fcos(step * 0)*_radius
-			 );
+			, bx::sin(step * 0)*_radius
+			, bx::cos(step * 0)*_radius
+			);
 		lineTo(pos[0] + _x, pos[1] + _y, pos[2] + _z);
 
 		getPoint(pos, _axis
-			 , bx::fsin(step * n)*_radius
-			 , bx::fcos(step * n)*_radius
-			 );
+			, bx::sin(step * n)*_radius
+			, bx::cos(step * n)*_radius
+			);
 		moveTo(pos[0] + _x, pos[1] + _y, pos[2] + _z);
 		lineTo(_x, _y, _z);
 	}
 
-	void drawCircle(const float* _normal, const float* _center, float _radius, float _weight = 0.0f)
+	void drawCircle(const float* _normal, const float* _center, float _radius, float _weight)
 	{
 		const Attrib& attrib = m_attrib[m_stack];
 		const uint32_t num = getCircleLod(attrib.m_lod);
-		const float step = bx::pi * 2.0f / num;
-		_weight = bx::fclamp(_weight, 0.0f, 2.0f);
+		const float step = bx::kPi * 2.0f / num;
+		_weight = bx::clamp(_weight, 0.0f, 2.0f);
 
-		Plane plane = { { _normal[0], _normal[1], _normal[2] }, 0.0f };
 		float udir[3];
 		float vdir[3];
-		calcPlaneUv(plane, udir, vdir);
+		bx::vec3TangentFrame(_normal, udir, vdir, attrib.m_spin);
 
 		float pos[3];
 		float tmp0[3];
@@ -957,8 +1765,8 @@ struct DebugDraw
 		circle(xy0, 0.0f);
 		squircle(xy1, 0.0f);
 
-		bx::vec3Mul(pos,  udir, bx::flerp(xy0[0], xy1[0], _weight)*_radius);
-		bx::vec3Mul(tmp0, vdir, bx::flerp(xy0[1], xy1[1], _weight)*_radius);
+		bx::vec3Mul(pos,  udir, bx::lerp(xy0[0], xy1[0], _weight)*_radius);
+		bx::vec3Mul(tmp0, vdir, bx::lerp(xy0[1], xy1[1], _weight)*_radius);
 		bx::vec3Add(tmp1, pos,  tmp0);
 		bx::vec3Add(pos,  tmp1, _center);
 		moveTo(pos);
@@ -969,8 +1777,8 @@ struct DebugDraw
 			circle(xy0, angle);
 			squircle(xy1, angle);
 
-			bx::vec3Mul(pos,  udir, bx::flerp(xy0[0], xy1[0], _weight)*_radius);
-			bx::vec3Mul(tmp0, vdir, bx::flerp(xy0[1], xy1[1], _weight)*_radius);
+			bx::vec3Mul(pos,  udir, bx::lerp(xy0[0], xy1[0], _weight)*_radius);
+			bx::vec3Mul(tmp0, vdir, bx::lerp(xy0[1], xy1[1], _weight)*_radius);
 			bx::vec3Add(tmp1, pos,  tmp0);
 			bx::vec3Add(pos,  tmp1, _center);
 			lineTo(pos);
@@ -979,17 +1787,17 @@ struct DebugDraw
 		close();
 	}
 
-	void drawCircle(const void* _normal, const void* _center, float _radius, float _weight = 0.0f)
+	void drawCircle(const void* _normal, const void* _center, float _radius, float _weight)
 	{
 		drawCircle( (const float*)_normal, (const float*)_center, _radius, _weight);
 	}
 
-	void drawCircle(Axis::Enum _axis, float _x, float _y, float _z, float _radius, float _weight = 0.0f)
+	void drawCircle(Axis::Enum _axis, float _x, float _y, float _z, float _radius, float _weight)
 	{
 		const Attrib& attrib = m_attrib[m_stack];
 		const uint32_t num = getCircleLod(attrib.m_lod);
-		const float step = bx::pi * 2.0f / num;
-		_weight = bx::fclamp(_weight, 0.0f, 2.0f);
+		const float step = bx::kPi * 2.0f / num;
+		_weight = bx::clamp(_weight, 0.0f, 2.0f);
 
 		float xy0[2];
 		float xy1[2];
@@ -998,8 +1806,8 @@ struct DebugDraw
 
 		float pos[3];
 		getPoint(pos, _axis
-			, bx::flerp(xy0[0], xy1[0], _weight)*_radius
-			, bx::flerp(xy0[1], xy1[1], _weight)*_radius
+			, bx::lerp(xy0[0], xy1[0], _weight)*_radius
+			, bx::lerp(xy0[1], xy1[1], _weight)*_radius
 			);
 
 		moveTo(pos[0] + _x, pos[1] + _y, pos[2] + _z);
@@ -1010,165 +1818,304 @@ struct DebugDraw
 			squircle(xy1, angle);
 
 			getPoint(pos, _axis
-				, bx::flerp(xy0[0], xy1[0], _weight)*_radius
-				, bx::flerp(xy0[1], xy1[1], _weight)*_radius
+				, bx::lerp(xy0[0], xy1[0], _weight)*_radius
+				, bx::lerp(xy0[1], xy1[1], _weight)*_radius
 				);
 			lineTo(pos[0] + _x, pos[1] + _y, pos[2] + _z);
 		}
 		close();
 	}
 
-	void drawCone(const float* _from, const float* _to, float _radius, float _weight = 0.0f)
+	void drawQuad(const float* _normal, const float* _center, float _size)
 	{
 		const Attrib& attrib = m_attrib[m_stack];
-		const uint32_t num = getCircleLod(attrib.m_lod);
-		const float step = bx::pi * 2.0f / num;
-		_weight = bx::fclamp(_weight, 0.0f, 2.0f);
+		if (attrib.m_wireframe)
+		{
+			float udir[3];
+			float vdir[3];
 
-		float pos[3];
-		float tmp0[3];
-		float tmp1[3];
+			bx::vec3TangentFrame(_normal, udir, vdir, attrib.m_spin);
 
-		bx::vec3Sub(tmp0, _from, _to);
+			const float halfExtent = _size*0.5f;
 
-		Plane plane;
-		plane.m_dist = 0.0f;
-		bx::vec3Norm(plane.m_normal, tmp0);
+			float umin[3];
+			bx::vec3Mul(umin, udir, -halfExtent);
+
+			float umax[3];
+			bx::vec3Mul(umax, udir,  halfExtent);
+
+			float vmin[3];
+			bx::vec3Mul(vmin, vdir, -halfExtent);
+
+			float vmax[3];
+			bx::vec3Mul(vmax, vdir,  halfExtent);
+
+			float pt[3];
+			float tmp[3];
+			bx::vec3Add(tmp, umin, vmin);
+			bx::vec3Add(pt, _center, tmp);
+			moveTo(pt);
+
+			bx::vec3Add(tmp, umax, vmin);
+			bx::vec3Add(pt, _center, tmp);
+			lineTo(pt);
+
+			bx::vec3Add(tmp, umax, vmax);
+			bx::vec3Add(pt, _center, tmp);
+			lineTo(pt);
+
+			bx::vec3Add(tmp, umin, vmax);
+			bx::vec3Add(pt, _center, tmp);
+			lineTo(pt);
+
+			close();
+		}
+		else
+		{
+			float mtx[16];
+			bx::mtxFromNormal(mtx, _normal, _size*0.5f, _center, attrib.m_spin);
+			draw(Mesh::Quad, mtx, 1, false);
+		}
+	}
+
+	void drawQuad(SpriteHandle _handle, const float* _normal, const float* _center, float _size)
+	{
+		if (!isValid(_handle) )
+		{
+			drawQuad(_normal, _center, _size);
+			return;
+		}
+
+		if (m_posQuad == BX_COUNTOF(m_cacheQuad) )
+		{
+			flushQuad();
+		}
+
+		const Attrib& attrib = m_attrib[m_stack];
 
 		float udir[3];
 		float vdir[3];
-		calcPlaneUv(plane, udir, vdir);
 
-		float xy0[2];
-		float xy1[2];
-		circle(xy0, 0.0f);
-		squircle(xy1, 0.0f);
+		bx::vec3TangentFrame(_normal, udir, vdir, attrib.m_spin);
 
-		bx::vec3Mul(pos,  udir, bx::flerp(xy0[0], xy1[0], _weight)*_radius);
-		bx::vec3Mul(tmp0, vdir, bx::flerp(xy0[1], xy1[1], _weight)*_radius);
-		bx::vec3Add(tmp1, pos,  tmp0);
-		bx::vec3Add(pos,  tmp1, _from);
-		moveTo(pos);
+		const Pack2D& pack = s_dds.m_sprite.get(_handle);
+		const float invTextureSize = 1.0f/SPRITE_TEXTURE_SIZE;
+		const float us =  pack.m_x                  * invTextureSize;
+		const float vs =  pack.m_y                  * invTextureSize;
+		const float ue = (pack.m_x + pack.m_width ) * invTextureSize;
+		const float ve = (pack.m_y + pack.m_height) * invTextureSize;
 
-		for (uint32_t ii = 1; ii < num; ++ii)
-		{
-			float angle = step * ii;
-			circle(xy0, angle);
-			squircle(xy1, angle);
+		const float aspectRatio = float(pack.m_width)/float(pack.m_height);
+		const float halfExtentU =      aspectRatio*_size*0.5f;
+		const float halfExtentV = 1.0f/aspectRatio*_size*0.5f;
 
-			bx::vec3Mul(pos,  udir, bx::flerp(xy0[0], xy1[0], _weight)*_radius);
-			bx::vec3Mul(tmp0, vdir, bx::flerp(xy0[1], xy1[1], _weight)*_radius);
-			bx::vec3Add(tmp1, pos,  tmp0);
-			bx::vec3Add(pos,  tmp1, _from);
-			lineTo(pos);
-		}
+		float umin[3];
+		bx::vec3Mul(umin, udir, -halfExtentU);
 
-		close();
+		float umax[3];
+		bx::vec3Mul(umax, udir,  halfExtentU);
 
-		for (uint32_t ii = 0; ii < num; ++ii)
-		{
-			float angle = step * ii;
-			circle(xy0, angle);
-			squircle(xy1, angle);
+		float vmin[3];
+		bx::vec3Mul(vmin, vdir, -halfExtentV);
 
-			bx::vec3Mul(pos,  udir, bx::flerp(xy0[0], xy1[0], _weight)*_radius);
-			bx::vec3Mul(tmp0, vdir, bx::flerp(xy0[1], xy1[1], _weight)*_radius);
-			bx::vec3Add(tmp1, pos,  tmp0);
-			bx::vec3Add(pos,  tmp1, _from);
-			moveTo(pos);
-			lineTo(_to);
-		}
+		float vmax[3];
+		bx::vec3Mul(vmax, vdir,  halfExtentV);
+
+		DebugUvVertex* vertex = &m_cacheQuad[m_posQuad];
+		m_posQuad += 4;
+
+		float pt[3];
+		float tmp[3];
+		bx::vec3Add(tmp, umin, vmin);
+		bx::vec3Add(pt, _center, tmp);
+		vertex->m_x = pt[0];
+		vertex->m_y = pt[1];
+		vertex->m_z = pt[2];
+		vertex->m_u = us;
+		vertex->m_v = vs;
+		vertex->m_abgr = attrib.m_abgr;
+		++vertex;
+
+		bx::vec3Add(tmp, umax, vmin);
+		bx::vec3Add(pt, _center, tmp);
+		vertex->m_x = pt[0];
+		vertex->m_y = pt[1];
+		vertex->m_z = pt[2];
+		vertex->m_u = ue;
+		vertex->m_v = vs;
+		vertex->m_abgr = attrib.m_abgr;
+		++vertex;
+
+		bx::vec3Add(tmp, umin, vmax);
+		bx::vec3Add(pt, _center, tmp);
+		vertex->m_x = pt[0];
+		vertex->m_y = pt[1];
+		vertex->m_z = pt[2];
+		vertex->m_u = us;
+		vertex->m_v = ve;
+		vertex->m_abgr = attrib.m_abgr;
+		++vertex;
+
+		bx::vec3Add(tmp, umax, vmax);
+		bx::vec3Add(pt, _center, tmp);
+		vertex->m_x = pt[0];
+		vertex->m_y = pt[1];
+		vertex->m_z = pt[2];
+		vertex->m_u = ue;
+		vertex->m_v = ve;
+		vertex->m_abgr = attrib.m_abgr;
+		++vertex;
 	}
 
-	void drawCone(const void* _from, const void* _to, float _radius, float _weight = 0.0f)
+	void drawQuad(bgfx::TextureHandle _handle, const float* _normal, const float* _center, float _size)
 	{
-		drawCone( (const float*)_from, (const float*)_to, _radius, _weight);
+		BX_UNUSED(_handle, _normal, _center, _size);
 	}
 
-	void drawCylinder(const float* _from, const float* _to, float _radius, float _weight = 0.0f)
+	void drawCone(const float* _from, const float* _to, float _radius)
 	{
 		const Attrib& attrib = m_attrib[m_stack];
-		const uint32_t num = getCircleLod(attrib.m_lod);
-		const float step = bx::pi * 2.0f / num;
-		_weight = bx::fclamp(_weight, 0.0f, 2.0f);
 
-		float pos[3];
 		float tmp0[3];
-		float tmp1[3];
-
 		bx::vec3Sub(tmp0, _from, _to);
 
-		Plane plane;
-		plane.m_dist = 0.0f;
-		bx::vec3Norm(plane.m_normal, tmp0);
+		float normal[3];
+		bx::vec3Norm(normal, tmp0);
 
-		float udir[3];
-		float vdir[3];
-		calcPlaneUv(plane, udir, vdir);
+		float mtx[2][16];
+		bx::mtxFromNormal(mtx[0], normal, _radius, _from, attrib.m_spin);
 
-		float xy0[2];
-		float xy1[2];
-		circle(xy0, 0.0f);
-		squircle(xy1, 0.0f);
+		bx::memCopy(mtx[1], mtx[0], 64);
+		mtx[1][12] = _to[0];
+		mtx[1][13] = _to[1];
+		mtx[1][14] = _to[2];
 
-		float pos1[3];
-		bx::vec3Mul(pos,  udir, bx::flerp(xy0[0], xy1[0], _weight)*_radius);
-		bx::vec3Mul(tmp0, vdir, bx::flerp(xy0[1], xy1[1], _weight)*_radius);
-		bx::vec3Add(tmp1, pos,  tmp0);
-		bx::vec3Add(pos,  tmp1, _from);
-		bx::vec3Add(pos1, tmp1, _to);
+		uint8_t lod = attrib.m_lod > Mesh::ConeMaxLod
+					? uint8_t(Mesh::ConeMaxLod)
+					: attrib.m_lod
+					;
+		draw(Mesh::Enum(Mesh::Cone0 + lod), mtx[0], 2, attrib.m_wireframe);
+	}
 
-		for (uint32_t ii = 1; ii < num+1; ++ii)
+	void drawCone(const void* _from, const void* _to, float _radius)
+	{
+		drawCone( (const float*)_from, (const float*)_to, _radius);
+	}
+
+	void drawCylinder(const float* _from, const float* _to, float _radius, bool _capsule)
+	{
+		const Attrib& attrib = m_attrib[m_stack];
+
+		float tmp0[3];
+		bx::vec3Sub(tmp0, _from, _to);
+
+		float normal[3];
+		bx::vec3Norm(normal, tmp0);
+
+		float mtx[2][16];
+		bx::mtxFromNormal(mtx[0], normal, _radius, _from, attrib.m_spin);
+
+		bx::memCopy(mtx[1], mtx[0], 64);
+		mtx[1][12] = _to[0];
+		mtx[1][13] = _to[1];
+		mtx[1][14] = _to[2];
+
+		if (_capsule)
 		{
-			float angle = step * ii;
-			circle(xy0, angle);
-			squircle(xy1, angle);
+			uint8_t lod = attrib.m_lod > Mesh::CapsuleMaxLod
+				? uint8_t(Mesh::CapsuleMaxLod)
+				: attrib.m_lod
+				;
+			draw(Mesh::Enum(Mesh::Capsule0 + lod), mtx[0], 2, attrib.m_wireframe);
 
-			moveTo(pos); lineTo(pos1);
+			Sphere sphere;
+			bx::vec3Move(sphere.m_center, _from);
+			sphere.m_radius = _radius;
+			draw(sphere);
 
-			moveTo(pos);
-			bx::vec3Mul(pos,  udir, bx::flerp(xy0[0], xy1[0], _weight)*_radius);
-			bx::vec3Mul(tmp0, vdir, bx::flerp(xy0[1], xy1[1], _weight)*_radius);
-			bx::vec3Add(tmp1, pos,  tmp0);
-			bx::vec3Add(pos,  tmp1, _from);
-			lineTo(pos);
-
-			moveTo(pos1);
-			bx::vec3Add(pos1, tmp1, _to);
-			lineTo(pos1);
+			bx::vec3Move(sphere.m_center, _to);
+			draw(sphere);
+		}
+		else
+		{
+			uint8_t lod = attrib.m_lod > Mesh::CylinderMaxLod
+				? uint8_t(Mesh::CylinderMaxLod)
+				: attrib.m_lod
+				;
+			 draw(Mesh::Enum(Mesh::Cylinder0 + lod), mtx[0], 2, attrib.m_wireframe);
 		}
 	}
 
-	void drawCylinder(const void* _from, const void* _to, float _radius, float _weight = 0.0f)
+	void drawCylinder(const void* _from, const void* _to, float _radius, bool _capsule)
 	{
-		drawCylinder( (const float*)_from, (const float*)_to, _radius, _weight);
+		drawCylinder( (const float*)_from, (const float*)_to, _radius, _capsule);
 	}
 
-	void drawAxis(float _x, float _y, float _z, float _len, Axis::Enum _highlight)
+	void drawAxis(float _x, float _y, float _z, float _len, Axis::Enum _highlight, float _thickness)
 	{
 		push();
 
-		setColor(Axis::X == _highlight ? 0xff00ffff : 0xff0000ff);
-		moveTo(_x, _y, _z);
-		lineTo(_x + _len, _y, _z);
+		if (_thickness > 0.0f)
+		{
+			float from[3] = { _x, _y, _z };
+			float mid[3];
+			float to[3];
 
-		setColor(Axis::Y == _highlight ? 0xff00ffff : 0xff00ff00);
-		moveTo(_x, _y, _z);
-		lineTo(_x, _y + _len, _z);
+			setColor(Axis::X == _highlight ? 0xff00ffff : 0xff0000ff);
+			mid[0] = _x + _len - _thickness;
+			mid[1] = _y;
+			mid[2] = _z;
+			to[0]  = _x + _len;
+			to[1]  = _y;
+			to[2]  = _z;
+			drawCylinder(from, mid, _thickness, false);
+			drawCone(mid, to, _thickness);
 
-		setColor(Axis::Z == _highlight ? 0xff00ffff : 0xffff0000);
-		moveTo(_x, _y, _z);
-		lineTo(_x, _y, _z + _len);
+			setColor(Axis::Y == _highlight ? 0xff00ffff : 0xff00ff00);
+			mid[0] = _x;
+			mid[1] = _y + _len - _thickness;
+			mid[2] = _z;
+			to[0]  = _x;
+			to[1]  = _y + _len;
+			to[2]  = _z;
+			drawCylinder(from, mid, _thickness, false);
+			drawCone(mid, to, _thickness);
+
+			setColor(Axis::Z == _highlight ? 0xff00ffff : 0xffff0000);
+			mid[0] = _x;
+			mid[1] = _y;
+			mid[2] = _z + _len - _thickness;
+			to[0]  = _x;
+			to[1]  = _y;
+			to[2]  = _z + _len;
+			drawCylinder(from, mid, _thickness, false);
+			drawCone(mid, to, _thickness);
+		}
+		else
+		{
+			setColor(Axis::X == _highlight ? 0xff00ffff : 0xff0000ff);
+			moveTo(_x, _y, _z);
+			lineTo(_x + _len, _y, _z);
+
+			setColor(Axis::Y == _highlight ? 0xff00ffff : 0xff00ff00);
+			moveTo(_x, _y, _z);
+			lineTo(_x, _y + _len, _z);
+
+			setColor(Axis::Z == _highlight ? 0xff00ffff : 0xffff0000);
+			moveTo(_x, _y, _z);
+			lineTo(_x, _y, _z + _len);
+		}
 
 		pop();
 	}
 
 	void drawGrid(const float* _normal, const float* _center, uint32_t _size, float _step)
 	{
+		const Attrib& attrib = m_attrib[m_stack];
+
 		float udir[3];
 		float vdir[3];
-		Plane plane = { { _normal[0], _normal[1], _normal[2] }, 0.0f };
-		calcPlaneUv(plane, udir, vdir);
+		bx::vec3TangentFrame(_normal, udir, vdir, attrib.m_spin);
 
 		bx::vec3Mul(udir, udir, _step);
 		bx::vec3Mul(vdir, vdir, _step);
@@ -1230,7 +2177,7 @@ struct DebugDraw
 	void drawGrid(Axis::Enum _axis, const float* _center, uint32_t _size, float _step)
 	{
 		push();
-		setTranslate(_center);
+		pushTranslate(_center);
 
 		const uint32_t num = (_size/2)*2-1;
 		const float halfExtent = float(_size/2) * _step;
@@ -1261,6 +2208,7 @@ struct DebugDraw
 		moveTo(_axis, 0.0f, -halfExtent);
 		lineTo(_axis, 0.0f,  halfExtent);
 
+		popTransform();
 		pop();
 	}
 
@@ -1274,105 +2222,41 @@ struct DebugDraw
 		push();
 
 		setColor(Axis::X == _hightlight ? 0xff00ffff : 0xff0000ff);
-		drawCircle(Axis::X, _x, _y, _z, _radius);
+		drawCircle(Axis::X, _x, _y, _z, _radius, 0.0f);
 
 		setColor(Axis::Y == _hightlight ? 0xff00ffff : 0xff00ff00);
-		drawCircle(Axis::Y, _x, _y, _z, _radius);
+		drawCircle(Axis::Y, _x, _y, _z, _radius, 0.0f);
 
 		setColor(Axis::Z == _hightlight ? 0xff00ffff : 0xffff0000);
-		drawCircle(Axis::Z, _x, _y, _z, _radius);
+		drawCircle(Axis::Z, _x, _y, _z, _radius, 0.0f);
 
 		pop();
 	}
 
-private:
-	struct Mesh
+	void draw(Mesh::Enum _mesh, const float* _mtx, uint16_t _num, bool _wireframe)
 	{
-		enum Enum
-		{
-			Sphere0,
-			Sphere1,
-			Sphere2,
-			Sphere3,
-			Cube,
+		pushTransform(_mtx, _num, false /* flush */);
 
-			Count,
-
-			SphereMaxLod = Sphere3 - Sphere0,
-		};
-
-		uint32_t m_startVertex;
-		uint32_t m_numVertices;
-		uint32_t m_startIndex[2];
-		uint32_t m_numIndices[2];
-	};
-
-	struct Program
-	{
-		enum Enum
-		{
-			Lines,
-			LinesStipple,
-			Fill,
-			FillLit,
-
-			Count
-		};
-	};
-
-	void draw(Mesh::Enum _mesh, const float* _mtx, bool _wireframe) const
-	{
-		const Mesh& mesh = m_mesh[_mesh];
-
-		const Attrib& attrib = m_attrib[m_stack];
+		const Mesh& mesh = s_dds.m_mesh[_mesh];
 
 		if (0 != mesh.m_numIndices[_wireframe])
 		{
-			bgfx::setIndexBuffer(m_ibh
+			m_encoder->setIndexBuffer(s_dds.m_ibh
 				, mesh.m_startIndex[_wireframe]
 				, mesh.m_numIndices[_wireframe]
 				);
 		}
 
-		float params[4][4] =
-		{
-			{
-				 0.0f,
-				-1.0f,
-				 0.0f,
-				 3.0f,
-			},
-			{
-				1.0f,
-				0.9f,
-				0.8f,
-				0.0f,
-			},
-			{
-				0.2f,
-				0.22f,
-				0.5f,
-				0.0f,
-			},
-			{
-				( (attrib.m_abgr>>24)     )/255.0f,
-				( (attrib.m_abgr>>16)&0xff)/255.0f,
-				( (attrib.m_abgr>> 8)&0xff)/255.0f,
-				( (attrib.m_abgr    )&0xff)/255.0f,
-			},
-		};
+		const Attrib& attrib = m_attrib[m_stack];
+		setUParams(attrib, _wireframe);
 
-		bx::vec3Norm(params[0], params[0]);
+		MatrixStack& stack = m_mtxStack[m_mtxStackCurrent];
+		m_encoder->setTransform(stack.mtx, stack.num);
 
-		bgfx::setUniform(u_params, params, 4);
+		m_encoder->setVertexBuffer(0, s_dds.m_vbh, mesh.m_startVertex, mesh.m_numVertices);
+		m_encoder->submit(m_viewId, s_dds.m_program[_wireframe ? Program::Fill : Program::FillLit]);
 
-		bgfx::setTransform(_mtx);
-		bgfx::setVertexBuffer(m_vbh, mesh.m_startVertex, mesh.m_numVertices);
-		bgfx::setState(0
-				| attrib.m_state
-				| (_wireframe ? BGFX_STATE_PT_LINES|BGFX_STATE_LINEAA|BGFX_STATE_BLEND_ALPHA : 0)
-				);
-		bgfx::submit(m_viewId, m_program[_wireframe ? Program::Fill : Program::FillLit]);
+		popTransform(false /* flush */);
 	}
 
 	void softFlush()
@@ -1387,36 +2271,78 @@ private:
 	{
 		if (0 != m_pos)
 		{
-			if (bgfx::checkAvailTransientBuffers(m_pos, DebugVertex::ms_decl, m_indexPos) )
+			if (checkAvailTransientBuffers(m_pos, DebugVertex::ms_decl, m_indexPos) )
 			{
 				bgfx::TransientVertexBuffer tvb;
 				bgfx::allocTransientVertexBuffer(&tvb, m_pos, DebugVertex::ms_decl);
-				memcpy(tvb.data, m_cache, m_pos * DebugVertex::ms_decl.m_stride);
+				bx::memCopy(tvb.data, m_cache, m_pos * DebugVertex::ms_decl.m_stride);
 
 				bgfx::TransientIndexBuffer tib;
 				bgfx::allocTransientIndexBuffer(&tib, m_indexPos);
-				memcpy(tib.data, m_indices, m_indexPos * sizeof(uint16_t) );
+				bx::memCopy(tib.data, m_indices, m_indexPos * sizeof(uint16_t) );
 
 				const Attrib& attrib = m_attrib[m_stack];
 
-				bgfx::setVertexBuffer(&tvb);
-				bgfx::setIndexBuffer(&tib);
-				bgfx::setState(0
-						| BGFX_STATE_RGB_WRITE
-						| BGFX_STATE_PT_LINES
-						| attrib.m_state
-						| BGFX_STATE_LINEAA
-						| BGFX_STATE_BLEND_ALPHA
-						);
-				bgfx::setTransform(m_mtx);
-				bgfx::ProgramHandle program = m_program[attrib.m_stipple ? 1 : 0];
-				bgfx::submit(m_viewId, program);
+				m_encoder->setVertexBuffer(0, &tvb);
+				m_encoder->setIndexBuffer(&tib);
+				m_encoder->setState(0
+					| BGFX_STATE_WRITE_RGB
+					| BGFX_STATE_PT_LINES
+					| attrib.m_state
+					| BGFX_STATE_LINEAA
+					| BGFX_STATE_BLEND_ALPHA
+					);
+				m_encoder->setTransform(m_mtxStack[m_mtxStackCurrent].mtx);
+				bgfx::ProgramHandle program = s_dds.m_program[attrib.m_stipple ? 1 : 0];
+				m_encoder->submit(m_viewId, program);
 			}
 
 			m_state     = State::None;
 			m_pos       = 0;
 			m_indexPos  = 0;
 			m_vertexPos = 0;
+		}
+	}
+
+	void flushQuad()
+	{
+		if (0 != m_posQuad)
+		{
+			const uint32_t numIndices = m_posQuad/4*6;
+			if (checkAvailTransientBuffers(m_posQuad, DebugUvVertex::ms_decl, numIndices) )
+			{
+				bgfx::TransientVertexBuffer tvb;
+				bgfx::allocTransientVertexBuffer(&tvb, m_posQuad, DebugUvVertex::ms_decl);
+				bx::memCopy(tvb.data, m_cacheQuad, m_posQuad * DebugUvVertex::ms_decl.m_stride);
+
+				bgfx::TransientIndexBuffer tib;
+				bgfx::allocTransientIndexBuffer(&tib, numIndices);
+				uint16_t* indices = (uint16_t*)tib.data;
+				for (uint16_t ii = 0, num = m_posQuad/4; ii < num; ++ii)
+				{
+					uint16_t startVertex = ii*4;
+					indices[0] = startVertex+0;
+					indices[1] = startVertex+1;
+					indices[2] = startVertex+2;
+					indices[3] = startVertex+1;
+					indices[4] = startVertex+3;
+					indices[5] = startVertex+2;
+					indices += 6;
+				}
+
+				const Attrib& attrib = m_attrib[m_stack];
+
+				m_encoder->setVertexBuffer(0, &tvb);
+				m_encoder->setIndexBuffer(&tib);
+				m_encoder->setState(0
+					| (attrib.m_state & ~BGFX_STATE_CULL_MASK)
+					);
+				m_encoder->setTransform(m_mtxStack[m_mtxStackCurrent].mtx);
+				m_encoder->setTexture(0, s_dds.s_texColor, s_dds.m_texture);
+				m_encoder->submit(m_viewId, s_dds.m_program[Program::FillTexture]);
+			}
+
+			m_posQuad = 0;
 		}
 	}
 
@@ -1432,208 +2358,311 @@ private:
 		};
 	};
 
-	static const uint32_t cacheSize = 1024;
-	static const uint32_t stackSize = 16;
-	BX_STATIC_ASSERT(cacheSize >= 3, "Cache must be at least 3 elements.");
-	DebugVertex m_cache[cacheSize+1];
-	uint32_t m_mtx;
-	uint16_t m_indices[cacheSize*2];
+	static const uint32_t kCacheSize = 1024;
+	static const uint32_t kStackSize = 16;
+	static const uint32_t kCacheQuadSize = 1024;
+	BX_STATIC_ASSERT(kCacheSize >= 3, "Cache must be at least 3 elements.");
+
+	DebugVertex   m_cache[kCacheSize+1];
+	DebugUvVertex m_cacheQuad[kCacheQuadSize];
+	uint16_t m_indices[kCacheSize*2];
 	uint16_t m_pos;
+	uint16_t m_posQuad;
 	uint16_t m_indexPos;
 	uint16_t m_vertexPos;
-	uint8_t  m_viewId;
-	uint8_t  m_stack;
-	bool     m_depthTestLess;
+	uint32_t m_mtxStackCurrent;
 
-	struct Attrib
+	struct MatrixStack
 	{
-		uint64_t m_state;
-		float    m_offset;
-		float    m_scale;
-		uint32_t m_abgr;
-		bool     m_stipple;
-		bool     m_wireframe;
-		uint8_t  m_lod;
+		void reset()
+		{
+			mtx  = 0;
+			num  = 1;
+			data = NULL;
+		}
+
+		uint32_t mtx;
+		uint16_t num;
+		float*   data;
 	};
 
-	Attrib m_attrib[stackSize];
+	MatrixStack m_mtxStack[32];
+
+	bgfx::ViewId m_viewId;
+	uint8_t m_stack;
+	bool    m_depthTestLess;
+
+	Attrib m_attrib[kStackSize];
 
 	State::Enum m_state;
 
-	Mesh m_mesh[Mesh::Count];
-
-	bgfx::ProgramHandle m_program[Program::Count];
-	bgfx::UniformHandle u_params;
-
-	bgfx::VertexBufferHandle m_vbh;
-	bgfx::IndexBufferHandle  m_ibh;
-
-	bx::AllocatorI* m_allocator;
+	bgfx::Encoder* m_encoder;
+	bgfx::Encoder* m_defaultEncoder;
 };
 
-static DebugDraw s_dd;
+static DebugDrawEncoderImpl s_dde;
+BX_STATIC_ASSERT(sizeof(DebugDrawEncoderImpl) <= sizeof(DebugDrawEncoder), "Size must match");
 
-void ddInit(bool _depthTestLess, bx::AllocatorI* _allocator)
+void ddInit(bx::AllocatorI* _allocator)
 {
-	s_dd.init(_depthTestLess, _allocator);
+	s_dds.init(_allocator);
+	s_dde.init(bgfx::begin() );
 }
 
 void ddShutdown()
 {
-	s_dd.shutdown();
+	s_dde.shutdown();
+	s_dds.shutdown();
 }
 
-void ddBegin(uint8_t _viewId)
+SpriteHandle ddCreateSprite(uint16_t _width, uint16_t _height, const void* _data)
 {
-	s_dd.begin(_viewId);
+	return s_dds.createSprite(_width, _height, _data);
 }
 
-void ddEnd()
+void ddDestroy(SpriteHandle _handle)
 {
-	s_dd.end();
+	s_dds.destroy(_handle);
 }
 
-void ddPush()
+GeometryHandle ddCreateGeometry(uint32_t _numVertices, const DdVertex* _vertices, uint32_t _numIndices, const void* _indices, bool _index32)
 {
-	s_dd.push();
+	return s_dds.createGeometry(_numVertices, _vertices, _numIndices, _indices, _index32);
 }
 
-void ddPop()
+void ddDestroy(GeometryHandle _handle)
 {
-	s_dd.pop();
+	s_dds.destroy(_handle);
 }
 
-void ddSetState(bool _depthTest, bool _depthWrite, bool _clockwise)
+#define DEBUG_DRAW_ENCODER(_func) reinterpret_cast<DebugDrawEncoderImpl*>(this)->_func
+
+DebugDrawEncoder::DebugDrawEncoder()
 {
-	s_dd.setState(_depthTest, _depthWrite, _clockwise);
+	DEBUG_DRAW_ENCODER(init(s_dde.m_defaultEncoder) );
 }
 
-void ddSetColor(uint32_t _abgr)
+DebugDrawEncoder::~DebugDrawEncoder()
 {
-	s_dd.setColor(_abgr);
+	DEBUG_DRAW_ENCODER(shutdown() );
 }
 
-void ddSetLod(uint8_t _lod)
+void DebugDrawEncoder::begin(uint16_t _viewId, bool _depthTestLess, bgfx::Encoder* _encoder)
 {
-	s_dd.setLod(_lod);
+	DEBUG_DRAW_ENCODER(begin(_viewId, _depthTestLess, _encoder) );
 }
 
-void ddSetWireframe(bool _wireframe)
+void DebugDrawEncoder::end()
 {
-	s_dd.setWireframe(_wireframe);
+	DEBUG_DRAW_ENCODER(end() );
 }
 
-void ddSetStipple(bool _stipple, float _scale, float _offset)
+void DebugDrawEncoder::push()
 {
-	s_dd.setStipple(_stipple, _scale, _offset);
+	DEBUG_DRAW_ENCODER(push() );
 }
 
-void ddSetTransform(const void* _mtx)
+void DebugDrawEncoder::pop()
 {
-	s_dd.setTransform(_mtx);
+	DEBUG_DRAW_ENCODER(pop() );
 }
 
-void ddSetTranslate(float _x, float _y, float _z)
+void DebugDrawEncoder::setDepthTestLess(bool _depthTestLess)
 {
-	s_dd.setTranslate(_x, _y, _z);
+	DEBUG_DRAW_ENCODER(setDepthTestLess(_depthTestLess) );
 }
 
-void ddMoveTo(float _x, float _y, float _z)
+void DebugDrawEncoder::setState(bool _depthTest, bool _depthWrite, bool _clockwise)
 {
-	s_dd.moveTo(_x, _y, _z);
+	DEBUG_DRAW_ENCODER(setState(_depthTest, _depthWrite, _clockwise) );
 }
 
-void ddMoveTo(const void* _pos)
+void DebugDrawEncoder::setColor(uint32_t _abgr)
 {
-	s_dd.moveTo(_pos);
+	DEBUG_DRAW_ENCODER(setColor(_abgr) );
 }
 
-void ddLineTo(float _x, float _y, float _z)
+void DebugDrawEncoder::setLod(uint8_t _lod)
 {
-	s_dd.lineTo(_x, _y, _z);
+	DEBUG_DRAW_ENCODER(setLod(_lod) );
 }
 
-void ddLineTo(const void* _pos)
+void DebugDrawEncoder::setWireframe(bool _wireframe)
 {
-	s_dd.lineTo(_pos);
+	DEBUG_DRAW_ENCODER(setWireframe(_wireframe) );
 }
 
-void ddClose()
+void DebugDrawEncoder::setStipple(bool _stipple, float _scale, float _offset)
 {
-	s_dd.close();
+	DEBUG_DRAW_ENCODER(setStipple(_stipple, _scale, _offset) );
 }
 
-void ddDraw(const Aabb& _aabb)
+void DebugDrawEncoder::setSpin(float _spin)
 {
-	s_dd.draw(_aabb);
+	DEBUG_DRAW_ENCODER(setSpin(_spin) );
 }
 
-void ddDraw(const Cylinder& _cylinder, bool _capsule)
+void DebugDrawEncoder::setTransform(const void* _mtx)
 {
-	s_dd.draw(_cylinder, _capsule);
+	DEBUG_DRAW_ENCODER(setTransform(_mtx) );
 }
 
-void ddDraw(const Disk& _disk)
+void DebugDrawEncoder::setTranslate(float _x, float _y, float _z)
 {
-	s_dd.draw(_disk);
+	DEBUG_DRAW_ENCODER(setTranslate(_x, _y, _z) );
 }
 
-void ddDraw(const Obb& _obb)
+void DebugDrawEncoder::pushTransform(const void* _mtx)
 {
-	s_dd.draw(_obb);
+	DEBUG_DRAW_ENCODER(pushTransform(_mtx, 1) );
 }
 
-void ddDraw(const Sphere& _sphere)
+void DebugDrawEncoder::popTransform()
 {
-	s_dd.draw(_sphere);
+	DEBUG_DRAW_ENCODER(popTransform() );
 }
 
-void ddDrawFrustum(const void* _viewProj)
+void DebugDrawEncoder::moveTo(float _x, float _y, float _z)
 {
-	s_dd.drawFrustum(_viewProj);
+	DEBUG_DRAW_ENCODER(moveTo(_x, _y, _z) );
 }
 
-void ddDrawArc(Axis::Enum _axis, float _x, float _y, float _z, float _radius, float _degrees)
+void DebugDrawEncoder::moveTo(const void* _pos)
 {
-	s_dd.drawArc(_axis, _x, _y, _z, _radius, _degrees);
+	DEBUG_DRAW_ENCODER(moveTo(_pos) );
 }
 
-void ddDrawCircle(const void* _normal, const void* _center, float _radius, float _weight)
+void DebugDrawEncoder::lineTo(float _x, float _y, float _z)
 {
-	s_dd.drawCircle(_normal, _center, _radius, _weight);
+	DEBUG_DRAW_ENCODER(lineTo(_x, _y, _z) );
 }
 
-void ddDrawCircle(Axis::Enum _axis, float _x, float _y, float _z, float _radius, float _weight)
+void DebugDrawEncoder::lineTo(const void* _pos)
 {
-	s_dd.drawCircle(_axis, _x, _y, _z, _radius, _weight);
+	DEBUG_DRAW_ENCODER(lineTo(_pos) );
 }
 
-void ddDrawCone(const void* _from, const void* _to, float _radius, float _weight)
+void DebugDrawEncoder::close()
 {
-	s_dd.drawCone(_from, _to, _radius, _weight);
+	DEBUG_DRAW_ENCODER(close() );
 }
 
-void ddDrawCylinder(const void* _from, const void* _to, float _radius, float _weight)
+void DebugDrawEncoder::draw(const Aabb& _aabb)
 {
-	s_dd.drawCylinder(_from, _to, _radius, _weight);
+	DEBUG_DRAW_ENCODER(draw(_aabb) );
 }
 
-void ddDrawAxis(float _x, float _y, float _z, float _len, Axis::Enum _hightlight)
+void DebugDrawEncoder::draw(const Cylinder& _cylinder)
 {
-	s_dd.drawAxis(_x, _y, _z, _len, _hightlight);
+	DEBUG_DRAW_ENCODER(draw(_cylinder, false) );
 }
 
-void ddDrawGrid(const void* _normal, const void* _center, uint32_t _size, float _step)
+void DebugDrawEncoder::draw(const Capsule& _capsule)
 {
-	s_dd.drawGrid(_normal, _center, _size, _step);
+	DEBUG_DRAW_ENCODER(draw(*( (const Cylinder*)&_capsule), true) );
 }
 
-void ddDrawGrid(Axis::Enum _axis, const void* _center, uint32_t _size, float _step)
+void DebugDrawEncoder::draw(const Disk& _disk)
 {
-	s_dd.drawGrid(_axis, _center, _size, _step);
+	DEBUG_DRAW_ENCODER(draw(_disk) );
 }
 
-void ddDrawOrb(float _x, float _y, float _z, float _radius, Axis::Enum _hightlight)
+void DebugDrawEncoder::draw(const Obb& _obb)
 {
-	s_dd.drawOrb(_x, _y, _z, _radius, _hightlight);
+	DEBUG_DRAW_ENCODER(draw(_obb) );
+}
+
+void DebugDrawEncoder::draw(const Sphere& _sphere)
+{
+	DEBUG_DRAW_ENCODER(draw(_sphere) );
+}
+
+void DebugDrawEncoder::draw(const Cone& _cone)
+{
+	DEBUG_DRAW_ENCODER(drawCone(_cone.m_pos, _cone.m_end, _cone.m_radius) );
+}
+
+void DebugDrawEncoder::draw(GeometryHandle _handle)
+{
+	DEBUG_DRAW_ENCODER(draw(_handle) );
+}
+
+void DebugDrawEncoder::drawLineList(uint32_t _numVertices, const DdVertex* _vertices, uint32_t _numIndices, const uint16_t* _indices)
+{
+	DEBUG_DRAW_ENCODER(draw(true, _numVertices, _vertices, _numIndices, _indices) );
+}
+
+void DebugDrawEncoder::drawTriList(uint32_t _numVertices, const DdVertex* _vertices, uint32_t _numIndices, const uint16_t* _indices)
+{
+	DEBUG_DRAW_ENCODER(draw(false, _numVertices, _vertices, _numIndices, _indices) );
+}
+
+void DebugDrawEncoder::drawFrustum(const void* _viewProj)
+{
+	DEBUG_DRAW_ENCODER(drawFrustum(_viewProj) );
+}
+
+void DebugDrawEncoder::drawArc(Axis::Enum _axis, float _x, float _y, float _z, float _radius, float _degrees)
+{
+	DEBUG_DRAW_ENCODER(drawArc(_axis, _x, _y, _z, _radius, _degrees) );
+}
+
+void DebugDrawEncoder::drawCircle(const void* _normal, const void* _center, float _radius, float _weight)
+{
+	DEBUG_DRAW_ENCODER(drawCircle(_normal, _center, _radius, _weight) );
+}
+
+void DebugDrawEncoder::drawCircle(Axis::Enum _axis, float _x, float _y, float _z, float _radius, float _weight)
+{
+	DEBUG_DRAW_ENCODER(drawCircle(_axis, _x, _y, _z, _radius, _weight) );
+}
+
+void DebugDrawEncoder::drawQuad(const float* _normal, const float* _center, float _size)
+{
+	DEBUG_DRAW_ENCODER(drawQuad(_normal, _center, _size) );
+}
+
+void DebugDrawEncoder::drawQuad(SpriteHandle _handle, const float* _normal, const float* _center, float _size)
+{
+	DEBUG_DRAW_ENCODER(drawQuad(_handle, _normal, _center, _size) );
+}
+
+void DebugDrawEncoder::drawQuad(bgfx::TextureHandle _handle, const float* _normal, const float* _center, float _size)
+{
+	DEBUG_DRAW_ENCODER(drawQuad(_handle, _normal, _center, _size) );
+}
+
+void DebugDrawEncoder::drawCone(const void* _from, const void* _to, float _radius)
+{
+	DEBUG_DRAW_ENCODER(drawCone(_from, _to, _radius) );
+}
+
+void DebugDrawEncoder::drawCylinder(const void* _from, const void* _to, float _radius)
+{
+	DEBUG_DRAW_ENCODER(drawCylinder(_from, _to, _radius, false) );
+}
+
+void DebugDrawEncoder::drawCapsule(const void* _from, const void* _to, float _radius)
+{
+	DEBUG_DRAW_ENCODER(drawCylinder(_from, _to, _radius, true) );
+}
+
+void DebugDrawEncoder::drawAxis(float _x, float _y, float _z, float _len, Axis::Enum _highlight, float _thickness)
+{
+	DEBUG_DRAW_ENCODER(drawAxis(_x, _y, _z, _len, _highlight, _thickness) );
+}
+
+void DebugDrawEncoder::drawGrid(const void* _normal, const void* _center, uint32_t _size, float _step)
+{
+	DEBUG_DRAW_ENCODER(drawGrid(_normal, _center, _size, _step) );
+}
+
+void DebugDrawEncoder::drawGrid(Axis::Enum _axis, const void* _center, uint32_t _size, float _step)
+{
+	DEBUG_DRAW_ENCODER(drawGrid(_axis, _center, _size, _step) );
+}
+
+void DebugDrawEncoder::drawOrb(float _x, float _y, float _z, float _radius, Axis::Enum _highlight)
+{
+	DEBUG_DRAW_ENCODER(drawOrb(_x, _y, _z, _radius, _highlight) );
 }
