@@ -325,10 +325,14 @@ ifneq (,$(or $(findstring webos,$(CROSS_COMPILE)),$(findstring starfish,$(CROSS_
   ifndef NOASM
     NOASM := 1
   endif
-  ifneq (,$(findstring starfish,$(CROSS_COMPILE)))
-    TOOLCHAIN_PREFIX = arm-starfishmllib32-linux-gnueabi-
+  ifneq (,$(findstring aarch64,$(CROSS_COMPILE)))
+    TOOLCHAIN_PREFIX = aarch64-webos-linux-gnu-
   else
-    TOOLCHAIN_PREFIX = arm-webos-linux-gnueabi-
+    ifneq (,$(findstring starfish,$(CROSS_COMPILE)))
+      TOOLCHAIN_PREFIX = arm-starfishmllib32-linux-gnueabi-
+    else
+      TOOLCHAIN_PREFIX = arm-webos-linux-gnueabi-
+    endif
   endif
   OVERRIDE_CC = $(TOOLCHAIN_PREFIX)gcc
   OVERRIDE_CXX = $(TOOLCHAIN_PREFIX)g++
