@@ -124,7 +124,13 @@ endif
 ifneq (,$(findstring webos,$(CROSS_COMPILE)$(findstring starfish,$(CROSS_COMPILE))))
 	PYTHON_EXECUTABLE = python
 	FORCE_DRC_C_BACKEND = 1
-	PTR64 = 0
+	ifneq (,$(findstring aarch64,$(CROSS_COMPILE)))
+		PTR64 = 1
+		CFLAGS += -DPTR64
+		CXXFLAGS += -DPTR64
+	else
+		PTR64 = 0
+	endif
 endif
 
 ###########################################################################
