@@ -133,7 +133,7 @@ void retro_set_audio_sample(retro_audio_sample_t cb) { }
 
 void retro_set_environment(retro_environment_t cb)
 {
-   sprintf(option_mouse, "%s_%s", core, "mouse_enable");
+   sprintf(option_mouse, "%s_%s", core, "mouse_mode");
    sprintf(option_cheats, "%s_%s", core, "cheats_enable");
    sprintf(option_overclock, "%s_%s", core, "cpu_overclock");
    sprintf(option_nag, "%s_%s",core,"hide_nagscreen");
@@ -162,7 +162,7 @@ void retro_set_environment(retro_environment_t cb)
     { option_write_config, "Write configuration; disabled|enabled" },
     { option_saves, "Save state naming; game|system" },
     { option_auto_save, "Auto save/load states; disabled|enabled" },
-    { option_mouse, "Enable in-game mouse; disabled|enabled" },
+    { option_mouse, "XY device (Restart); none|lightgun|mouse" },
     { option_throttle, "Enable throttle; disabled|enabled" },
     { option_cheats, "Enable cheats; disabled|enabled" },
     { option_overclock, "Main CPU Overclock; default|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45|46|47|48|49|50|51|52|53|54|55|60|65|70|75|80|85|90|95|100|105|110|115|120|125|130|135|140|145|150" },
@@ -212,10 +212,12 @@ static void check_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      if (!strcmp(var.value, "disabled"))
-         mouse_enable = false;
-      if (!strcmp(var.value, "enabled"))
-         mouse_enable = true;
+      if (!strcmp(var.value, "none"))
+         mouse_mode = 0;
+      if (!strcmp(var.value, "mouse"))
+         mouse_mode = 1;
+      if (!strcmp(var.value, "lightgun"))
+         mouse_mode = 2;
    }
 
    var.key   = option_throttle;
@@ -578,6 +580,7 @@ void retro_run (void)
    input_poll_cb();
 
    process_mouse_state();
+   process_lightgun_state();
    process_keyboard_state();
    process_joypad_state();
 
