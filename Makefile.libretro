@@ -18,11 +18,11 @@
 #      we're effectively users, and users who try to follow the bleeding
 #      edge no less.  That means we get cut, and too often it's by some
 #      random warning upstream hasn't squashed.
-#   3. Set PYTHON_EXECUTABLE on non-Apple platforms.  Upstream assumes
-#      python (no prefix) is python2, which basically NEVER happens now on
-#      modern Linux systems, and isn't even common on Windows anymore.  It
-#      should be python2 pretty much everywhere but Apple, and the exception
-#      there is mostly because Apple hates GPLv3.
+#   3. Set PYTHON_EXECUTABLE.  Upstream assumes python (no prefix) is
+#      python2.  Neither holds any more: python2 has been gone from the
+#      build images for years, and an unversioned python is not installed
+#      by default on Debian, Ubuntu or current macOS either.  python3 is
+#      what is actually there, on every platform this core builds for.
 #   4. Enable VERBOSE.  Yes, MAME builds generate a metric crap-ton of
 #      output, but when builds fail it's nice to know why.
 #   5. Rename $ARCH and unset it.  Apple has a convention on the Mac of
@@ -42,8 +42,9 @@
 # Disable -Werror as libretro is effectively a MAME user, not a developer
 NOWERROR ?= 1
 
-# This needs to be python2 at the moment everywhere but OS X (fixed later)
-PYTHON_EXECUTABLE ?= python2
+# The generator scripts run under python3; python2 is not installed anywhere
+# the buildbot builds this, and neither is an unversioned python.
+PYTHON_EXECUTABLE ?= python3
 
 # Cause the build system to regenerate itself, in case it changed
 REGENIE ?= 1
@@ -111,18 +112,18 @@ ifeq ($(platform), android)
 #	CROSS_BUILD = 1
 #	FORCE_DRC_C_BACKEND = 1
 else ifeq ($(platform), osx)
-	PYTHON_EXECUTABLE = python
+	PYTHON_EXECUTABLE = python3
 else ifneq (,$(findstring ios,$(platform)))
 #	PTR64 = 0
         LIBRETRO_CPU=arm
-	PYTHON_EXECUTABLE = python
+	PYTHON_EXECUTABLE = python3
 	# FIXME: Pass these to GENie and test...
 #	CROSS_BUILD = 1
 #	FORCE_DRC_C_BACKEND = 1
 endif
 
 ifneq (,$(findstring webos,$(CROSS_COMPILE)$(findstring starfish,$(CROSS_COMPILE))))
-	PYTHON_EXECUTABLE = python
+	PYTHON_EXECUTABLE = python3
 	FORCE_DRC_C_BACKEND = 1
 	ifneq (,$(findstring aarch64,$(CROSS_COMPILE)))
 		PTR64 = 1
