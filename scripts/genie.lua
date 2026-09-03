@@ -186,6 +186,15 @@ newoption {
 }
 
 newoption {
+	trigger = "NO_USE_PORTAUDIO",
+	description = "Disable PortAudio interface.",
+	allowed = {
+		{ "0",  "Enable PortAudio"   },
+		{ "1",  "Disable PortAudio"  },
+	},
+}
+
+newoption {
 	trigger = "PROFILE",
 	description = "Enable profiling.",
 }
@@ -1102,7 +1111,6 @@ if _OPTIONS["osd"]=="retro" then
 			"pthread",		
 			"dl",
 			"m",
-			"asound",			
 		}
 
 		linkoptions {	
