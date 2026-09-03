@@ -879,7 +879,7 @@ end
 -- PortAudio library objects
 --------------------------------------------------
 
-if not _OPTIONS["with-system-portaudio"] then
+if not _OPTIONS["with-system-portaudio"] and _OPTIONS["NO_USE_PORTAUDIO"]~="1" then
 project "portaudio"
 	uuid "0755c5f5-eccf-47f3-98a9-df67018a94d4"
 	kind "StaticLib"

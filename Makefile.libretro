@@ -58,6 +58,13 @@ VERBOSE ?= 1
 
 USE_BGFX ?= 0
 
+# A libretro core plays its audio through the frontend, so neither of these
+# is any use to us - and building them costs us portaudio's dependency on
+# ALSA headers, which is one more thing that has to be present in every
+# cross and 32-bit image we build in.
+NO_USE_MIDI ?= 1
+NO_USE_PORTAUDIO ?= 1
+
 ###########################################################################
 #
 #   LIBRETRO PLATFORM GUESSING
@@ -80,7 +87,7 @@ ifeq ($(platform),)
 		platform = win
 	endif
 endif
-ifeq ($(ARCH),)
+ifneq ($(ARCH),)
 	LIBRETRO_CPU = $(ARCH)
 endif
 ifeq ($(LIBRETRO_CPU),)
@@ -105,6 +112,29 @@ endif
 #   Settings needed to get MAME to build everywhere we build it
 #
 ###########################################################################
+
+# Windows. The buildbot cross-builds these from Linux with the mxe
+# toolchains: the templates hand us prefixed compilers in $CC/$CXX/$AR and
+# the resource compiler in $WINDRES, which MAME wants as OVERRIDE_* instead,
+# and TARGETOS has to be told - left alone MAME reads it off the build host
+# and produces a Linux core with a .dll name. MAME also refuses to build
+# either Windows target unless MINGW64/MINGW32 is set to something.
+ifneq (,$(findstring win,$(platform)))
+	TARGETOS = windows
+	ifneq (,$(filter win32 x86,$(platform) $(LIBRETRO_CPU)))
+		PTR64 = 0
+		MINGW_FLAG = MINGW32=1
+	else
+		PTR64 = 1
+		MINGW_FLAG = MINGW64=1
+	endif
+endif
+
+# 32-bit desktops: MAME picks the target from PTR64, and the i686 Linux
+# image is a native 32-bit rootfs, so this is all it takes there.
+ifeq ($(LIBRETRO_CPU),x86)
+	PTR64 = 0
+endif
 
 ifeq ($(platform), android)
 #	PTR64 = 0
@@ -141,6 +171,12 @@ endif
 ###########################################################################
 
 BUILDFLAGS = REGENIE=$(REGENIE) VERBOSE=$(VERBOSE) NOWERROR=$(NOWERROR) OSD="retro"
+ifneq ($(NO_USE_MIDI),)
+	BUILDFLAGS += NO_USE_MIDI=$(NO_USE_MIDI)
+endif
+ifneq ($(NO_USE_PORTAUDIO),)
+	BUILDFLAGS += NO_USE_PORTAUDIO=$(NO_USE_PORTAUDIO)
+endif
 ifneq ($(PYTHON_EXECUTABLE),)
 	BUILDFLAGS += PYTHON_EXECUTABLE=$(PYTHON_EXECUTABLE)
 endif
@@ -163,6 +199,27 @@ ifneq ($(PTR64),)
 endif
 ifneq ($(platform),)
 	PLATFLAGS += LIBRETRO_OS="$(platform)"
+endif
+ifneq ($(TARGETOS),)
+	PLATFLAGS += TARGETOS=$(TARGETOS)
+endif
+ifneq ($(MINGW_FLAG),)
+	PLATFLAGS += $(MINGW_FLAG)
+endif
+# Forward the cross tools, but only the ones the caller actually set: CC and
+# AR have make built-in defaults, and passing those along would override
+# MAME's own choice on a native build.
+ifneq (,$(filter environment command line,$(origin CC)))
+	PLATFLAGS += OVERRIDE_CC="$(CC)"
+endif
+ifneq (,$(filter environment command line,$(origin CXX)))
+	PLATFLAGS += OVERRIDE_CXX="$(CXX)"
+endif
+ifneq (,$(filter environment command line,$(origin AR)))
+	PLATFLAGS += OVERRIDE_AR="$(AR)"
+endif
+ifneq (,$(filter environment command line,$(origin WINDRES)))
+	PLATFLAGS += WINDRES="$(WINDRES)"
 endif
 ifeq ($(platform),win)
 	ifeq ($(MSYSTEM),MINGW64)
