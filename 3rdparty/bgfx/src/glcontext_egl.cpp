@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -123,7 +123,7 @@ EGL_IMPORT
 
 		~SwapChainGL()
 		{
-			eglMakeCurrent(EGL_NO_DISPLAY, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+			eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 			eglDestroyContext(m_display, m_context);
 			eglDestroySurface(m_display, m_surface);
 		}
@@ -195,6 +195,9 @@ EGL_IMPORT
 			BX_TRACE("Supported EGL extensions:");
 			dumpExtensions(extensions);
 
+			// https://www.khronos.org/registry/EGL/extensions/ANDROID/EGL_ANDROID_recordable.txt
+			const bool hasEglAndroidRecordable = !bx::findIdentifierMatch(extensions, "EGL_ANDROID_recordable").isEmpty();
+
 			EGLint attrs[] =
 			{
 				EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
@@ -205,6 +208,10 @@ EGL_IMPORT
 				EGL_DEPTH_SIZE, 24,
 #	endif // BX_PLATFORM_
 				EGL_STENCIL_SIZE, 8,
+
+				// Android Recordable surface
+				hasEglAndroidRecordable ? 0x3142 : EGL_NONE,
+				hasEglAndroidRecordable ? 1      : EGL_NONE,
 
 				EGL_NONE
 			};
@@ -249,8 +256,8 @@ EGL_IMPORT
 			m_surface = eglCreateWindowSurface(m_display, m_config, nwh, NULL);
 			BGFX_FATAL(m_surface != EGL_NO_SURFACE, Fatal::UnableToInitialize, "Failed to create surface.");
 
-			const bool hasEglKhrCreateContext = !!bx::findIdentifierMatch(extensions, "EGL_KHR_create_context");
-			const bool hasEglKhrNoError       = !!bx::findIdentifierMatch(extensions, "EGL_KHR_create_context_no_error");
+			const bool hasEglKhrCreateContext = !bx::findIdentifierMatch(extensions, "EGL_KHR_create_context").isEmpty();
+			const bool hasEglKhrNoError       = !bx::findIdentifierMatch(extensions, "EGL_KHR_create_context_no_error").isEmpty();
 
 			const uint32_t gles = BGFX_CONFIG_RENDERER_OPENGLES;
 
@@ -262,7 +269,7 @@ EGL_IMPORT
 
 #	if BX_PLATFORM_RPI
 				BX_UNUSED(hasEglKhrCreateContext, hasEglKhrNoError);
-#else
+#	else
 				if (hasEglKhrCreateContext)
 				{
 					bx::write(&writer, EGLint(EGL_CONTEXT_MAJOR_VERSION_KHR) );
@@ -324,7 +331,7 @@ EGL_IMPORT
 	{
 		if (NULL != m_display)
 		{
-			eglMakeCurrent(EGL_NO_DISPLAY, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+			eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 			eglDestroyContext(m_display, m_context);
 			eglDestroySurface(m_display, m_surface);
 			eglTerminate(m_display);
@@ -343,6 +350,14 @@ EGL_IMPORT
 #	if BX_PLATFORM_ANDROID
 		if (NULL != m_display)
 		{
+			EGLNativeWindowType nwh = (EGLNativeWindowType )g_platformData.nwh;
+			eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+			eglDestroySurface(m_display, m_surface);
+			m_surface = eglCreateWindowSurface(m_display, m_config, nwh, NULL);
+			BGFX_FATAL(m_surface != EGL_NO_SURFACE, Fatal::UnableToInitialize, "Failed to create surface.");
+			EGLBoolean success = eglMakeCurrent(m_display, m_surface, m_surface, m_context);
+			BGFX_FATAL(success, Fatal::UnableToInitialize, "Failed to set context.");
+
 			EGLint format;
 			eglGetConfigAttrib(m_display, m_config, EGL_NATIVE_VISUAL_ID, &format);
 			ANativeWindow_setBuffersGeometry( (ANativeWindow*)g_platformData.nwh, _width, _height, format);
@@ -365,6 +380,7 @@ EGL_IMPORT
 		return BX_ENABLED(0
 						| BX_PLATFORM_LINUX
 						| BX_PLATFORM_WINDOWS
+						| BX_PLATFORM_ANDROID
 						)
 			? BGFX_CAPS_SWAP_CHAIN
 			: 0

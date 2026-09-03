@@ -16,7 +16,11 @@ indent_size  = 4
 indent_style = tab
 indent_size  = 4
 
-[ocornut-imgui/*]
+[dear-imgui/*]
+indent_style = space
+indent_size  = 4
+
+[dear-imgui/*.inl]
 indent_style = space
 indent_size  = 4
 
@@ -27,3 +31,7 @@ indent_size  = 4
 [remotery/*]
 indent_style = space
 indent_size  = 4
+
+[glsl-optimizer/*]
+indent_style = space
+indent_size  = 3

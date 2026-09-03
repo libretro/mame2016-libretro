@@ -1,16 +1,12 @@
 /*
- * Copyright 2010-2016 Branimir Karadzic. All rights reserved.
+ * Copyright 2010-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
-#include <ctype.h>  // isspace
-#include <stdint.h>
-#include <stdlib.h> // size_t
-#include <string.h> // strlen
-
 #include <bx/allocator.h>
+#include <bx/commandline.h>
 #include <bx/hash.h>
-#include <bx/tokenizecmd.h>
+#include <bx/string.h>
 
 #include "dbg.h"
 #include "cmd.h"
@@ -33,7 +29,7 @@ struct CmdContext
 
 	void add(const char* _name, ConsoleFn _fn, void* _userData)
 	{
-		uint32_t cmd = bx::hashMurmur2A(_name, (uint32_t)strlen(_name) );
+		uint32_t cmd = bx::hash<bx::HashMurmur2A>(_name, (uint32_t)bx::strLen(_name) );
 		BX_CHECK(m_lookup.end() == m_lookup.find(cmd), "Command \"%s\" already exist.", _name);
 		Func fn = { _fn, _userData };
 		m_lookup.insert(stl::make_pair(cmd, fn) );
@@ -41,7 +37,7 @@ struct CmdContext
 
 	void exec(const char* _cmd)
 	{
-		for (const char* next = _cmd; '\0' != *next; _cmd = next)
+		for (bx::StringView next(_cmd); !next.isEmpty(); _cmd = next.getPtr() )
 		{
 			char commandLine[1024];
 			uint32_t size = sizeof(commandLine);
@@ -51,7 +47,7 @@ struct CmdContext
 			if (argc > 0)
 			{
 				int err = -1;
-				uint32_t cmd = bx::hashMurmur2A(argv[0], (uint32_t)strlen(argv[0]) );
+				uint32_t cmd = bx::hash<bx::HashMurmur2A>(argv[0], (uint32_t)bx::strLen(argv[0]) );
 				CmdLookup::iterator it = m_lookup.find(cmd);
 				if (it != m_lookup.end() )
 				{
@@ -66,14 +62,14 @@ struct CmdContext
 
 				case -1:
 					{
-						stl::string tmp(_cmd, next-_cmd - (*next == '\0' ? 0 : 1) );
+						stl::string tmp(_cmd, next.getPtr()-_cmd - (next.isEmpty() ? 0 : 1) );
 						DBG("Command '%s' doesn't exist.", tmp.c_str() );
 					}
 					break;
 
 				default:
 					{
-						stl::string tmp(_cmd, next-_cmd - (*next == '\0' ? 0 : 1) );
+						stl::string tmp(_cmd, next.getPtr()-_cmd - (next.isEmpty() ? 0 : 1) );
 						DBG("Failed '%s' err: %d.", tmp.c_str(), err);
 					}
 					break;
@@ -109,7 +105,14 @@ void cmdAdd(const char* _name, ConsoleFn _fn, void* _userData)
 	s_cmdContext->add(_name, _fn, _userData);
 }
 
-void cmdExec(const char* _cmd)
+void cmdExec(const char* _format, ...)
 {
-	s_cmdContext->exec(_cmd);
+	char tmp[2048];
+
+	va_list argList;
+	va_start(argList, _format);
+	bx::vsnprintf(tmp, BX_COUNTOF(tmp), _format, argList);
+	va_end(argList);
+
+	s_cmdContext->exec(tmp);
 }

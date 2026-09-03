@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -16,6 +16,9 @@ namespace bgfx
 
 	/// Returns attribute name.
 	const char* getAttribName(Attrib::Enum _attr);
+
+	///
+	const char* getAttribNameShort(Attrib::Enum _attr);
 
 	/// Dump vertex declaration into debug output.
 	void dump(const VertexDecl& _decl);

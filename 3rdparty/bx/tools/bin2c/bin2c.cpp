@@ -1,14 +1,35 @@
 /*
- * Copyright 2011-2016 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bx#license-bsd-2-clause
  */
 
-#include <string>
-#include <vector>
-
+#include <bx/allocator.h>
 #include <bx/commandline.h>
-#include <bx/crtimpl.h>
+#include <bx/file.h>
 #include <bx/string.h>
+
+bx::DefaultAllocator g_allocator;
+
+struct TinyStlAllocator
+{
+	static void* static_allocate(size_t _bytes)
+	{
+		return BX_ALLOC(&g_allocator, _bytes);
+	}
+
+	static void static_deallocate(void* _ptr, size_t /*_bytes*/)
+	{
+		if (NULL != _ptr)
+		{
+			BX_FREE(&g_allocator, _ptr);
+		}
+	}
+};
+
+#define TINYSTL_ALLOCATOR TinyStlAllocator
+#include <tinystl/string.h>
+#include <tinystl/vector.h>
+namespace stl = tinystl;
 
 class Bin2cWriter : public bx::WriterI
 {
@@ -23,7 +44,7 @@ public:
 	{
 	}
 
-	virtual int32_t write(const void* _data, int32_t _size, bx::Error* /*_err*/ = NULL) BX_OVERRIDE
+	virtual int32_t write(const void* _data, int32_t _size, bx::Error* /*_err*/ = NULL) override
 	{
 		const char* data = (const char*)_data;
 		m_buffer.insert(m_buffer.end(), data, data+_size);
@@ -35,7 +56,7 @@ public:
 #define HEX_DUMP_WIDTH 16
 #define HEX_DUMP_SPACE_WIDTH 96
 #define HEX_DUMP_FORMAT "%-" BX_STRINGIZE(HEX_DUMP_SPACE_WIDTH) "." BX_STRINGIZE(HEX_DUMP_SPACE_WIDTH) "s"
-		const uint8_t* data = &m_buffer[0];
+		const char* data = &m_buffer[0];
 		uint32_t size = (uint32_t)m_buffer.size();
 
 		bx::writePrintf(m_writer, "static const uint8_t %s[%d] =\n{\n", m_name.c_str(), size);
@@ -51,7 +72,7 @@ public:
 				bx::snprintf(&hex[hexPos], sizeof(hex)-hexPos, "0x%02x, ", data[asciiPos]);
 				hexPos += 6;
 
-				ascii[asciiPos] = isprint(data[asciiPos]) && data[asciiPos] != '\\' ? data[asciiPos] : '.';
+				ascii[asciiPos] = bx::isPrint(data[asciiPos]) && data[asciiPos] != '\\' ? data[asciiPos] : '.';
 				asciiPos++;
 
 				if (HEX_DUMP_WIDTH == asciiPos)
@@ -59,7 +80,7 @@ public:
 					ascii[asciiPos] = '\0';
 					bx::writePrintf(m_writer, "\t" HEX_DUMP_FORMAT "// %s\n", hex, ascii);
 					data += asciiPos;
-					hexPos = 0;
+					hexPos   = 0;
 					asciiPos = 0;
 				}
 			}
@@ -80,26 +101,27 @@ public:
 	}
 
 	bx::WriterI* m_writer;
-	std::string m_filePath;
-	std::string m_name;
-	typedef std::vector<uint8_t> Buffer;
+	stl::string m_name;
+	typedef stl::vector<char> Buffer;
 	Buffer m_buffer;
 };
 
 void help(const char* _error = NULL)
 {
+	bx::WriterI* stdOut = bx::getStdOut();
+
 	if (NULL != _error)
 	{
-		fprintf(stderr, "Error:\n%s\n\n", _error);
+		bx::writePrintf(stdOut, "Error:\n%s\n\n", _error);
 	}
 
-	fprintf(stderr
+	bx::writePrintf(stdOut
 		, "bin2c, binary to C\n"
-		  "Copyright 2011-2016 Branimir Karadzic. All rights reserved.\n"
+		  "Copyright 2011-2018 Branimir Karadzic. All rights reserved.\n"
 		  "License: https://github.com/bkaradzic/bx#license-bsd-2-clause\n\n"
 		);
 
-	fprintf(stderr
+	bx::writePrintf(stdOut
 		, "Usage: bin2c -f <in> -o <out> -n <name>\n"
 
 		  "\n"
@@ -121,21 +143,21 @@ int main(int _argc, const char* _argv[])
 	if (cmdLine.hasArg('h', "help") )
 	{
 		help();
-		return EXIT_FAILURE;
+		return bx::kExitFailure;
 	}
 
 	const char* filePath = cmdLine.findOption('f');
 	if (NULL == filePath)
 	{
 		help("Input file name must be specified.");
-		return EXIT_FAILURE;
+		return bx::kExitFailure;
 	}
 
 	const char* outFilePath = cmdLine.findOption('o');
 	if (NULL == outFilePath)
 	{
 		help("Output file name must be specified.");
-		return EXIT_FAILURE;
+		return bx::kExitFailure;
 	}
 
 	const char* name = cmdLine.findOption('n');
@@ -145,16 +167,18 @@ int main(int _argc, const char* _argv[])
 	}
 
 	void* data = NULL;
-	size_t size = 0;
+	uint32_t size = 0;
 
-	bx::CrtFileReader fr;
+	bx::FileReader fr;
 	if (bx::open(&fr, filePath) )
 	{
-		size = (size_t)bx::getSize(&fr);
-		data = malloc(size);
+		size = uint32_t(bx::getSize(&fr) );
+
+		bx::DefaultAllocator allocator;
+		data = BX_ALLOC(&allocator, size);
 		bx::read(&fr, data, size);
 
-		bx::CrtFileWriter fw;
+		bx::FileWriter fw;
 		if (bx::open(&fw, outFilePath) )
 		{
 			Bin2cWriter writer(&fw, name);
@@ -163,7 +187,7 @@ int main(int _argc, const char* _argv[])
 			bx::close(&fw);
 		}
 
-		free(data);
+		BX_FREE(&allocator, data);
 	}
 
 	return 0;

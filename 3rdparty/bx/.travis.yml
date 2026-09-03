@@ -6,8 +6,18 @@ matrix:
     - compiler: clang
       os: osx
 
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-5
+    - g++-5
+    - clang
+
 script:
-  make test
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then make test CXX="g++-5" CC="gcc-5"; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then make test; fi
 
 branches:
   only:
@@ -16,5 +26,4 @@ branches:
 notifications:
   email: false
 
-osx_image:
-  xcode61
+osx_image: xcode9.3

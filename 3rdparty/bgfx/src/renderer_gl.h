@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -7,26 +7,26 @@
 #define BGFX_RENDERER_GL_H_HEADER_GUARD
 
 #define BGFX_USE_EGL (BGFX_CONFIG_RENDERER_OPENGLES && (0 \
-			|| BX_PLATFORM_ANDROID \
-			|| BX_PLATFORM_EMSCRIPTEN \
-			|| BX_PLATFORM_LINUX \
-			|| BX_PLATFORM_BSD \
-			|| BX_PLATFORM_QNX \
-			|| BX_PLATFORM_RPI \
-			|| BX_PLATFORM_STEAMLINK \
-			|| BX_PLATFORM_WINDOWS \
+			|| BX_PLATFORM_ANDROID                        \
+			|| BX_PLATFORM_BSD                            \
+			|| BX_PLATFORM_EMSCRIPTEN                     \
+			|| BX_PLATFORM_LINUX                          \
+			|| BX_PLATFORM_NX                             \
+			|| BX_PLATFORM_RPI                            \
+			|| BX_PLATFORM_STEAMLINK                      \
+			|| BX_PLATFORM_WINDOWS                        \
 			) )
 
 #define BGFX_USE_WGL (BGFX_CONFIG_RENDERER_OPENGL && BX_PLATFORM_WINDOWS)
 #define BGFX_USE_GLX (BGFX_CONFIG_RENDERER_OPENGL && (0 \
-			|| BX_PLATFORM_LINUX \
-			|| BX_PLATFORM_BSD \
+			|| BX_PLATFORM_BSD                          \
+			|| BX_PLATFORM_LINUX                        \
 			) )
 
 #define BGFX_USE_GL_DYNAMIC_LIB (0 \
-			|| BX_PLATFORM_LINUX \
-			|| BX_PLATFORM_BSD \
-			|| BX_PLATFORM_OSX \
+			|| BX_PLATFORM_BSD     \
+			|| BX_PLATFORM_LINUX   \
+			|| BX_PLATFORM_OSX     \
 			|| BX_PLATFORM_WINDOWS \
 			)
 
@@ -82,11 +82,17 @@ typedef uint64_t GLuint64;
 #		define GL_HALF_FLOAT GL_HALF_FLOAT_OES
 #		define GL_RGBA8 GL_RGBA8_OES
 #		define GL_UNSIGNED_INT_2_10_10_10_REV GL_UNSIGNED_INT_2_10_10_10_REV_EXT
-#		define GL_TEXTURE_3D GL_TEXTURE_3D_OES
+#		ifndef GL_TEXTURE_3D
+#			define GL_TEXTURE_3D GL_TEXTURE_3D_OES
+#		endif // GL_TEXTURE_3D
 #		define GL_SAMPLER_3D GL_SAMPLER_3D_OES
 #		define GL_TEXTURE_WRAP_R GL_TEXTURE_WRAP_R_OES
-#		define GL_MIN GL_MIN_EXT
-#		define GL_MAX GL_MAX_EXT
+#		ifndef GL_MIN
+#			define GL_MIN GL_MIN_EXT
+#		endif // GL_MIN
+#		ifndef GL_MAX
+#			define GL_MAX GL_MAX_EXT
+#		endif // GL_MAX
 #		define GL_DEPTH_COMPONENT24 GL_DEPTH_COMPONENT24_OES
 #		define GL_DEPTH24_STENCIL8 GL_DEPTH24_STENCIL8_OES
 #		define GL_DEPTH_COMPONENT32 GL_DEPTH_COMPONENT32_OES
@@ -107,8 +113,6 @@ typedef uint64_t GLuint64;
 #endif // BGFX_CONFIG_RENDERER_OPENGL
 
 #include "renderer.h"
-#include "hmd_ovr.h"
-#include "hmd_openvr.h"
 #include "debug_renderdoc.h"
 
 #ifndef GL_LUMINANCE
@@ -451,6 +455,66 @@ typedef uint64_t GLuint64;
 #	define GL_COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV1_EXT 0x8A57
 #endif // GL_COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV1_EXT
 
+#ifndef ATC_RGB_AMD
+	#define GL_ATC_RGB_AMD 0x8C92
+#endif
+
+#ifndef GL_ATC_RGBA_EXPLICIT_ALPHA_AMD
+#   define GL_ATC_RGBA_EXPLICIT_ALPHA_AMD 0x8C93
+#endif
+
+#ifndef ATC_RGBA_INTERPOLATED_ALPHA_AMD
+#   define GL_ATC_RGBA_INTERPOLATED_ALPHA_AMD 0x87EE
+#endif
+
+#ifndef GL_COMPRESSED_RGBA_ASTC_4x4_KHR
+#   define GL_COMPRESSED_RGBA_ASTC_4x4_KHR 0x93B0
+#endif
+
+#ifndef GL_COMPRESSED_RGBA_ASTC_5x5_KHR
+#   define GL_COMPRESSED_RGBA_ASTC_5x5_KHR 0x93B2
+#endif
+
+#ifndef GL_COMPRESSED_RGBA_ASTC_6x6_KHR
+#   define GL_COMPRESSED_RGBA_ASTC_6x6_KHR 0x93B4
+#endif
+
+#ifndef GL_COMPRESSED_RGBA_ASTC_8x5_KHR
+#   define GL_COMPRESSED_RGBA_ASTC_8x5_KHR 0x93B5
+#endif
+
+#ifndef GL_COMPRESSED_RGBA_ASTC_8x6_KHR
+#   define GL_COMPRESSED_RGBA_ASTC_8x6_KHR 0x93B6
+#endif
+
+#ifndef GL_COMPRESSED_RGBA_ASTC_10x5_KHR
+#   define GL_COMPRESSED_RGBA_ASTC_10x5_KHR 0x93B8
+#endif
+
+#ifndef GL_COMPRESSED_SRGB8_ASTC_4x4_KHR
+#   define GL_COMPRESSED_SRGB8_ASTC_4x4_KHR 0x93D0
+#endif
+
+#ifndef GL_COMPRESSED_SRGB8_ASTC_5x5_KHR
+#   define GL_COMPRESSED_SRGB8_ASTC_5x5_KHR 0x93D2
+#endif
+
+#ifndef GL_COMPRESSED_SRGB8_ASTC_6x6_KHR
+#   define GL_COMPRESSED_SRGB8_ASTC_6x6_KHR 0x93D4
+#endif
+
+#ifndef GL_COMPRESSED_SRGB8_ASTC_8x5_KHR
+#   define GL_COMPRESSED_SRGB8_ASTC_8x5_KHR 0x93D5
+#endif
+
+#ifndef GL_COMPRESSED_SRGB8_ASTC_8x6_KHR
+#   define GL_COMPRESSED_SRGB8_ASTC_8x6_KHR 0x93D6
+#endif
+
+#ifndef GL_COMPRESSED_SRGB8_ASTC_10x5_KHR
+#   define GL_COMPRESSED_SRGB8_ASTC_10x5_KHR 0x93D8
+#endif
+
 #ifndef GL_COMPRESSED_RGBA_BPTC_UNORM_ARB
 #	define GL_COMPRESSED_RGBA_BPTC_UNORM_ARB 0x8E8C
 #endif // GL_COMPRESSED_RGBA_BPTC_UNORM_ARB
@@ -518,6 +582,10 @@ typedef uint64_t GLuint64;
 #ifndef GL_MAX_DRAW_BUFFERS
 #	define GL_MAX_DRAW_BUFFERS 0x8824
 #endif // GL_MAX_DRAW_BUFFERS
+
+#ifndef GL_MAX_ARRAY_TEXTURE_LAYERS
+#	define GL_MAX_ARRAY_TEXTURE_LAYERS 0x88FF
+#endif // GL_MAX_ARRAY_TEXTURE_LAYERS
 
 #ifndef GL_QUERY_RESULT
 #	define GL_QUERY_RESULT 0x8866
@@ -624,6 +692,14 @@ typedef uint64_t GLuint64;
 #	define GL_UNSIGNED_INT_SAMPLER_2D 0x8DD2
 #endif // GL_UNSIGNED_INT_SAMPLER_2D
 
+#ifndef GL_INT_SAMPLER_2D_ARRAY
+#	define GL_INT_SAMPLER_2D_ARRAY 0x8DCF
+#endif // GL_INT_SAMPLER_2D_ARRAY
+
+#ifndef GL_UNSIGNED_INT_SAMPLER_2D_ARRAY
+#	define GL_UNSIGNED_INT_SAMPLER_2D_ARRAY 0x8DD7
+#endif // GL_UNSIGNED_INT_SAMPLER_2D_ARRAY
+
 #ifndef GL_INT_SAMPLER_3D
 #	define GL_INT_SAMPLER_3D 0x8DCB
 #endif // GL_INT_SAMPLER_3D
@@ -655,6 +731,14 @@ typedef uint64_t GLuint64;
 #ifndef GL_SAMPLER_2D_SHADOW
 #	define GL_SAMPLER_2D_SHADOW 0x8B62
 #endif // GL_SAMPLER_2D_SHADOW
+
+#ifndef GL_SAMPLER_2D_ARRAY
+#	define GL_SAMPLER_2D_ARRAY 0x8DC1
+#endif // GL_SAMPLER_2D_ARRAY
+
+#ifndef GL_SAMPLER_2D_ARRAY_SHADOW
+#	define GL_SAMPLER_2D_ARRAY_SHADOW 0x8DC4
+#endif // GL_SAMPLER_2D_ARRAY_SHADOW
 
 #ifndef GL_TEXTURE_MAX_LEVEL
 #	define GL_TEXTURE_MAX_LEVEL 0x813D
@@ -703,6 +787,10 @@ typedef uint64_t GLuint64;
 #ifndef GL_IMAGE_2D
 #	define GL_IMAGE_2D 0x904D
 #endif // GL_IMAGE_2D
+
+#ifndef GL_IMAGE_2D_ARRAY
+#	define GL_IMAGE_2D_ARRAY 0x9053
+#endif // GL_IMAGE_2D_ARRAY
 
 #ifndef GL_IMAGE_3D
 #	define GL_IMAGE_3D 0x904E
@@ -820,6 +908,14 @@ typedef uint64_t GLuint64;
 #	define GL_UPPER_LEFT 0x8CA2
 #endif // GL_UPPER_LEFT
 
+#ifndef GL_SHADER
+#	define GL_SHADER 0x82E1
+#endif // GL_SHADER
+
+#ifndef GL_TEXTURE
+#	define GL_TEXTURE 0x1702
+#endif // GL_TEXTURE
+
 // _KHR or _ARB...
 #define GL_DEBUG_OUTPUT_SYNCHRONOUS         0x8242
 #define GL_DEBUG_NEXT_LOGGED_MESSAGE_LENGTH 0x8243
@@ -863,6 +959,18 @@ typedef uint64_t GLuint64;
 #	define GL_CLAMP_TO_BORDER 0x812D
 #endif // GL_CLAMP_TO_BORDER
 
+#ifndef GL_TEXTURE_2D_ARRAY
+#	define GL_TEXTURE_2D_ARRAY 0x8C1A
+#endif // GL_TEXTURE_2D_ARRAY
+
+#ifndef GL_TEXTURE_2D_MULTISAMPLE_ARRAY
+#	define GL_TEXTURE_2D_MULTISAMPLE_ARRAY 0x9102
+#endif // GL_TEXTURE_2D_MULTISAMPLE_ARRAY
+
+#ifndef GL_TEXTURE_CUBE_MAP_ARRAY
+#	define GL_TEXTURE_CUBE_MAP_ARRAY 0x9009
+#endif // GL_TEXTURE_CUBE_MAP_ARRAY
+
 #ifndef GL_TEXTURE_CUBE_MAP_SEAMLESS
 #	define GL_TEXTURE_CUBE_MAP_SEAMLESS 0x884F
 #endif // GL_TEXTURE_CUBE_MAP_SEAMLESS
@@ -883,9 +991,31 @@ typedef uint64_t GLuint64;
 #	define GL_MAX_NAME_LENGTH 0x92F6
 #endif // GL_MAX_NAME_LENGTH
 
-#if BX_PLATFORM_NACL
-#	include "glcontext_ppapi.h"
-#elif BX_PLATFORM_WINDOWS
+#ifndef GL_DEBUG_SEVERITY_NOTIFICATION
+#	define GL_DEBUG_SEVERITY_NOTIFICATION 0x826b
+#endif // GL_DEBUG_SEVERITY_NOTIFICATION
+
+#ifndef GL_LINE
+#	define GL_LINE 0x1B01
+#endif // GL_LINE
+
+#ifndef GL_FILL
+#	define GL_FILL 0x1B02
+#endif // GL_FILL
+
+#ifndef GL_MULTISAMPLE
+#	define GL_MULTISAMPLE 0x809D
+#endif // GL_MULTISAMPLE
+
+#ifndef GL_LINE_SMOOTH
+#	define GL_LINE_SMOOTH 0x0B20
+#endif // GL_LINE_SMOOTH
+
+#ifndef GL_TEXTURE_LOD_BIAS
+#	define GL_TEXTURE_LOD_BIAS 0x8501
+#endif // GL_TEXTURE_LOD_BIAS
+
+#if BX_PLATFORM_WINDOWS
 #	include <windows.h>
 #elif BX_PLATFORM_LINUX || BX_PLATFORM_BSD
 #	include "glcontext_glx.h"
@@ -918,32 +1048,6 @@ namespace bgfx
 
 namespace bgfx { namespace gl
 {
-#if BGFX_CONFIG_USE_OVR
-	struct OVRBufferGL : public OVRBufferI
-	{
-		virtual void create(const ovrSession& _session, int _eyeIdx, int _msaaSamples) BX_OVERRIDE;
-		virtual void destroy(const ovrSession& _session) BX_OVERRIDE;
-		virtual void render(const ovrSession& _session) BX_OVERRIDE;
-		virtual void postRender(const ovrSession& _sesion) BX_OVERRIDE;
-
-		GLuint m_eyeFbo;
-		GLuint m_eyeTexId;
-		GLuint m_depthBuffer;
-		GLuint m_msaaEyeFbo;
-		GLuint m_msaaEyeTexId;
-		GLuint m_msaaDepthBuffer;
-	};
-
-	struct OVRMirrorGL : public OVRMirrorI
-	{
-		virtual void create(const ovrSession& _session, int _width, int _height) BX_OVERRIDE;
-		virtual void destroy(const ovrSession& _session) BX_OVERRIDE;
-		virtual void blit(const ovrSession& _session) BX_OVERRIDE;
-
-		GLuint m_mirrorFBO;
-	};
-#endif // BGFX_CONFIG_USE_OVR
-
 	void dumpExtensions(const char* _extensions);
 
 	const char* glEnumName(GLenum _enum);
@@ -970,87 +1074,6 @@ namespace bgfx { namespace gl
 #define GL_IMPORT_TYPEDEFS 1
 #define GL_IMPORT(_optional, _proto, _func, _import) extern _proto _func
 #include "glimports.h"
-
-	class VaoStateCache
-	{
-	public:
-		GLuint add(uint32_t _hash)
-		{
-			invalidate(_hash);
-
-			GLuint arrayId;
-			GL_CHECK(glGenVertexArrays(1, &arrayId) );
-
-			m_hashMap.insert(stl::make_pair(_hash, arrayId) );
-
-			return arrayId;
-		}
-
-		GLuint find(uint32_t _hash)
-		{
-			HashMap::iterator it = m_hashMap.find(_hash);
-			if (it != m_hashMap.end() )
-			{
-				return it->second;
-			}
-
-			return UINT32_MAX;
-		}
-
-		void invalidate(uint32_t _hash)
-		{
-			GL_CHECK(glBindVertexArray(0) );
-
-			HashMap::iterator it = m_hashMap.find(_hash);
-			if (it != m_hashMap.end() )
-			{
-				GL_CHECK(glDeleteVertexArrays(1, &it->second) );
-				m_hashMap.erase(it);
-			}
-		}
-
-		void invalidate()
-		{
-			GL_CHECK(glBindVertexArray(0) );
-
-			for (HashMap::iterator it = m_hashMap.begin(), itEnd = m_hashMap.end(); it != itEnd; ++it)
-			{
-				GL_CHECK(glDeleteVertexArrays(1, &it->second) );
-			}
-			m_hashMap.clear();
-		}
-
-		uint32_t getCount() const
-		{
-			return uint32_t(m_hashMap.size() );
-		}
-
-	private:
-		typedef stl::unordered_map<uint32_t, GLuint> HashMap;
-		HashMap m_hashMap;
-	};
-
-	class VaoCacheRef
-	{
-	public:
-		void add(uint32_t _hash)
-		{
-			m_vaoSet.insert(_hash);
-		}
-
-		void invalidate(VaoStateCache& _vaoCache)
-		{
-			for (VaoSet::iterator it = m_vaoSet.begin(), itEnd = m_vaoSet.end(); it != itEnd; ++it)
-			{
-				_vaoCache.invalidate(*it);
-			}
-
-			m_vaoSet.clear();
-		}
-
-		typedef stl::unordered_set<uint32_t> VaoSet;
-		VaoSet m_vaoSet;
-	};
 
 	class SamplerStateCache
 	{
@@ -1147,14 +1170,8 @@ namespace bgfx { namespace gl
 
 		void destroy();
 
-		void add(uint32_t _hash)
-		{
-			m_vcref.add(_hash);
-		}
-
 		GLuint m_id;
 		uint32_t m_size;
-		VaoCacheRef m_vcref;
 		uint16_t m_flags;
 	};
 
@@ -1201,16 +1218,10 @@ namespace bgfx { namespace gl
 
 		void destroy();
 
-		void add(uint32_t _hash)
-		{
-			m_vcref.add(_hash);
-		}
-
 		GLuint m_id;
 		GLenum m_target;
 		uint32_t m_size;
 		VertexDeclHandle m_decl;
-		VaoCacheRef m_vcref;
 	};
 
 	struct TextureGL
@@ -1227,20 +1238,29 @@ namespace bgfx { namespace gl
 		{
 		}
 
-		bool init(GLenum _target, uint32_t _width, uint32_t _height, uint32_t _depth, uint8_t _numMips, uint32_t _flags);
-		void create(const Memory* _mem, uint32_t _flags, uint8_t _skip);
+		bool init(GLenum _target, uint32_t _width, uint32_t _height, uint32_t _depth, uint8_t _numMips, uint64_t _flags);
+		void create(const Memory* _mem, uint64_t _flags, uint8_t _skip);
 		void destroy();
 		void overrideInternal(uintptr_t _ptr);
 		void update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem);
 		void setSamplerState(uint32_t _flags, const float _rgba[4]);
 		void commit(uint32_t _stage, uint32_t _flags, const float _palette[][4]);
+		void resolve(uint8_t _resolve) const;
+
+		bool isCubeMap() const
+		{
+			return 0
+				|| GL_TEXTURE_CUBE_MAP       == m_target
+				|| GL_TEXTURE_CUBE_MAP_ARRAY == m_target
+				;
+		}
 
 		GLuint m_id;
 		GLuint m_rbo;
 		GLenum m_target;
 		GLenum m_fmt;
 		GLenum m_type;
-		uint32_t m_flags;
+		uint64_t m_flags;
 		uint32_t m_currentSamplerHash;
 		uint32_t m_width;
 		uint32_t m_height;
@@ -1259,7 +1279,7 @@ namespace bgfx { namespace gl
 		{
 		}
 
-		void create(Memory* _mem);
+		void create(const Memory* _mem);
 		void destroy();
 
 		GLuint m_id;
@@ -1273,12 +1293,13 @@ namespace bgfx { namespace gl
 			: m_swapChain(NULL)
 			, m_denseIdx(UINT16_MAX)
 			, m_num(0)
+			, m_needPresent(false)
 		{
-			memset(m_fbo, 0, sizeof(m_fbo) );
+			bx::memSet(m_fbo, 0, sizeof(m_fbo) );
 		}
 
 		void create(uint8_t _num, const Attachment* _attachment);
-		void create(uint16_t _denseIdx, void* _nwh, uint32_t _width, uint32_t _height, TextureFormat::Enum _depthFormat);
+		void create(uint16_t _denseIdx, void* _nwh, uint32_t _width, uint32_t _height, TextureFormat::Enum _format, TextureFormat::Enum _depthFormat);
 		void postReset();
 		uint16_t destroy();
 		void resolve();
@@ -1291,6 +1312,7 @@ namespace bgfx { namespace gl
 		uint16_t m_denseIdx;
 		uint8_t  m_num;
 		uint8_t  m_numTh;
+		bool     m_needPresent;
 		Attachment m_attachment[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
 	};
 
@@ -1306,18 +1328,37 @@ namespace bgfx { namespace gl
 		void create(const ShaderGL& _vsh, const ShaderGL& _fsh);
 		void destroy();
 		void init();
-		void bindAttributes(const VertexDecl& _vertexDecl, uint32_t _baseVertex = 0) const;
 		void bindInstanceData(uint32_t _stride, uint32_t _baseVertex = 0) const;
+		void unbindInstanceData() const;
 
-		void add(uint32_t _hash)
+		void bindAttributesBegin()
 		{
-			m_vcref.add(_hash);
+			bx::memCopy(m_unboundUsedAttrib, m_used, sizeof(m_unboundUsedAttrib) );
 		}
+
+		void bindAttributes(const VertexDecl& _vertexDecl, uint32_t _baseVertex = 0);
+
+		void bindAttributesEnd()
+		{
+			for (uint32_t ii = 0, iiEnd = m_usedCount; ii < iiEnd; ++ii)
+			{
+				if (Attrib::Count != m_unboundUsedAttrib[ii])
+				{
+					Attrib::Enum attr = Attrib::Enum(m_unboundUsedAttrib[ii]);
+					GLint loc = m_attributes[attr];
+					GL_CHECK(glDisableVertexAttribArray(loc) );
+				}
+			}
+		}
+
+		void unbindAttributes();
 
 		GLuint m_id;
 
-		uint8_t m_used[Attrib::Count+1]; // dense
-		GLint m_attributes[Attrib::Count]; // sparse
+		uint8_t m_unboundUsedAttrib[Attrib::Count]; // For tracking unbound used attributes between begin()/end().
+		uint8_t m_usedCount;
+		uint8_t m_used[Attrib::Count]; // Dense.
+		GLint m_attributes[Attrib::Count]; // Sparse.
 		GLint m_instanceData[BGFX_CONFIG_MAX_INSTANCE_DATA_COUNT+1];
 
 		GLint m_sampler[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
@@ -1326,94 +1367,114 @@ namespace bgfx { namespace gl
 		UniformBuffer* m_constantBuffer;
 		PredefinedUniform m_predefined[PredefinedUniform::Count];
 		uint8_t m_numPredefined;
-		VaoCacheRef m_vcref;
 	};
 
 	struct TimerQueryGL
 	{
 		TimerQueryGL()
-			: m_control(BX_COUNTOF(m_frame) )
+			: m_control(BX_COUNTOF(m_query) )
 		{
 		}
 
 		void create()
 		{
-			for (uint32_t ii = 0; ii < BX_COUNTOF(m_frame); ++ii)
+			for (uint32_t ii = 0; ii < BX_COUNTOF(m_query); ++ii)
 			{
-				Frame& frame = m_frame[ii];
-				GL_CHECK(glGenQueries(1, &frame.m_begin) );
-				GL_CHECK(glGenQueries(1, &frame.m_elapsed) );
+				Query& query = m_query[ii];
+				query.m_ready = false;
+				GL_CHECK(glGenQueries(1, &query.m_begin) );
+				GL_CHECK(glGenQueries(1, &query.m_end) );
+			}
+
+			for (uint32_t ii = 0; ii < BX_COUNTOF(m_result); ++ii)
+			{
+				Result& result = m_result[ii];
+				result.reset();
 			}
 		}
 
 		void destroy()
 		{
-			for (uint32_t ii = 0; ii < BX_COUNTOF(m_frame); ++ii)
+			for (uint32_t ii = 0; ii < BX_COUNTOF(m_query); ++ii)
 			{
-				Frame& frame = m_frame[ii];
-				GL_CHECK(glDeleteQueries(1, &frame.m_begin) );
-				GL_CHECK(glDeleteQueries(1, &frame.m_elapsed) );
+				Query& query = m_query[ii];
+				GL_CHECK(glDeleteQueries(1, &query.m_begin) );
+				GL_CHECK(glDeleteQueries(1, &query.m_end) );
 			}
 		}
 
-		void begin()
+		uint32_t begin(uint32_t _resultIdx)
 		{
 			while (0 == m_control.reserve(1) )
 			{
-				get();
+				update();
 			}
 
-			Frame& frame = m_frame[m_control.m_current];
-			if (!BX_ENABLED(BX_PLATFORM_OSX) )
-			{
-				GL_CHECK(glQueryCounter(frame.m_begin
-						, GL_TIMESTAMP
-						) );
-			}
+			Result& result = m_result[_resultIdx];
+			++result.m_pending;
 
-			GL_CHECK(glBeginQuery(GL_TIME_ELAPSED
-					, frame.m_elapsed
-					) );
-		}
+			const uint32_t idx = m_control.m_current;
+			Query& query = m_query[idx];
+			query.m_resultIdx = _resultIdx;
+			query.m_ready     = false;
 
-		void end()
-		{
-			GL_CHECK(glEndQuery(GL_TIME_ELAPSED) );
+			GL_CHECK(glQueryCounter(query.m_begin
+				, GL_TIMESTAMP
+				) );
+
 			m_control.commit(1);
+
+			return idx;
 		}
 
-		bool get()
+		void end(uint32_t _idx)
+		{
+			Query& query = m_query[_idx];
+			query.m_ready = true;
+
+			GL_CHECK(glQueryCounter(query.m_end
+				, GL_TIMESTAMP
+				) );
+
+			while (update() )
+			{
+			}
+		}
+
+		bool update()
 		{
 			if (0 != m_control.available() )
 			{
-				Frame& frame = m_frame[m_control.m_read];
+				Query& query = m_query[m_control.m_read];
+
+				if (!query.m_ready)
+				{
+					return false;
+				}
 
 				GLint available;
-				GL_CHECK(glGetQueryObjectiv(frame.m_elapsed
-						, GL_QUERY_RESULT_AVAILABLE
-						, &available
-						) );
+				GL_CHECK(glGetQueryObjectiv(query.m_end
+					, GL_QUERY_RESULT_AVAILABLE
+					, &available
+					) );
 
 				if (available)
 				{
-					if (!BX_ENABLED(BX_PLATFORM_OSX) )
-					{
-						GL_CHECK(glGetQueryObjectui64v(frame.m_begin
-								, GL_QUERY_RESULT
-								, &m_begin
-								) );
-					}
-					else
-					{
-						m_begin = 0;
-					}
-
-					GL_CHECK(glGetQueryObjectui64v(frame.m_elapsed
-							, GL_QUERY_RESULT
-							, &m_elapsed
-							) );
-					m_end = m_begin + m_elapsed;
 					m_control.consume(1);
+
+					Result& result = m_result[query.m_resultIdx];
+					--result.m_pending;
+
+					GL_CHECK(glGetQueryObjectui64v(query.m_begin
+						, GL_QUERY_RESULT
+						, &result.m_begin
+						) );
+
+					GL_CHECK(glGetQueryObjectui64v(query.m_end
+						, GL_QUERY_RESULT
+						, &result.m_end
+						) );
+
 					return true;
 				}
 			}
@@ -1421,17 +1482,31 @@ namespace bgfx { namespace gl
 			return false;
 		}
 
-		uint64_t m_begin;
-		uint64_t m_end;
-		uint64_t m_elapsed;
-
-		struct Frame
+		struct Result
 		{
-			GLuint m_begin;
-			GLuint m_elapsed;
+			void reset()
+			{
+				m_begin   = 0;
+				m_end     = 0;
+				m_pending = 0;
+			}
+
+			uint64_t m_begin;
+			uint64_t m_end;
+			uint32_t m_pending;
 		};
 
-		Frame m_frame[4];
+		struct Query
+		{
+			GLuint   m_begin;
+			GLuint   m_end;
+			uint32_t m_resultIdx;
+			bool     m_ready;
+		};
+
+		Result m_result[BGFX_CONFIG_MAX_VIEWS+1];
+
+		Query m_query[BGFX_CONFIG_MAX_VIEWS*4];
 		bx::RingBufferControl m_control;
 	};
 
@@ -1447,6 +1522,7 @@ namespace bgfx { namespace gl
 		void begin(Frame* _render, OcclusionQueryHandle _handle);
 		void end();
 		void resolve(Frame* _render, bool _wait = false);
+		void invalidate(OcclusionQueryHandle _handle);
 
 		struct Query
 		{
@@ -1454,8 +1530,54 @@ namespace bgfx { namespace gl
 			OcclusionQueryHandle m_handle;
 		};
 
-		Query m_query[BGFX_CONFIG_MAX_OCCUSION_QUERIES];
+		Query m_query[BGFX_CONFIG_MAX_OCCLUSION_QUERIES];
 		bx::RingBufferControl m_control;
+	};
+
+	class LineReader : public bx::ReaderI
+	{
+	public:
+		LineReader(const void* _str)
+			: m_str( (const char*)_str)
+			, m_pos(0)
+			, m_size(bx::strLen( (const char*)_str) )
+		{
+		}
+
+		LineReader(const bx::StringView& _str)
+			: m_str(_str.getPtr() )
+			, m_pos(0)
+			, m_size(_str.getLength() )
+		{
+		}
+
+		virtual int32_t read(void* _data, int32_t _size, bx::Error* _err) override
+		{
+			if (m_str[m_pos] == '\0'
+			||  m_pos == m_size)
+			{
+				BX_ERROR_SET(_err, BX_ERROR_READERWRITER_EOF, "LineReader: EOF.");
+				return 0;
+			}
+
+			uint32_t pos = m_pos;
+			const char* str = &m_str[pos];
+			const char* nl = bx::strFindNl(str).getPtr();
+			pos += (uint32_t)(nl - str);
+
+			const char* eol = &m_str[pos];
+
+			uint32_t size = bx::uint32_min(uint32_t(eol - str), _size);
+
+			bx::memCopy(_data, str, size);
+			m_pos += size;
+
+			return size;
+		}
+
+		const char* m_str;
+		uint32_t m_pos;
+		uint32_t m_size;
 	};
 
 } /* namespace gl */ } // namespace bgfx

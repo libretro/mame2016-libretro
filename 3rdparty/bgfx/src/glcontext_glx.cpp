@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2016 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -11,6 +11,9 @@
 #	if BGFX_USE_GLX
 #		define GLX_GLXEXT_PROTOTYPES
 #		include <glx/glxext.h>
+
+// will include X11 which #defines None...
+#undef None
 
 namespace bgfx { namespace gl
 {
@@ -107,7 +110,7 @@ namespace bgfx { namespace gl
 				{
 					BX_TRACE("---");
 					bool valid = true;
-					for (uint32_t attr = 6; attr < BX_COUNTOF(attrsGlx)-1 && attrsGlx[attr] != None; attr += 2)
+					for (uint32_t attr = 6; attr < BX_COUNTOF(attrsGlx)-1 && attrsGlx[attr] != 0; attr += 2)
 					{
 						int value;
 						glXGetFBConfigAttrib( (::Display*)g_platformData.ndt, configs[ii], attrsGlx[attr], &value);
@@ -155,10 +158,12 @@ namespace bgfx { namespace gl
 			if (NULL != glXCreateContextAttribsARB)
 			{
 				BX_TRACE("Create GL 3.1 context.");
+				int32_t flags = BGFX_CONFIG_DEBUG ? GLX_CONTEXT_DEBUG_BIT_ARB : 0;
 				const int contextAttrs[] =
 				{
 					GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
 					GLX_CONTEXT_MINOR_VERSION_ARB, 1,
+					GLX_CONTEXT_FLAGS_ARB, flags,
 					GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
 					0,
 				};
@@ -259,6 +264,7 @@ namespace bgfx { namespace gl
 	void GlContext::destroySwapChain(SwapChainGL* _swapChain)
 	{
 		BX_DELETE(g_allocator, _swapChain);
+		glXMakeCurrent( (::Display*)g_platformData.ndt, (::Window)g_platformData.nwh, m_context);
 	}
 
 	void GlContext::swap(SwapChainGL* _swapChain)
