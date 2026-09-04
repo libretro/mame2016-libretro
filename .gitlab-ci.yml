@@ -53,6 +53,14 @@ stages:
   - build-shared
   - build-static
 
+# Cache, referenced by the macOS jobs
+.osx-cache: &osx_cache
+  untracked: true
+  key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+  when: always
+  paths:
+    - build/
+
 ##############################################################################
 #################################### STAGES ##################################
 ##############################################################################
@@ -91,16 +99,26 @@ libretro-build-linux-aarch64:
     - .core-defs
 
 # MacOS 64-bit
+#
+# A full MAME build does not fit in the one hour a job gets, and the mac
+# runners hand the build a fifth of their cores. Both macOS jobs therefore
+# keep build/ around and pick up where the last pipeline stopped; the cache
+# is uploaded even when the job is cut short, otherwise a timed out job
+# would throw its hour away and the next one would start from scratch again.
 libretro-build-osx-x64:
   extends:
     - .libretro-osx-x64-make-default
     - .core-defs
+  cache:
+    <<: *osx_cache
 
 # MacOS ARM 64-bit
 libretro-build-osx-arm64:
   extends:
     - .libretro-osx-arm64-make-default
     - .core-defs
+  cache:
+    <<: *osx_cache
 
 ################################### CELLULAR #################################
 # Android ARMv8a

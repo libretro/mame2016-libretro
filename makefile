@@ -141,10 +141,10 @@ endif
 ifneq ($(filter arm%,$(UNAME_P)),)
 PLATFORM := arm
 endif 
-ifneq ($(filter aarch64%,$(UNAME_M)),)
+ifneq ($(filter aarch64% arm64%,$(UNAME_M)),)
 PLATFORM := arm64
 endif 
-ifneq ($(filter aarch64%,$(UNAME_P)),)
+ifneq ($(filter aarch64% arm64%,$(UNAME_P)),)
 PLATFORM := arm64
 endif 
 ifneq ($(filter powerpc,$(UNAME_P)),)
@@ -1274,8 +1274,13 @@ macosx_x64: generate $(PROJECTDIR)/gmake-osx/Makefile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/gmake-osx config=$(CONFIG)64 precompile
 	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/gmake-osx config=$(CONFIG)64
 
+# Whatever the host is: Apple Silicon reaches this target (uname -m arm64
+# empties $(ARCHITECTURE), like it does on Linux ARM), and the x86 build it
+# used to alias to is neither wanted nor buildable against a current SDK.
 .PHONY: macosx
-macosx: macosx_x86
+macosx: generate $(PROJECTDIR)/gmake-osx/Makefile
+	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/gmake-osx config=$(CONFIG) precompile
+	$(SILENT) $(MAKE) $(MAKEPARAMS) -C $(PROJECTDIR)/gmake-osx config=$(CONFIG)
 
 .PHONY: macosx_x86
 macosx_x86: generate $(PROJECTDIR)/gmake-osx/Makefile
