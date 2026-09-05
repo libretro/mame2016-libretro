@@ -22,9 +22,13 @@
 #if defined(__FreeBSD__) || defined(__DragonFly__)
 #include <termios.h>
 #include <libutil.h>
-#elif defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__) || defined(__ANDROID__)
+#elif defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 #include <termios.h>
 #include <util.h>
+#elif defined(__ANDROID__)
+// bionic has no <util.h>, and openpty only appears in <pty.h> at API 23 - the
+// Android branch of posix_open_ptty below does not call it either way.
+#include <termios.h>
 #elif defined(__linux__) || defined(EMSCRIPTEN)
 #include <pty.h>
 #elif defined(__HAIKU__)

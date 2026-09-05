@@ -129,17 +129,42 @@ libretro-build-osx-arm64:
     <<: *osx_cache
 
 ################################### CELLULAR #################################
+# Android, the two ARM ABIs.
+#
+# No x86 ones: MAME's x86 recompiler backends do not compile against bionic,
+# whose <sys/ucontext.h> puts REG_EAX and friends in the global namespace,
+# where they collide with x86emit's ("reference to 'REG_EAX' is ambiguous").
+# The x86_64 job that used to be here never cross-compiled anyway: it built a
+# host x86_64 Linux core and uploaded nothing.
+#
+# Three hours, like the macOS jobs - a full build is about an hour on four
+# cores, and the runner hands the build a fifth of its own.
+android-armeabi-v7a:
+  extends:
+    - .libretro-android-make-armeabi-v7a
+    - .core-defs
+  timeout: 3h
+
 # Android ARMv8a
 android-arm64-v8a:
   extends:
     - .libretro-android-make-arm64-v8a
     - .core-defs
+  timeout: 3h
 
-# Android 64-bit x86
+# Android x86
+android-x86:
+  extends:
+    - .libretro-android-make-x86
+    - .core-defs
+  timeout: 3h
+
+# Android x86_64
 android-x86_64:
   extends:
     - .libretro-android-make-x86_64
     - .core-defs
+  timeout: 3h
 
 #################################### MISC ##################################
 # webOS 32-bit
