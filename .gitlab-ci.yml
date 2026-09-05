@@ -100,15 +100,17 @@ libretro-build-linux-aarch64:
 
 # MacOS 64-bit
 #
-# A full MAME build does not fit in the one hour a job gets, and the mac
-# runners hand the build a fifth of their cores. Both macOS jobs therefore
-# keep build/ around and pick up where the last pipeline stopped; the cache
-# is uploaded even when the job is cut short, otherwise a timed out job
-# would throw its hour away and the next one would start from scratch again.
+# A full MAME build does not fit in the one hour a job gets by default, and
+# the mac runners hand the build a fifth of their cores. The cache only helps
+# when the next pipeline lands on the same runner - the shell executor keeps
+# it locally - and a job killed by the timeout never uploads one at all, so
+# the x64 job had never once finished. Three hours is enough: it was 55
+# minutes in when it was cut off, against 20 for arm64.
 libretro-build-osx-x64:
   extends:
     - .libretro-osx-x64-make-default
     - .core-defs
+  timeout: 3h
   cache:
     <<: *osx_cache
 
@@ -117,6 +119,7 @@ libretro-build-osx-arm64:
   extends:
     - .libretro-osx-arm64-make-default
     - .core-defs
+  timeout: 3h
   cache:
     <<: *osx_cache
 
