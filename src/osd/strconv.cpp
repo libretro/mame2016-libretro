@@ -129,7 +129,9 @@ error:
 }
 
 #else
-#if !defined(ANDROID) && !defined(__ANDROID__)
+// Built on Android too: this was excluded back when bionic had no mbstowcs,
+// which it has had since API 21, and the retro OSD has nothing else to give
+// the linker for it.
 #include "unicode.h"
 //============================================================
 //  osd_uchar_from_osdchar
@@ -147,5 +149,4 @@ int osd_uchar_from_osdchar(unicode_char *uchar, const char *osdchar, size_t coun
 
 	return count;
 }
-#endif
 #endif

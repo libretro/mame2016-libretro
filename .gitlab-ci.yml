@@ -47,6 +47,11 @@ include:
   - project: 'libretro-infrastructure/ci-templates'
     file: '/android-make.yml'
 
+  #################################### MISC ##################################
+  # webOS 32-bit (LGTV)
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/webos-make.yml'
+
 # Stages for building
 stages:
   - build-prepare
@@ -100,15 +105,17 @@ libretro-build-linux-aarch64:
 
 # MacOS 64-bit
 #
-# A full MAME build does not fit in the one hour a job gets, and the mac
-# runners hand the build a fifth of their cores. Both macOS jobs therefore
-# keep build/ around and pick up where the last pipeline stopped; the cache
-# is uploaded even when the job is cut short, otherwise a timed out job
-# would throw its hour away and the next one would start from scratch again.
+# A full MAME build does not fit in the one hour a job gets by default, and
+# the mac runners hand the build a fifth of their cores. The cache only helps
+# when the next pipeline lands on the same runner - the shell executor keeps
+# it locally - and a job killed by the timeout never uploads one at all, so
+# the x64 job had never once finished. Three hours is enough: it was 55
+# minutes in when it was cut off, against 20 for arm64.
 libretro-build-osx-x64:
   extends:
     - .libretro-osx-x64-make-default
     - .core-defs
+  timeout: 3h
   cache:
     <<: *osx_cache
 
@@ -117,18 +124,57 @@ libretro-build-osx-arm64:
   extends:
     - .libretro-osx-arm64-make-default
     - .core-defs
+  timeout: 3h
   cache:
     <<: *osx_cache
 
 ################################### CELLULAR #################################
+# Android, the two ARM ABIs.
+#
+# No x86 ones: MAME's x86 recompiler backends do not compile against bionic,
+# whose <sys/ucontext.h> puts REG_EAX and friends in the global namespace,
+# where they collide with x86emit's ("reference to 'REG_EAX' is ambiguous").
+# The x86_64 job that used to be here never cross-compiled anyway: it built a
+# host x86_64 Linux core and uploaded nothing.
+#
+# Three hours, like the macOS jobs - a full build is about an hour on four
+# cores, and the runner hands the build a fifth of its own.
+android-armeabi-v7a:
+  extends:
+    - .libretro-android-make-armeabi-v7a
+    - .core-defs
+  timeout: 3h
+
 # Android ARMv8a
 android-arm64-v8a:
   extends:
     - .libretro-android-make-arm64-v8a
     - .core-defs
+  timeout: 3h
 
-# Android 64-bit x86
+# Android x86
+android-x86:
+  extends:
+    - .libretro-android-make-x86
+    - .core-defs
+  timeout: 3h
+
+# Android x86_64
 android-x86_64:
   extends:
     - .libretro-android-make-x86_64
     - .core-defs
+  timeout: 3h
+
+#################################### MISC ##################################
+# webOS 32-bit
+#
+# The SDK's toolchain builds the unix target; Makefile.libretro already knows
+# the arm-webos-linux-gnueabi prefix and picks 32-bit pointers and the C DRC
+# backend from it. Three hours because the webOS runner is not fast and this
+# does not fit in one, same as the macOS jobs.
+libretro-build-webos-armv7a:
+  extends:
+    - .libretro-webos-armv7a-make-default
+    - .core-defs
+  timeout: 3h
