@@ -47,6 +47,11 @@ include:
   - project: 'libretro-infrastructure/ci-templates'
     file: '/android-make.yml'
 
+  #################################### MISC ##################################
+  # webOS 32-bit (LGTV)
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/webos-make.yml'
+
 # Stages for building
 stages:
   - build-prepare
@@ -135,3 +140,16 @@ android-x86_64:
   extends:
     - .libretro-android-make-x86_64
     - .core-defs
+
+#################################### MISC ##################################
+# webOS 32-bit
+#
+# The SDK's toolchain builds the unix target; Makefile.libretro already knows
+# the arm-webos-linux-gnueabi prefix and picks 32-bit pointers and the C DRC
+# backend from it. Three hours because the webOS runner is not fast and this
+# does not fit in one, same as the macOS jobs.
+libretro-build-webos-armv7a:
+  extends:
+    - .libretro-webos-armv7a-make-default
+    - .core-defs
+  timeout: 3h
