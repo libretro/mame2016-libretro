@@ -136,12 +136,59 @@ ifeq ($(LIBRETRO_CPU),x86)
 	PTR64 = 0
 endif
 
-ifeq ($(platform), android)
-#	PTR64 = 0
-	# FIXME: Pass these to GENie and test...
-#	CROSS_BUILD = 1
-#	FORCE_DRC_C_BACKEND = 1
-else ifeq ($(platform), osx)
+# Android. The template names the ABI in platform (android-arm, android-arm64,
+# android-x86, android-x86_64) and exports the NDK's clang directory; nothing
+# else says this is a cross build, so MAME was building for the machine it ran
+# on - host g++, host pointer size, the x86-64 recompiler - and naming the
+# result for Linux, which is why the jobs uploaded nothing.
+ifneq (,$(findstring android,$(platform)))
+	# 24, not 21: bionic's pthread_barrier_* - which the bundled libuv uses -
+	# arrive there, and so does openpty.
+	ANDROID_API ?= 24
+	ANDROID_NDK_LLVM ?= $(NDK_ROOT)/toolchains/llvm/prebuilt/linux-x86_64
+	ifeq ($(platform),android-arm)
+		ANDROID_TRIPLE = armv7a-linux-androideabi
+		LIBRETRO_CPU = arm
+		ANDROID_GENIE_PLATFORM = arm
+	else ifeq ($(platform),android-arm64)
+		ANDROID_TRIPLE = aarch64-linux-android
+		LIBRETRO_CPU = aarch64
+		ANDROID_GENIE_PLATFORM = arm64
+	else ifeq ($(platform),android-x86)
+		ANDROID_TRIPLE = i686-linux-android
+		LIBRETRO_CPU = x86
+		PTR64 = 0
+	else
+		ANDROID_TRIPLE = x86_64-linux-android
+		LIBRETRO_CPU = x86_64
+		PTR64 = 1
+	endif
+	# The ARM ABIs. MAME reads all of this off the build host, which is x86_64
+	# here: PLATFORM is what GENie turns into the PTR64 define and the cast
+	# alignment warnings, ARCHITECTURE would send it looking for an x86 target,
+	# and its inline assembly is x86 only.
+	ifneq ($(ANDROID_GENIE_PLATFORM),)
+		ANDROID_ARCH_FLAGS = ARCHITECTURE= NOASM=1 PLATFORM=$(ANDROID_GENIE_PLATFORM)
+	endif
+
+	# The C recompiler backend everywhere on Android: there is no ARM one in
+	# this MAME, and the x86 one does not compile against bionic - its register
+	# enums collide with the REG_* that <sys/ucontext.h> puts in the global
+	# namespace ("reference to 'REG_RDI' is ambiguous").
+	FORCE_DRC_C_BACKEND = 1
+	# bionic has no libpthread - it is part of libc - but the retro OSD links
+	# it by name. An empty archive on the link path answers that; the build
+	# target below makes it.
+	ANDROID_STUB_DIR = $(CURDIR)/obj/android-stubs
+	ANDROID_CC = $(ANDROID_NDK_LLVM)/bin/$(ANDROID_TRIPLE)$(ANDROID_API)-clang
+	# CROSS_BUILD keeps the host compiler for the tools MAME builds and runs
+	# during the build - m68kmake and friends - and gives GENie the NDK's for
+	# everything that ends up in the core.
+	ANDROID_OVERRIDES = CROSS_BUILD=1 $(ANDROID_ARCH_FLAGS) LDOPTS="-L$(ANDROID_STUB_DIR)" OVERRIDE_CC="$(ANDROID_CC)" OVERRIDE_CXX="$(ANDROID_CC)++" OVERRIDE_AR="$(ANDROID_NDK_LLVM)/bin/llvm-ar"
+	CORE_SUFFIX = _android
+endif
+
+ifeq ($(platform), osx)
 	PYTHON_EXECUTABLE = python3
 else ifneq (,$(findstring ios,$(platform)))
 #	PTR64 = 0
@@ -236,6 +283,9 @@ endif
 ifneq ($(FORCE_DRC_C_BACKEND),)
 	PLATFLAGS += FORCE_DRC_C_BACKEND="$(FORCE_DRC_C_BACKEND)"
 endif
+ifneq ($(ANDROID_OVERRIDES),)
+	PLATFLAGS += $(ANDROID_OVERRIDES)
+endif
 
 ###########################################################################
 #
@@ -263,7 +313,14 @@ endif
 all: build
 
 build:
+ifneq ($(ANDROID_STUB_DIR),)
+	mkdir -p $(ANDROID_STUB_DIR)
+	$(ANDROID_NDK_LLVM)/bin/llvm-ar crs $(ANDROID_STUB_DIR)/libpthread.a
+endif
 	$(MAKE) $(BUILDFLAGS) $(PLATFLAGS) $(TARGETFLAGS)
+ifneq ($(CORE_SUFFIX),)
+	mv mame2016_libretro.so mame2016_libretro$(CORE_SUFFIX).so
+endif
 
 clean:
 	$(MAKE) $(BUILDFLAGS) $(PLATFLAGS) $(TARGETFLAGS) clean
