@@ -193,13 +193,37 @@ endif
 
 ifeq ($(platform), osx)
 	PYTHON_EXECUTABLE = python3
-else ifneq (,$(findstring ios,$(platform)))
-#	PTR64 = 0
-        LIBRETRO_CPU=arm
+else ifneq (,$(filter ios-arm64 tvos-arm64,$(platform)))
 	PYTHON_EXECUTABLE = python3
-	# FIXME: Pass these to GENie and test...
-#	CROSS_BUILD = 1
-#	FORCE_DRC_C_BACKEND = 1
+	# Both are Darwin, so TARGETOS stays macosx and only the SDK, the
+	# deployment target and the file name differ. MAME reads the target off
+	# the build host otherwise, which here is an x86-64 Mac's worth of
+	# assumptions: PLATFORM is what GENie turns into the PTR64 define and the
+	# cast alignment warnings, ARCHITECTURE would send it looking for an x86
+	# target, and its inline assembly is x86 only.
+	ifeq ($(platform),ios-arm64)
+		IOS_MINVER ?= 12.0
+		APPLE_SDK := $(shell xcodebuild -version -sdk iphoneos Path)
+		APPLE_TARGET = -arch arm64 -isysroot $(APPLE_SDK) -miphoneos-version-min=$(IOS_MINVER)
+		CORE_SUFFIX = _ios
+	else
+		TVOS_MINVER ?= 11.0
+		APPLE_SDK := $(shell xcodebuild -version -sdk appletvos Path)
+		APPLE_TARGET = -arch arm64 -isysroot $(APPLE_SDK) -mappletvos-version-min=$(TVOS_MINVER)
+		CORE_SUFFIX = _tvos
+	endif
+	CORE_EXT = dylib
+	LIBRETRO_CPU = arm64
+	TARGETOS = macosx
+	PTR64 = 1
+	# There is no ARM recompiler backend in this MAME.
+	FORCE_DRC_C_BACKEND = 1
+	# CROSS_BUILD keeps the host compiler for the tools MAME builds and runs
+	# during the build - m68kmake and friends - and gives GENie the target
+	# flags for everything that ends up in the core.
+	APPLE_OVERRIDES = CROSS_BUILD=1 ARCHITECTURE= NOASM=1 PLATFORM=arm64 \
+		ARCHOPTS="$(APPLE_TARGET)" LDOPTS="$(APPLE_TARGET)" \
+		OVERRIDE_CC="clang" OVERRIDE_CXX="clang++"
 endif
 
 ifneq (,$(findstring webos,$(CROSS_COMPILE)$(findstring starfish,$(CROSS_COMPILE))))
@@ -242,6 +266,8 @@ endif
 #   PLATFORM FLAGS
 #
 ###########################################################################
+
+CORE_EXT ?= so
 
 PLATFLAGS =
 ifneq ($(PTR64),)
@@ -289,6 +315,9 @@ endif
 ifneq ($(ANDROID_OVERRIDES),)
 	PLATFLAGS += $(ANDROID_OVERRIDES)
 endif
+ifneq ($(APPLE_OVERRIDES),)
+	PLATFLAGS += $(APPLE_OVERRIDES)
+endif
 
 ###########################################################################
 #
@@ -322,7 +351,7 @@ ifneq ($(ANDROID_STUB_DIR),)
 endif
 	$(MAKE) $(BUILDFLAGS) $(PLATFLAGS) $(TARGETFLAGS)
 ifneq ($(CORE_SUFFIX),)
-	mv mame2016_libretro.so mame2016_libretro$(CORE_SUFFIX).so
+	mv mame2016_libretro.$(CORE_EXT) mame2016_libretro$(CORE_SUFFIX).$(CORE_EXT)
 endif
 
 clean:
