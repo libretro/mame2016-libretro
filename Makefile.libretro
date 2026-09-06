@@ -193,35 +193,50 @@ endif
 
 ifeq ($(platform), osx)
 	PYTHON_EXECUTABLE = python3
-else ifneq (,$(filter ios-arm64 tvos-arm64,$(platform)))
+else ifneq (,$(filter ios-arm64 ios9 tvos-arm64,$(platform)))
 	PYTHON_EXECUTABLE = python3
-	# Both are Darwin, so TARGETOS stays macosx and only the SDK, the
-	# deployment target and the file name differ. MAME reads the target off
-	# the build host otherwise, which here is an x86-64 Mac's worth of
-	# assumptions: PLATFORM is what GENie turns into the PTR64 define and the
+	# All three are Darwin, so TARGETOS stays macosx and only the SDK, the
+	# architecture, the deployment target and the file name differ. MAME reads
+	# the target off the build host otherwise, which here is an x86-64 Mac's
+	# worth of assumptions: PLATFORM is what GENie turns into the PTR64 define and the
 	# cast alignment warnings, ARCHITECTURE would send it looking for an x86
 	# target, and its inline assembly is x86 only.
 	ifeq ($(platform),ios-arm64)
 		IOS_MINVER ?= 12.0
 		APPLE_SDK := $(shell xcodebuild -version -sdk iphoneos Path)
 		APPLE_TARGET = -arch arm64 -isysroot $(APPLE_SDK) -miphoneos-version-min=$(IOS_MINVER)
+		APPLE_GENIE_PLATFORM = arm64
+		LIBRETRO_CPU = arm64
+		PTR64 = 1
+		CORE_SUFFIX = _ios
+	else ifeq ($(platform),ios9)
+		# armv7 devices stop at iOS 10, so this one cannot take the arm64
+		# deployment target - and it is a 32-bit build, PTR64 and the GENie
+		# platform with it.
+		IOS9_MINVER ?= 9.0
+		APPLE_SDK := $(shell xcodebuild -version -sdk iphoneos Path)
+		APPLE_TARGET = -arch armv7 -isysroot $(APPLE_SDK) -miphoneos-version-min=$(IOS9_MINVER)
+		APPLE_GENIE_PLATFORM = arm
+		LIBRETRO_CPU = arm
+		PTR64 = 0
 		CORE_SUFFIX = _ios
 	else
 		TVOS_MINVER ?= 11.0
 		APPLE_SDK := $(shell xcodebuild -version -sdk appletvos Path)
 		APPLE_TARGET = -arch arm64 -isysroot $(APPLE_SDK) -mappletvos-version-min=$(TVOS_MINVER)
+		APPLE_GENIE_PLATFORM = arm64
+		LIBRETRO_CPU = arm64
+		PTR64 = 1
 		CORE_SUFFIX = _tvos
 	endif
 	CORE_EXT = dylib
-	LIBRETRO_CPU = arm64
 	TARGETOS = macosx
-	PTR64 = 1
 	# There is no ARM recompiler backend in this MAME.
 	FORCE_DRC_C_BACKEND = 1
 	# CROSS_BUILD keeps the host compiler for the tools MAME builds and runs
 	# during the build - m68kmake and friends - and gives GENie the target
 	# flags for everything that ends up in the core.
-	APPLE_OVERRIDES = CROSS_BUILD=1 ARCHITECTURE= NOASM=1 PLATFORM=arm64 \
+	APPLE_OVERRIDES = CROSS_BUILD=1 ARCHITECTURE= NOASM=1 PLATFORM=$(APPLE_GENIE_PLATFORM) \
 		ARCHOPTS="$(APPLE_TARGET)" LDOPTS="$(APPLE_TARGET)" \
 		OVERRIDE_CC="clang" OVERRIDE_CXX="clang++"
 endif
