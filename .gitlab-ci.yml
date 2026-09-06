@@ -42,6 +42,18 @@ include:
   - project: 'libretro-infrastructure/ci-templates'
     file: '/osx-arm64.yml'
 
+  # iOS arm64
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/ios-arm64.yml'
+
+  # iOS armv7 (iOS 9 and up)
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/ios9.yml'
+
+  # tvOS arm64
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/tvos-arm64.yml'
+
   ################################## CELLULAR ################################
   # Android
   - project: 'libretro-infrastructure/ci-templates'
@@ -123,6 +135,33 @@ libretro-build-osx-x64:
 libretro-build-osx-arm64:
   extends:
     - .libretro-osx-arm64-make-default
+    - .core-defs
+  timeout: 3h
+  cache:
+    <<: *osx_cache
+
+# iOS arm64
+libretro-build-ios-arm64:
+  extends:
+    - .libretro-ios-arm64-make-default
+    - .core-defs
+  timeout: 3h
+  cache:
+    <<: *osx_cache
+
+# iOS armv7 (iOS 9 and up)
+libretro-build-ios9:
+  extends:
+    - .libretro-ios9-make-default
+    - .core-defs
+  timeout: 3h
+  cache:
+    <<: *osx_cache
+
+# tvOS arm64
+libretro-build-tvos-arm64:
+  extends:
+    - .libretro-tvos-arm64-make-default
     - .core-defs
   timeout: 3h
   cache:

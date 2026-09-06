@@ -63,7 +63,7 @@ def extract_version(input):
 build, outfmt, srcfile, dstfile = parse_args()
 
 try:
-    fp = open(srcfile, 'rU')
+    fp = open(srcfile, 'r')
 except IOError:
     sys.stderr.write("Unable to open source file '%s'\n" % srcfile)
     sys.exit(1)
