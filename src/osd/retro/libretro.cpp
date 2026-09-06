@@ -742,3 +742,21 @@ void retro_frame_draw_enable(bool enable)
 {
    draw_this_frame = enable;
 }
+
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#if TARGET_OS_IOS || TARGET_OS_TV
+// clang rewrites the backwards search in src/lib/util/plaparse.cpp into a call
+// to memrchr, and neither iOS nor tvOS has that symbol at the deployment
+// targets we build for: "Undefined symbols for architecture arm64: _memrchr".
+// -fno-builtin-memrchr does not stop the rewrite, so supply the function.
+extern "C" void *memrchr(const void *s, int c, size_t n)
+{
+	const unsigned char *p = static_cast<const unsigned char *>(s) + n;
+	while (p-- != static_cast<const unsigned char *>(s))
+		if (*p == static_cast<unsigned char>(c))
+			return const_cast<unsigned char *>(p);
+	return nullptr;
+}
+#endif
+#endif
